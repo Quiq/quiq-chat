@@ -1,0 +1,17 @@
+{
+  "name": "quiq-chat",
+  "version": "0.0.1",
+  "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "quiq"
+  ],
+  "author": "nate.norberg@goquiq.com",
+  "license": "MIT",
+  "devDependencies": {
+    "isomorphic-fetch": "^2.2.1"
+  }
+}
