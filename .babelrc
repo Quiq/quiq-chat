@@ -4,8 +4,9 @@
       "es2015",
       {
         "modules": false
-      }
-    ]
+      },
+    ],
+    "stage-1"
   ],
   "plugins": [
     "external-helpers"
