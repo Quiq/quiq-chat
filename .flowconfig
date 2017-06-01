@@ -3,6 +3,9 @@
 [ignore]
 <PROJECT_ROOT>/build/.*
 
+# Including these files causes issues
+.*/node_modules/jest-validate/.*
+
 
 [options]
 module.name_mapper='^\(.*\)$' -> '<PROJECT_ROOT>/src/\1'

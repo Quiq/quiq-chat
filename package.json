@@ -6,7 +6,14 @@
   "scripts": {
     "test": "flow",
     "flow": "flow",
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "src/**/*.js": [
+      "prettier --single-quote --trailing-comma all --parser flow --no-bracket-spacing --print-width 100 --write",
+      "git add"
+    ]
   },
   "keywords": [
     "quiq"
@@ -17,7 +24,10 @@
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-es2015": "^6.24.1",
     "flow-bin": "^0.47.0",
+    "husky": "^0.13.4",
     "isomorphic-fetch": "^2.2.1",
+    "lint-staged": "^3.6.0",
+    "prettier": "^1.3.1",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-flow": "^1.1.1"
