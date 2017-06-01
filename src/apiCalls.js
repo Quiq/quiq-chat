@@ -1,14 +1,8 @@
 // @flow
 import fetch from 'isomorphic-fetch';
+import {formatQueryParams} from './utils';
+import {getUrlForContactPoint, getPublicApiUrl} from './globals';
 import type {Conversation} from 'types';
-
-// TODO: Get this from somewhere
-const GLOBALS = {
-  HOST: 'https://nate.dev.quiq.sh',
-  CONTACT_POINT: 'default',
-};
-
-const {HOST, CONTACT_POINT} = GLOBALS;
 
 const parseResponse = (response: Response): Promise<*> => {
   if (response.status && response.status >= 300) {
@@ -19,7 +13,7 @@ const parseResponse = (response: Response): Promise<*> => {
 };
 
 export const joinChat = () => {
-  fetch(`${HOST}/api/v1/messaging/chat/${CONTACT_POINT}/join`, {
+  fetch(`${getUrlForContactPoint()}/join`, {
     mode: 'cors',
     credentials: 'include',
     method: 'POST',
@@ -31,7 +25,7 @@ export const joinChat = () => {
 };
 
 export const leaveChat = () => {
-  fetch(`${HOST}/api/v1/messaging/chat/${CONTACT_POINT}/leave`, {
+  fetch(`${getUrlForContactPoint()}/leave`, {
     mode: 'cors',
     credentials: 'include',
     method: 'POST',
@@ -43,7 +37,7 @@ export const leaveChat = () => {
 };
 
 export const addMessage = (text: string) => {
-  fetch(`${HOST}/api/v1/messaging/chat/${CONTACT_POINT}/send-message`, {
+  fetch(`${getUrlForContactPoint()}/send-message`, {
     mode: 'cors',
     credentials: 'include',
     method: 'POST',
@@ -56,7 +50,7 @@ export const addMessage = (text: string) => {
 };
 
 export const fetchWebsocketInfo = (): Promise<{url: string}> =>
-  fetch(`${HOST}/api/v1/messaging/chat/${CONTACT_POINT}/socket-info`, {
+  fetch(`${getUrlForContactPoint()}/socket-info`, {
     mode: 'cors',
     credentials: 'include',
   }).then(parseResponse);
@@ -65,13 +59,13 @@ export const fetchWebsocketInfo = (): Promise<{url: string}> =>
 export const ping = () => fetchWebsocketInfo();
 
 export const fetchConversation = (): Promise<Conversation> =>
-  fetch(`${HOST}/api/v1/messaging/chat/${CONTACT_POINT}`, {
+  fetch(`${getUrlForContactPoint()}`, {
     mode: 'cors',
     credentials: 'include',
   }).then(parseResponse);
 
 export const updateMessagePreview = (text: string, typing: boolean) => {
-  fetch(`${HOST}/api/v1/messaging/chat/${CONTACT_POINT}/typing`, {
+  fetch(`${getUrlForContactPoint()}/typing`, {
     mode: 'cors',
     credentials: 'include',
     method: 'POST',
@@ -84,11 +78,17 @@ export const updateMessagePreview = (text: string, typing: boolean) => {
 };
 
 export const checkForAgents = (): Promise<{available: boolean}> =>
-  fetch(`${HOST}/api/v1/messaging/agents-available?platform=Chat&contactPoint=${CONTACT_POINT}`, {
-    mode: 'cors',
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+  fetch(
+    formatQueryParams(`${getPublicApiUrl()}/agents-available`, {
+      platform: 'Chat',
+      contactPoint: CONTACT_POINT,
+    }),
+    {
+      mode: 'cors',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
     },
-  }).then(parseResponse);
+  ).then(parseResponse);
