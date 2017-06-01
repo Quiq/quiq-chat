@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "src/index.js",
+  "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
     "test": "flow && jest --env=jsdom --coverage",
     "flow": "flow",
