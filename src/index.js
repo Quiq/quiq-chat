@@ -1,23 +1,13 @@
 // @flow
 import * as API from './apiCalls';
-import {setGlobals} from './globals';
+import {setGlobals, checkRequiredSettings} from './globals';
+import type {QuiqChatSettings} from 'types';
 
 export const init = (settings: QuiqChatSettings) => {
   setGlobals(settings);
 };
 
 // TODO: Subscribe method for websocket events
-
-function checkRequiredSettings() {
-  if (!quiqChatSettings || !quiqChatSettings.HOST || !quiqChatSettings.CONTACT_POINT) {
-    throw new Error(
-      `
-      HOST and CONTACT_POINT must be configured to call Quiq Messaging.
-      Did you forget to call init?
-      `,
-    );
-  }
-}
 
 export const joinChat = () => {
   checkRequiredSettings();
@@ -43,9 +33,9 @@ export const fetchConversation = () => {
   return API.fetchConversation();
 };
 
-export const updateMessagePreview = () => {
+export const updateMessagePreview = (text: string, typing: boolean) => {
   checkRequiredSettings();
-  return API.updateMessagePreview();
+  return API.updateMessagePreview(text, typing);
 };
 
 export const checkForAgents = () => {

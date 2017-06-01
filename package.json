@@ -4,7 +4,8 @@
   "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "flow",
+    "flow": "flow",
     "build": "rollup -c"
   },
   "keywords": [

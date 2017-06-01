@@ -1,7 +1,7 @@
 // @flow
 import fetch from 'isomorphic-fetch';
 import {formatQueryParams} from './utils';
-import {getUrlForContactPoint, getPublicApiUrl} from './globals';
+import {getUrlForContactPoint, getPublicApiUrl, getContactPoint} from './globals';
 import type {Conversation} from 'types';
 
 const parseResponse = (response: Response): Promise<*> => {
@@ -81,7 +81,7 @@ export const checkForAgents = (): Promise<{available: boolean}> =>
   fetch(
     formatQueryParams(`${getPublicApiUrl()}/agents-available`, {
       platform: 'Chat',
-      contactPoint: CONTACT_POINT,
+      contactPoint: getContactPoint(),
     }),
     {
       mode: 'cors',

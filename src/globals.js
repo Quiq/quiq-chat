@@ -1,14 +1,21 @@
 // @flow
-
-type QuiqChatSettings = {
-  HOST: string,
-  CONTACT_POINT: string,
-};
+import type {QuiqChatSettings} from 'types';
 
 let quiqChatSettings: QuiqChatSettings;
 
 export const setGlobals = (globals: QuiqChatSettings) => {
   quiqChatSettings = globals;
+};
+
+export const checkRequiredSettings = () => {
+  if (!quiqChatSettings || !quiqChatSettings.HOST || !quiqChatSettings.CONTACT_POINT) {
+    throw new Error(
+      `
+      HOST and CONTACT_POINT must be configured to call Quiq Messaging.
+      Did you forget to call init?
+      `,
+    );
+  }
 };
 
 export const getHost = () => quiqChatSettings.HOST;
