@@ -4,8 +4,9 @@
   "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "src/index.js",
   "scripts": {
-    "test": "flow",
+    "test": "flow && jest --env=jsdom --coverage",
     "flow": "flow",
+    "jest": "jest --watch --env=jsdom",
     "build": "rollup -c",
     "precommit": "lint-staged"
   },
@@ -14,6 +15,13 @@
       "prettier --single-quote --trailing-comma all --parser flow --no-bracket-spacing --print-width 100 --write",
       "git add"
     ]
+  },
+  "jest": {
+    "modulePaths": [
+      "src",
+      "node_modules"
+    ],
+    "rootDir": "src"
   },
   "keywords": [
     "quiq"
@@ -26,12 +34,18 @@
     "ua-parser-js": "^0.7.12"
   },
   "devDependencies": {
+    "babel-core": "^6.24.1",
+    "babel-jest": "^20.0.3",
     "babel-plugin-external-helpers": "^6.22.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
+    "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "babel-preset-stage-1": "^6.24.1",
     "flow-bin": "^0.47.0",
     "husky": "^0.13.4",
+    "jest": "^20.0.4",
+    "jsdom": "^11.0.0",
     "lint-staged": "^3.6.0",
     "prettier": "^1.3.1",
     "rollup": "^0.41.6",
