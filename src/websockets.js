@@ -72,11 +72,9 @@ const onOpen = response => {
   // Carry the UUID. This is required if you want to call subscribe(request) again.
   connection.request.uuid = response.request.uuid;
   onConnectionEstablish && onConnectionEstablish();
-  console.log('Socket open');
 };
 
 const onReopen = () => {
-  console.log('Socket reopened');
   onConnectionEstablish && onConnectionEstablish();
 };
 
@@ -87,10 +85,8 @@ const onReconnect = (req: AtmosphereRequest) => {
   if (req.transport === 'long-polling') {
     connection.pingTimeout = setTimeout(() => {
       ping();
-      console.log('Atmosphere: ping sent');
     }, connection.request.reconnectInterval + 5000);
   }
-  console.log('Atmosphere: reconnect');
 };
 
 const onMessage = res => {
@@ -102,24 +98,20 @@ const onMessage = res => {
     console.error('Error parsing Quiq websocket message');
     return;
   }
-
-  console.log(message);
 };
 
 const onTransportFailure = (errorMsg: string, req: AtmosphereRequest) => {
-  console.log(`Transport failed: ${req.transport}`);
+  // TODO: Add onTransportFailure
 };
 
 const onError = () => {
-  console.log('Atmosphere error');
   onConnectionLoss && onConnectionLoss();
 };
 
 const onClientTimeout = () => {
-  console.log('Atmosphere client timeout');
   onConnectionLoss && onConnectionLoss();
 };
 
 const onClose = () => {
-  console.log('Atmosphere connection closed');
+  // TODO: Add onClose
 };
