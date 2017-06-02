@@ -50,8 +50,16 @@ subscribe({
     // Called when the connection is established or reopened after a disconnect
   },
   
-  handleMessage(message) {
+  onMessage(message) {
     // React to the websocket message
+  },
+  
+  onTransportFailure(error, req) {
+    // Called if websockets don't work and we need to fall back to long polling
+  },
+  
+  onClose() {
+    // Called if the websocket connection gets closed for some reason
   }
 });
 ```
