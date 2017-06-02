@@ -1,4 +1,4 @@
-# quiq-chat
+# quiq-chat [![Build Status](https://travis-ci.org/Quiq/quiq-chat.svg?branch=master)](https://travis-ci.org/Quiq/quiq-chat)
 Library to handle the communication with Quiq Messaging APIs to build a web chat app
 
 ## Installation
@@ -45,19 +45,19 @@ subscribe({
   onConnectionLoss() {
     // Called when the connection is lost
   },
-  
+
   onConnectionEstablish() {
     // Called when the connection is established or reopened after a disconnect
   },
-  
+
   onMessage(message) {
     // React to the websocket message
   },
-  
+
   onTransportFailure(error, req) {
     // Called if websockets don't work and we need to fall back to long polling
   },
-  
+
   onClose() {
     // Called if the websocket connection gets closed for some reason
   }
@@ -111,6 +111,3 @@ Fetches whether or not there are agents available for the contact point the webc
   messages: Array<Message>,
 }
 ```
-
-
-
