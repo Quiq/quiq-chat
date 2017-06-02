@@ -65,7 +65,7 @@ The `message` object in `handleMessage` is of the type
 }
 ```
 
-### fetchConversation() => Promise<Conversation>
+### fetchConversation() => Promise\<Conversation\>
 Fetches the current conversation object from Quiq
 
 ### addMessage(text:string) => void
