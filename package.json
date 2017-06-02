@@ -31,8 +31,8 @@
   "license": "MIT",
   "dependencies": {
     "atmosphere.js": "https://github.com/Quiq/atmosphere-js/tarball/cf35c913143cf2c391b6bcb694ae8a47794a1b88",
-    "isomorphic-fetch": "^2.2.1",
-    "ua-parser-js": "^0.7.12"
+    "isomorphic-fetch": "2.2.1",
+    "ua-parser-js": "0.7.12"
   },
   "devDependencies": {
     "babel-core": "^6.24.1",

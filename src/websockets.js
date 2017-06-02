@@ -7,12 +7,11 @@ import type {
   AtmosphereConnection,
   AtmosphereConnectionBuilder,
   AtmosphereMessage,
+  WebsocketCallbacks,
 } from 'types';
 
 let connection: AtmosphereConnection;
-let onConnectionLoss: () => void;
-let onConnectionEstablish: () => void;
-let handleMessage: (message: AtmosphereMessage) => void;
+let callbacks: WebsocketCallbacks;
 let ie9Ping: number;
 
 const buildRequest = (socketUrl: string) => {
@@ -49,11 +48,9 @@ const buildRequest = (socketUrl: string) => {
 };
 
 export const connectSocket = (builder: AtmosphereConnectionBuilder) => {
-  const {socketUrl, options} = builder;
+  const {socketUrl, callbacks: websocketCallbacks} = builder;
 
-  onConnectionLoss = options.onConnectionLoss;
-  onConnectionEstablish = options.onConnectionEstablish;
-  handleMessage = options.handleMessage;
+  callbacks = websocketCallbacks;
 
   if (isIE9() && !ie9Ping) {
     // JSONP seems to be a bit unreliable, but we can prod it by periodically pinging the server...
@@ -71,13 +68,11 @@ export const disconnectSocket = () => {
 const onOpen = response => {
   // Carry the UUID. This is required if you want to call subscribe(request) again.
   connection.request.uuid = response.request.uuid;
-  onConnectionEstablish && onConnectionEstablish();
-  console.log('Socket open');
+  callbacks.onConnectionEstablish && callbacks.onConnectionEstablish();
 };
 
 const onReopen = () => {
-  console.log('Socket reopened');
-  onConnectionEstablish && onConnectionEstablish();
+  callbacks.onConnectionEstablish && callbacks.onConnectionEstablish();
 };
 
 const onReconnect = (req: AtmosphereRequest) => {
@@ -87,39 +82,33 @@ const onReconnect = (req: AtmosphereRequest) => {
   if (req.transport === 'long-polling') {
     connection.pingTimeout = setTimeout(() => {
       ping();
-      console.log('Atmosphere: ping sent');
     }, connection.request.reconnectInterval + 5000);
   }
-  console.log('Atmosphere: reconnect');
 };
 
 const onMessage = res => {
   let message;
   try {
     message = atmosphere.util.parseJSON(res.responseBody);
-    handleMessage && handleMessage(message);
+    callbacks.onMessage && callbacks.onMessage(message);
   } catch (e) {
     console.error('Error parsing Quiq websocket message');
     return;
   }
-
-  console.log(message);
 };
 
 const onTransportFailure = (errorMsg: string, req: AtmosphereRequest) => {
-  console.log(`Transport failed: ${req.transport}`);
+  callbacks.onTransportFailure && callbacks.onTransportFailure(errorMsg, req);
 };
 
 const onError = () => {
-  console.log('Atmosphere error');
-  onConnectionLoss && onConnectionLoss();
+  callbacks.onConnectionLoss && callbacks.onConnectionLoss();
 };
 
 const onClientTimeout = () => {
-  console.log('Atmosphere client timeout');
-  onConnectionLoss && onConnectionLoss();
+  callbacks.onConnectionLoss && callbacks.onConnectionLoss();
 };
 
 const onClose = () => {
-  console.log('Atmosphere connection closed');
+  callbacks.onClose && callbacks.onClose();
 };

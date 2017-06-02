@@ -2,22 +2,22 @@
 import * as API from './apiCalls';
 import {setGlobals, checkRequiredSettings} from './globals';
 import {connectSocket} from './websockets';
-import type {QuiqChatSettings, AtmosphereMessage} from 'types';
+import type {QuiqChatSettings, AtmosphereMessage, WebsocketCallbacks} from 'types';
 
-export const init = (settings: QuiqChatSettings) => {
-  setGlobals(settings);
+export const init = (settings: {HOST: string, CONTACT_POINT?: string}) => {
+  const defaults = {
+    CONTACT_POINT: 'default',
+  };
+
+  const globals = Object.assign({}, defaults, settings);
+
+  setGlobals(globals);
 };
 
-type Callbacks = {
-  onConnectionLoss: () => void,
-  onConnectionEstablish: () => void,
-  handleMessage: (message: AtmosphereMessage) => void,
-};
-
-export const subscribe = async (callbacks: Callbacks) => {
+export const subscribe = async (callbacks: WebsocketCallbacks) => {
   checkRequiredSettings();
   const wsInfo: {url: string} = await API.fetchWebsocketInfo();
-  connectSocket({socketUrl: wsInfo.url, options: callbacks});
+  connectSocket({socketUrl: wsInfo.url, callbacks});
 };
 
 export const joinChat = () => {
