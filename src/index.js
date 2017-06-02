@@ -4,8 +4,14 @@ import {setGlobals, checkRequiredSettings} from './globals';
 import {connectSocket} from './websockets';
 import type {QuiqChatSettings, AtmosphereMessage} from 'types';
 
-export const init = (settings: QuiqChatSettings) => {
-  setGlobals(settings);
+export const init = (settings: {HOST: string, CONTACT_POINT?: string}) => {
+  const defaults = {
+    CONTACT_POINT: 'default',
+  };
+
+  const globals = Object.assign({}, defaults, settings);
+
+  setGlobals(globals);
 };
 
 type Callbacks = {
