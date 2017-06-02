@@ -24,7 +24,7 @@ describe('quiq-chat', () => {
     const callbacks = {
       onConnectionLoss() {},
       onConnectionEstablish() {},
-      handleMessage() {},
+      onMessage() {},
     };
 
     beforeEach(() => {
@@ -34,7 +34,7 @@ describe('quiq-chat', () => {
     });
 
     it('calls connectSocket', () => {
-      expect(connectSocket).toBeCalledWith({socketUrl: 'www.fakesite.com', options: callbacks});
+      expect(connectSocket).toBeCalledWith({socketUrl: 'www.fakesite.com', callbacks});
     });
   });
 });

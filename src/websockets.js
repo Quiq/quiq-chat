@@ -7,12 +7,11 @@ import type {
   AtmosphereConnection,
   AtmosphereConnectionBuilder,
   AtmosphereMessage,
+  WebsocketCallbacks,
 } from 'types';
 
 let connection: AtmosphereConnection;
-let onConnectionLoss: () => void;
-let onConnectionEstablish: () => void;
-let handleMessage: (message: AtmosphereMessage) => void;
+let callbacks: WebsocketCallbacks;
 let ie9Ping: number;
 
 const buildRequest = (socketUrl: string) => {
@@ -49,11 +48,9 @@ const buildRequest = (socketUrl: string) => {
 };
 
 export const connectSocket = (builder: AtmosphereConnectionBuilder) => {
-  const {socketUrl, options} = builder;
+  const {socketUrl, callbacks: websocketCallbacks} = builder;
 
-  onConnectionLoss = options.onConnectionLoss;
-  onConnectionEstablish = options.onConnectionEstablish;
-  handleMessage = options.handleMessage;
+  callbacks = websocketCallbacks;
 
   if (isIE9() && !ie9Ping) {
     // JSONP seems to be a bit unreliable, but we can prod it by periodically pinging the server...
@@ -71,11 +68,11 @@ export const disconnectSocket = () => {
 const onOpen = response => {
   // Carry the UUID. This is required if you want to call subscribe(request) again.
   connection.request.uuid = response.request.uuid;
-  onConnectionEstablish && onConnectionEstablish();
+  callbacks.onConnectionEstablish && callbacks.onConnectionEstablish();
 };
 
 const onReopen = () => {
-  onConnectionEstablish && onConnectionEstablish();
+  callbacks.onConnectionEstablish && callbacks.onConnectionEstablish();
 };
 
 const onReconnect = (req: AtmosphereRequest) => {
@@ -93,7 +90,7 @@ const onMessage = res => {
   let message;
   try {
     message = atmosphere.util.parseJSON(res.responseBody);
-    handleMessage && handleMessage(message);
+    callbacks.onMessage && callbacks.onMessage(message);
   } catch (e) {
     console.error('Error parsing Quiq websocket message');
     return;
@@ -101,17 +98,17 @@ const onMessage = res => {
 };
 
 const onTransportFailure = (errorMsg: string, req: AtmosphereRequest) => {
-  // TODO: Add onTransportFailure
+  callbacks.onTransportFailure && callbacks.onTransportFailure(errorMsg, req);
 };
 
 const onError = () => {
-  onConnectionLoss && onConnectionLoss();
+  callbacks.onConnectionLoss && callbacks.onConnectionLoss();
 };
 
 const onClientTimeout = () => {
-  onConnectionLoss && onConnectionLoss();
+  callbacks.onConnectionLoss && callbacks.onConnectionLoss();
 };
 
 const onClose = () => {
-  // TODO: Add onClose
+  callbacks.onClose && callbacks.onClose();
 };

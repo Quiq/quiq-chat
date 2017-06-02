@@ -59,11 +59,7 @@ export type AtmosphereResponse = {
 
 export type AtmosphereConnectionBuilder = {
   socketUrl: string,
-  options: {
-    onConnectionLoss: () => void,
-    onConnectionEstablish: () => void,
-    handleMessage: (message: AtmosphereMessage) => void,
-  },
+  callbacks: WebsocketCallbacks,
 };
 
 export type AtmosphereConnection = {
@@ -97,6 +93,14 @@ export type AtmosphereMessage = {
   data: Object,
   messageType: MessageType,
   tenantId: string,
+};
+
+export type WebsocketCallbacks = {
+  onConnectionLoss?: () => void,
+  onConnectionEstablish?: () => void,
+  onMessage?: (message: AtmosphereMessage) => void,
+  onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => void,
+  onClose?: () => void,
 };
 
 export type BrowserNames =
