@@ -73,6 +73,9 @@ The `message` object in `handleMessage` is of the type
 }
 ```
 
+### unsubscribe() => void
+Unsubscribes from the current websocket connection
+
 ### fetchConversation() => Promise\<Conversation\>
 Fetches the current conversation object from Quiq
 
