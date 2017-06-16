@@ -1,7 +1,7 @@
 // @flow
 import * as API from './apiCalls';
 import {setGlobals, checkRequiredSettings} from './globals';
-import {connectSocket} from './websockets';
+import {connectSocket, disconnectSocket} from './websockets';
 import type {QuiqChatSettings, AtmosphereMessage, WebsocketCallbacks} from 'types';
 
 export const init = (settings: {HOST: string, CONTACT_POINT?: string}) => {
@@ -18,6 +18,11 @@ export const subscribe = async (callbacks: WebsocketCallbacks) => {
   checkRequiredSettings();
   const wsInfo: {url: string} = await API.fetchWebsocketInfo();
   connectSocket({socketUrl: wsInfo.url, callbacks});
+};
+
+export const unsubscribe = () => {
+  checkRequiredSettings();
+  disconnectSocket();
 };
 
 export const joinChat = () => {
