@@ -25,6 +25,7 @@ const buildRequest = (socketUrl: string) => {
   return {
     url: `https://${socketUrl}`,
     enableXDR: true,
+    headers: {'X-Quiq-Line': '1'},
     withCredentials: true,
     contentType: 'application/json',
     logLevel: 'error',
