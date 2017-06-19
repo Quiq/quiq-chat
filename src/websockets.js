@@ -32,7 +32,7 @@ const buildRequest = (socketUrl: string) => {
     transport,
     fallbackTransport: 'long-polling',
     trackMessageLength: true,
-    maxReconnectOnClose: Number.MAX_SAFE_INTEGER,
+    maxReconnectOnClose: 100,
     // Keep reconnectInterval at 10 seconds.  Otherwise if API-GW drops the atmosphere connection,
     // we will hammer them with onReconnect requests. See SER-2620
     reconnectInterval: 10000,
