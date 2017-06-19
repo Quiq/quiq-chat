@@ -9,6 +9,7 @@
     "flow": "flow",
     "jest": "jest --watch --env=jsdom",
     "build": "rollup -c",
+    "prepublish": "rollup -c",
     "precommit": "lint-staged"
   },
   "lint-staged": {
