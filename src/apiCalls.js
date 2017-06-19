@@ -12,6 +12,8 @@ const parseResponse = (response: Response): Promise<*> => {
   return response.json();
 };
 
+const quiqLine = {'X-Quiq-Line': '1'};
+
 export const joinChat = () => {
   fetch(`${getUrlForContactPoint()}/join`, {
     mode: 'cors',
@@ -20,6 +22,7 @@ export const joinChat = () => {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      ...quiqLine,
     },
   });
 };
@@ -32,6 +35,7 @@ export const leaveChat = () => {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      ...quiqLine,
     },
   });
 };
@@ -44,6 +48,7 @@ export const addMessage = (text: string) => {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      ...quiqLine,
     },
     body: JSON.stringify({text}),
   });
@@ -53,6 +58,7 @@ export const fetchWebsocketInfo = (): Promise<{url: string}> =>
   fetch(`${getUrlForContactPoint()}/socket-info`, {
     mode: 'cors',
     credentials: 'include',
+    headers: quiqLine,
   }).then(parseResponse);
 
 // Use socket-info as a ping since the ping endpoint isn't publicly exposed
@@ -62,6 +68,7 @@ export const fetchConversation = (): Promise<Conversation> =>
   fetch(`${getUrlForContactPoint()}`, {
     mode: 'cors',
     credentials: 'include',
+    headers: quiqLine,
   }).then(parseResponse);
 
 export const updateMessagePreview = (text: string, typing: boolean) => {
@@ -72,6 +79,7 @@ export const updateMessagePreview = (text: string, typing: boolean) => {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      ...quiqLine,
     },
     body: JSON.stringify({text, typing}),
   });
@@ -88,6 +96,7 @@ export const checkForAgents = (): Promise<{available: boolean}> =>
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
+        ...quiqLine,
       },
     },
   ).then(parseResponse);

@@ -25,13 +25,14 @@ const buildRequest = (socketUrl: string) => {
   return {
     url: `https://${socketUrl}`,
     enableXDR: true,
+    headers: {'X-Quiq-Line': '1'},
     withCredentials: true,
     contentType: 'application/json',
     logLevel: 'error',
     transport,
     fallbackTransport: 'long-polling',
     trackMessageLength: true,
-    maxReconnectOnClose: Number.MAX_SAFE_INTEGER,
+    maxReconnectOnClose: 100,
     // Keep reconnectInterval at 10 seconds.  Otherwise if API-GW drops the atmosphere connection,
     // we will hammer them with onReconnect requests. See SER-2620
     reconnectInterval: 10000,
