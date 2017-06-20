@@ -16,6 +16,7 @@ export const init = (settings: {HOST: string, CONTACT_POINT?: string}) => {
 
 export const subscribe = async (callbacks: WebsocketCallbacks) => {
   checkRequiredSettings();
+  disconnectSocket(); // Ensure we only have one websocket connection open
   const wsInfo: {url: string} = await API.fetchWebsocketInfo();
   connectSocket({socketUrl: wsInfo.url, callbacks});
 };
