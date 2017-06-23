@@ -85,6 +85,19 @@ export const updateMessagePreview = (text: string, typing: boolean) => {
   });
 };
 
+export const sendRegistration = (fields: Map<string, string>) =>
+  fetch(`${getUrlForContactPoint()}/register`, {
+    mode: 'cors',
+    credentials: 'include',
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      ...quiqLine,
+    },
+    body: JSON.stringify({form: fields}),
+  });
+
 export const checkForAgents = (): Promise<{available: boolean}> =>
   fetch(
     formatQueryParams(`${getPublicApiUrl()}/agents-available`, {
