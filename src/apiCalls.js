@@ -85,7 +85,7 @@ export const updateMessagePreview = (text: string, typing: boolean) => {
   });
 };
 
-export const sendRegistration = (fields: Map<string, string>) =>
+export const sendRegistration = (fields: {[string]: string}) =>
   fetch(`${getUrlForContactPoint()}/register`, {
     mode: 'cors',
     credentials: 'include',

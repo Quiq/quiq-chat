@@ -56,7 +56,7 @@ export const checkForAgents = () => {
   return API.checkForAgents();
 };
 
-export const sendRegistration = (fields: Map<string, string>) => {
+export const sendRegistration = (fields: {[string]: string}) => {
   checkRequiredSettings();
   return API.sendRegistration(fields);
 };
