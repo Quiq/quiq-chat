@@ -94,6 +94,10 @@ Sends a message to Quiq Messaging that the end user is typing and what they've t
 ### checkForAgents() => Promise<{available: boolean}>
 Fetches whether or not there are agents available for the contact point the webchat is connected to
 
+### sendRegistration() => Promise<void>
+Submits a map of custom `(key, value)` pairs to be included in the data for the current chat.
+`key` is limited to 80 characters and must be unique; `value` is limited to 1000 characters.
+
 ## Data types
 
 ### Message
