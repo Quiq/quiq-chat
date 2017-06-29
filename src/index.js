@@ -22,7 +22,7 @@ export const subscribe = async (callbacks: WebsocketCallbacks) => {
 };
 
 export const unsubscribe = () => {
-  checkRequiredSettings();
+  // Don't check requiredSettings here.  We don't want to block the client from disconnecting.
   disconnectSocket();
 };
 
