@@ -60,6 +60,10 @@ subscribe({
 
   onClose() {
     // Called if the websocket connection gets closed for some reason
+  },
+
+  onBurn(burnData) {
+    // Called if the client gets in a bad state and can't make any more network requests (need to hit refresh)
   }
 });
 ```
