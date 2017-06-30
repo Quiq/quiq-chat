@@ -1,5 +1,7 @@
 // @flow
 
+// TODO: Implement a way to fire an event when all errors are clear. Maybe have an onErrorResolution callback or pass null to the onError callback.
+
 import * as API from './apiCalls';
 import {setGlobals, checkRequiredSettings} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
@@ -24,7 +26,7 @@ const getConversationMessages = async () => {
   return conversation.messages.filter(
     m =>
       m.type === MessageTypes.TEXT &&
-      !m.text.includes('Quiq Welcome Form Customer Submission').trim(),
+      !m.text.trim().includes('Quiq Welcome Form Customer Submission'),
   );
 };
 
@@ -91,7 +93,8 @@ class QuiqChatClient {
         },
       });
 
-      (this.callbacks['onError'] || Function)(err);
+      // Todo: Resolve all errors on connection
+
       (this.callbacks['onConnectionStatusChange'] || Function)(true);
     } catch (err) {
       console.error(err);
@@ -160,10 +163,10 @@ class QuiqChatClient {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
       switch (message.data.type) {
         case 'Text':
-          if (!this.messages.some(m => m.id === message.id)) {
+          if (!this.messages.some(m => m.id === message.data.id)) {
             this.messages.push(message.data);
+            (this.callbacks['onNewMessages'] || Function)([message.data]);
           }
-          (this.callbacks['onNewMessages'] || Function)([message.data]);
           break;
         case 'AgentTyping':
           (this.callbacks['onAgentTyping'] || Function)(message.data.typing);
