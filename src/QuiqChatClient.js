@@ -1,7 +1,4 @@
 // @flow
-
-// TODO: Implement a way to fire an event when all errors are clear. Maybe have an onErrorResolution callback or pass null to the onError callback.
-
 import * as API from './apiCalls';
 import {setGlobals, checkRequiredSettings} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
@@ -23,6 +20,7 @@ type QuiqChatCallbacks = {
   onNewMessages?: (messages: Array<Message>) => void,
   onAgentTyping?: (typing: boolean) => void,
   onError?: (error: ?ApiError) => void,
+  onErrorResolved?: () => void,
   onConnectionStatusChange?: (connected: boolean) => void,
 };
 
@@ -61,6 +59,11 @@ class QuiqChatClient {
     return this;
   };
 
+  onErrorResolved = (callback: () => void): QuiqChatClient => {
+    this.callbacks.onErrorResolved = callback;
+    return this;
+  };
+
   onConnectionStatusChange = (callback: (connected: boolean) => void): QuiqChatClient => {
     this.callbacks.onConnectionStatusChange = callback;
     return this;
@@ -87,6 +90,7 @@ class QuiqChatClient {
       // Establish websocket connection
       disconnectSocket(); // Ensure we only have one websocket connection open
       const wsInfo: {url: string} = await API.fetchWebsocketInfo();
+
       connectSocket({
         socketUrl: wsInfo.url,
         callbacks: {
@@ -100,6 +104,9 @@ class QuiqChatClient {
 
       if (this.callbacks.onConnectionStatusChange) {
         this.callbacks.onConnectionStatusChange(true);
+      }
+      if (this.callbacks.onErrorResolved) {
+        this.callbacks.onErrorResolved();
       }
     } catch (err) {
       console.error(err);
