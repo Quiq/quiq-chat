@@ -245,4 +245,10 @@ export type ApiError = {
   status?: number,
 };
 
+export type CookieDef = {
+  id: string,
+  expiration?: number,
+  path?: string,
+};
+
 export type UserEventTypes = 'Join' | 'Leave';
