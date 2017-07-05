@@ -34,6 +34,7 @@ describe('QuiqChatClient', () => {
   const onError = jest.fn();
   const onErrorResolved = jest.fn();
   const onConnectionStatusChange = jest.fn();
+  const onBurn = jest.fn();
   const host = 'https://test.goquiq.fake';
   const contactPoint = 'test';
   const API = (ApiCalls: Object);
@@ -48,7 +49,8 @@ describe('QuiqChatClient', () => {
       .onAgentTyping(onAgentTyping)
       .onError(onError)
       .onErrorResolved(onErrorResolved)
-      .onConnectionStatusChange(onConnectionStatusChange);
+      .onConnectionStatusChange(onConnectionStatusChange)
+      .onBurn(onBurn);
 
     client.start();
   });
@@ -92,7 +94,8 @@ describe('QuiqChatClient', () => {
         .onAgentTyping(onAgentTyping)
         .onError(onError)
         .onErrorResolved(onErrorResolved)
-        .onConnectionStatusChange(onConnectionStatusChange);
+        .onConnectionStatusChange(onConnectionStatusChange)
+        .onBurn(onBurn);
 
       client.start();
     });
@@ -119,6 +122,7 @@ describe('QuiqChatClient', () => {
         .onError(onError)
         .onErrorResolved(onErrorResolved)
         .onConnectionStatusChange(onConnectionStatusChange)
+        .onBurn(onBurn)
         .start();
     });
 
@@ -180,6 +184,24 @@ describe('QuiqChatClient', () => {
 
     it('calls onAgentTyping', () => {
       expect(onAgentTyping).toBeCalledWith(true);
+    });
+  });
+
+  describe('client gets burned', () => {
+    beforeEach(() => {
+      if (!client) {
+        throw new Error('Client should be defined');
+      }
+
+      client._handleWebsocketMessage({
+        messageType: 'ChatMessage',
+        tenantId: 'test',
+        data: {type: 'BurnItDown'},
+      });
+    });
+
+    it('calls onBurn', () => {
+      expect(onBurn).toBeCalled();
     });
   });
 

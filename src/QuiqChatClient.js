@@ -22,6 +22,7 @@ export type QuiqChatCallbacks = {
   onError?: (error: ?ApiError) => void,
   onErrorResolved?: () => void,
   onConnectionStatusChange?: (connected: boolean) => void,
+  onBurn?: () => void,
 };
 
 class QuiqChatClient {
@@ -66,6 +67,11 @@ class QuiqChatClient {
 
   onConnectionStatusChange = (callback: (connected: boolean) => void): QuiqChatClient => {
     this.callbacks.onConnectionStatusChange = callback;
+    return this;
+  };
+
+  onBurn = (callback: () => void): QuiqChatClient => {
+    this.callbacks.onBurn = callback;
     return this;
   };
 
@@ -183,6 +189,13 @@ class QuiqChatClient {
         case 'AgentTyping':
           if (this.callbacks.onAgentTyping) {
             this.callbacks.onAgentTyping(message.data.typing);
+          }
+          break;
+        case 'BurnItDown':
+          // The BurnItDown script for this lives in the websockets file, but if we get this message
+          // we'll want to let the app know that they're burned
+          if (this.callbacks.onBurn) {
+            this.callbacks.onBurn();
           }
           break;
       }
