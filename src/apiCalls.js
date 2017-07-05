@@ -1,7 +1,7 @@
 // @flow
-import fetch from 'isomorphic-fetch';
 import {formatQueryParams} from './utils';
 import {getUrlForContactPoint, getPublicApiUrl, getContactPoint} from './globals';
+import quiqFetch from './quiqFetch';
 import type {Conversation} from 'types';
 
 const parseResponse = (response: Response): Promise<*> => {
@@ -12,104 +12,52 @@ const parseResponse = (response: Response): Promise<*> => {
   return response.json();
 };
 
-const quiqLine = {'X-Quiq-Line': '1'};
-
 export const joinChat = () => {
-  fetch(`${getUrlForContactPoint()}/join`, {
-    mode: 'cors',
-    credentials: 'include',
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...quiqLine,
-    },
-  });
+  quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST', credentials: 'include'});
 };
 
 export const leaveChat = () => {
-  fetch(`${getUrlForContactPoint()}/leave`, {
-    mode: 'cors',
-    credentials: 'include',
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...quiqLine,
-    },
-  });
+  quiqFetch(`${getUrlForContactPoint()}/leave`, {method: 'POST', credentials: 'include'});
 };
 
 export const addMessage = (text: string) => {
-  fetch(`${getUrlForContactPoint()}/send-message`, {
-    mode: 'cors',
-    credentials: 'include',
+  quiqFetch(`${getUrlForContactPoint()}/send-message`, {
     method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...quiqLine,
-    },
+    credentials: 'include',
     body: JSON.stringify({text}),
   });
 };
 
 export const fetchWebsocketInfo = (): Promise<{url: string}> =>
-  fetch(`${getUrlForContactPoint()}/socket-info`, {
-    mode: 'cors',
-    credentials: 'include',
-    headers: quiqLine,
-  }).then(parseResponse);
+  quiqFetch(`${getUrlForContactPoint()}/socket-info`, {credentials: 'include'}, null).then(
+    parseResponse,
+  );
 
 // Use socket-info as a ping since the ping endpoint isn't publicly exposed
 export const ping = () => fetchWebsocketInfo();
 
 export const fetchConversation = (): Promise<Conversation> =>
-  fetch(`${getUrlForContactPoint()}`, {
-    mode: 'cors',
-    credentials: 'include',
-    headers: quiqLine,
-  }).then(parseResponse);
+  quiqFetch(getUrlForContactPoint(), {credentials: 'include'}, null).then(parseResponse);
 
 export const updateMessagePreview = (text: string, typing: boolean) => {
-  fetch(`${getUrlForContactPoint()}/typing`, {
-    mode: 'cors',
-    credentials: 'include',
+  quiqFetch(`${getUrlForContactPoint()}/typing`, {
     method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...quiqLine,
-    },
+    credentials: 'include',
     body: JSON.stringify({text, typing}),
   });
 };
 
 export const sendRegistration = (fields: {[string]: string}) =>
-  fetch(`${getUrlForContactPoint()}/register`, {
-    mode: 'cors',
-    credentials: 'include',
+  quiqFetch(`${getUrlForContactPoint()}/register`, {
     method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...quiqLine,
-    },
+    credentials: 'include',
     body: JSON.stringify({form: fields}),
   });
 
 export const checkForAgents = (): Promise<{available: boolean}> =>
-  fetch(
+  quiqFetch(
     formatQueryParams(`${getPublicApiUrl()}/agents-available`, {
       platform: 'Chat',
       contactPoint: getContactPoint(),
     }),
-    {
-      mode: 'cors',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        ...quiqLine,
-      },
-    },
   ).then(parseResponse);

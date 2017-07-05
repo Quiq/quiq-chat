@@ -1,12 +1,12 @@
 // @flow
 import atmosphere from 'atmosphere.js';
 import {ping} from './apiCalls';
-import {isIE9} from './utils';
+import {isIE9, burnItDown} from './utils';
 import type {
   AtmosphereRequest,
+  AtmosphereResponse,
   AtmosphereConnection,
   AtmosphereConnectionBuilder,
-  AtmosphereMessage,
   WebsocketCallbacks,
 } from 'types';
 
@@ -21,7 +21,6 @@ const buildRequest = (socketUrl: string) => {
     transport = 'jsonp';
   }
 
-  /* eslint-disable no-use-before-define */
   return {
     url: `https://${socketUrl}`,
     enableXDR: true,
@@ -45,7 +44,6 @@ const buildRequest = (socketUrl: string) => {
     onError,
     onClientTimeout,
   };
-  /* eslint-disable no-use-before-define */
 };
 
 export const connectSocket = (builder: AtmosphereConnectionBuilder) => {
@@ -87,14 +85,19 @@ const onReconnect = (req: AtmosphereRequest) => {
   }
 };
 
-const onMessage = res => {
+const onMessage = (res: AtmosphereResponse) => {
   let message;
   try {
     message = atmosphere.util.parseJSON(res.responseBody);
+    if (message.messageType === 'BurnItDown') {
+      burnItDown(message.data);
+      if (callbacks.onBurn) callbacks.onBurn(message.data);
+      return;
+    }
+
     callbacks.onMessage && callbacks.onMessage(message);
   } catch (e) {
-    console.error('Error parsing Quiq websocket message');
-    return;
+    console.error('Error parsing Quiq websocket message'); // eslint-disable-line no-console
   }
 };
 

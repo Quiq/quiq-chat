@@ -1,6 +1,12 @@
 // @flow
 import type {QuiqChatSettings} from 'types';
 
+let burned = false;
+export const getBurned = () => burned;
+export const setBurned = () => {
+  burned = true;
+};
+
 let quiqChatSettings: QuiqChatSettings;
 
 const defaults = {
@@ -12,6 +18,10 @@ export const setGlobals = (globals: QuiqChatSettings) => {
 };
 
 export const checkRequiredSettings = () => {
+  if (getBurned()) {
+    throw new Error('Client in bad state. Aborting call.');
+  }
+
   if (!quiqChatSettings || !quiqChatSettings.HOST || !quiqChatSettings.CONTACT_POINT) {
     throw new Error(
       `

@@ -3,11 +3,12 @@
 export type QuiqChatSettings = {
   HOST: string,
   CONTACT_POINT: string,
+  BURNED?: boolean,
 };
 
 export type EventType = 'Text' | 'Join' | 'Leave';
 export type AuthorType = 'Customer' | 'Agent';
-export type MessageType = 'Text' | 'ChatMessage';
+export type MessageType = 'Text' | 'ChatMessage' | 'BurnItDown';
 
 export type Message = {
   authorType: AuthorType,
@@ -57,6 +58,12 @@ export type AtmosphereResponse = {
   state: string,
 };
 
+export type BurnItDownResponse = {
+  code: 466,
+  before?: number,
+  force?: boolean,
+};
+
 export type AtmosphereConnectionBuilder = {
   socketUrl: string,
   callbacks: WebsocketCallbacks,
@@ -101,6 +108,7 @@ export type WebsocketCallbacks = {
   onMessage?: (message: AtmosphereMessage) => void,
   onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => void,
   onClose?: () => void,
+  onBurn?: (burnData: BurnItDownResponse) => void,
 };
 
 export type BrowserNames =
