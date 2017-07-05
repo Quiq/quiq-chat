@@ -1,12 +1,13 @@
 {
   "name": "quiq-chat",
-  "version": "1.2.0-dev2",
+  "version": "1.2.0-dev3",
   "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
     "start": "./node_modules/.bin/nodemon --watch src -e js,sass --exec npm run build",
-    "test": "flow && jest --env=jsdom --coverage",
+    "lint": "node ./node_modules/eslint/bin/eslint.js src/",
+    "test": "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
     "flow": "flow",
     "jest": "jest --watch --env=jsdom",
     "build": "rollup -c",

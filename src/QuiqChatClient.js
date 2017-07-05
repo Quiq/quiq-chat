@@ -16,7 +16,7 @@ const getConversationMessages = async () => {
   );
 };
 
-type QuiqChatCallbacks = {
+export type QuiqChatCallbacks = {
   onNewMessages?: (messages: Array<Message>) => void,
   onAgentTyping?: (typing: boolean) => void,
   onError?: (error: ?ApiError) => void,
@@ -99,8 +99,6 @@ class QuiqChatClient {
           onMessage: this._handleWebsocketMessage,
         },
       });
-
-      // Todo: Resolve all errors on connection
 
       if (this.callbacks.onConnectionStatusChange) {
         this.callbacks.onConnectionStatusChange(true);

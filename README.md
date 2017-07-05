@@ -88,6 +88,9 @@ Called when a connection is established or terminated
 #### start() => Promise<[QuiqChatClient](#quiqchatclient)>
 Establishes the connection to QuiqMessaging
 
+#### stop() => void
+Disconnects the websocket from Quiq
+
 ### Other methods
 
 #### subscribe(callbacks: WebsocketCallbacks) => void
