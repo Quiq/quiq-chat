@@ -140,7 +140,7 @@ module.exports = {
     'no-mixed-operators': 0,
 
     // Things that should be fixed
-    'no-use-before-define': [1, {functions: false}], // These seem worth fixing (no auto-fix :/ 95 occurances)
+    'no-use-before-define': 0,
     'no-param-reassign': 1,
     'no-shadow': 1,
     'react/no-did-update-set-state': 1,

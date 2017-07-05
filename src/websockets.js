@@ -21,7 +21,6 @@ const buildRequest = (socketUrl: string) => {
     transport = 'jsonp';
   }
 
-  /* eslint-disable no-use-before-define */
   return {
     url: `https://${socketUrl}`,
     enableXDR: true,
@@ -45,7 +44,6 @@ const buildRequest = (socketUrl: string) => {
     onError,
     onClientTimeout,
   };
-  /* eslint-disable no-use-before-define */
 };
 
 export const connectSocket = (builder: AtmosphereConnectionBuilder) => {
