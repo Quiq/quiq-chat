@@ -7,7 +7,6 @@ import type {
   AtmosphereResponse,
   AtmosphereConnection,
   AtmosphereConnectionBuilder,
-  AtmosphereMessage,
   WebsocketCallbacks,
 } from 'types';
 
@@ -100,8 +99,7 @@ const onMessage = (res: AtmosphereResponse) => {
 
     callbacks.onMessage && callbacks.onMessage(message);
   } catch (e) {
-    console.error('Error parsing Quiq websocket message');
-    return;
+    console.error('Error parsing Quiq websocket message'); // eslint-disable-line no-console
   }
 };
 

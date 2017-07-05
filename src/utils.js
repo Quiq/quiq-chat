@@ -46,7 +46,7 @@ export const burnItDown = (message?: BurnItDownResponse) => {
   }
 
   setTimeout(() => {
-    unsubscribe();
     setBurned();
+    unsubscribe();
   }, timeToBurnItDown);
 };

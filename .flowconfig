@@ -14,3 +14,5 @@ esproposal.class_instance_fields=enable
 suppress_comment= \\(.\\|\n\\)*\\$FlowIssue
 emoji=true
 
+[libs]
+flow-typed/npm/

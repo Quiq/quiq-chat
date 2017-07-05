@@ -2,7 +2,7 @@
 import * as API from './apiCalls';
 import {setGlobals, checkRequiredSettings} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
-import type {QuiqChatSettings, AtmosphereMessage, WebsocketCallbacks} from 'types';
+import type {WebsocketCallbacks} from 'types';
 
 export const init = (settings: {HOST: string, CONTACT_POINT?: string}) => {
   const defaults = {

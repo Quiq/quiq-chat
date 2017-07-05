@@ -1,6 +1,8 @@
 // @flow
 jest.mock('atmosphere.js');
+jest.mock('../utils');
 import * as Websockets from '../websockets';
+import * as Utils from '../utils';
 import atmosphere from 'atmosphere.js';
 
 describe('Websockets', () => {
@@ -11,6 +13,7 @@ describe('Websockets', () => {
     onMessage: jest.fn(),
     onTransportFailure: jest.fn(),
     onClose: jest.fn(),
+    onBurn: jest.fn(),
   };
 
   describe('connectSocket', () => {
@@ -64,20 +67,31 @@ describe('Websockets', () => {
       });
 
       describe('onMessage', () => {
-        const message = {
-          data: {favoriteNumber: 7},
-          messageType: 'Text',
-          tenantId: 'test',
-        };
-
+        let message;
         beforeEach(() => {
-          buildRequest.onMessage({
-            responseBody: JSON.stringify(message),
-          });
+          message = {
+            data: {favoriteNumber: 7},
+            messageType: 'Text',
+            tenantId: 'test',
+          };
         });
 
         it('calls onMessage callback', () => {
+          buildRequest.onMessage({
+            responseBody: JSON.stringify(message),
+          });
           expect(callbacks.onMessage).toBeCalledWith(message);
+        });
+
+        describe('burnItDown message', () => {
+          it('calls burnItDown', () => {
+            message.messageType = 'BurnItDown';
+            buildRequest.onMessage({
+              responseBody: JSON.stringify(message),
+            });
+            expect(Utils.burnItDown).toBeCalledWith(message.data);
+            expect(callbacks.onBurn).toBeCalledWith(message.data);
+          });
         });
       });
 

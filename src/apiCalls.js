@@ -1,7 +1,7 @@
 // @flow
 import {formatQueryParams} from './utils';
 import {getUrlForContactPoint, getPublicApiUrl, getContactPoint} from './globals';
-import fetch from './fetch';
+import quiqFetch from './quiqFetch';
 import type {Conversation} from 'types';
 
 const parseResponse = (response: Response): Promise<*> => {
@@ -13,15 +13,15 @@ const parseResponse = (response: Response): Promise<*> => {
 };
 
 export const joinChat = () => {
-  fetch(`${getUrlForContactPoint()}/join`, {method: 'POST', credentials: 'include'});
+  quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST', credentials: 'include'});
 };
 
 export const leaveChat = () => {
-  fetch(`${getUrlForContactPoint()}/leave`, {method: 'POST', credentials: 'include'});
+  quiqFetch(`${getUrlForContactPoint()}/leave`, {method: 'POST', credentials: 'include'});
 };
 
 export const addMessage = (text: string) => {
-  fetch(`${getUrlForContactPoint()}/send-message`, {
+  quiqFetch(`${getUrlForContactPoint()}/send-message`, {
     method: 'POST',
     credentials: 'include',
     body: JSON.stringify({text}),
@@ -29,7 +29,7 @@ export const addMessage = (text: string) => {
 };
 
 export const fetchWebsocketInfo = (): Promise<{url: string}> =>
-  fetch(`${getUrlForContactPoint()}/socket-info`, {credentials: 'include'}, null).then(
+  quiqFetch(`${getUrlForContactPoint()}/socket-info`, {credentials: 'include'}, null).then(
     parseResponse,
   );
 
@@ -37,10 +37,10 @@ export const fetchWebsocketInfo = (): Promise<{url: string}> =>
 export const ping = () => fetchWebsocketInfo();
 
 export const fetchConversation = (): Promise<Conversation> =>
-  fetch(getUrlForContactPoint(), {credentials: 'include'}, null).then(parseResponse);
+  quiqFetch(getUrlForContactPoint(), {credentials: 'include'}, null).then(parseResponse);
 
 export const updateMessagePreview = (text: string, typing: boolean) => {
-  fetch(`${getUrlForContactPoint()}/typing`, {
+  quiqFetch(`${getUrlForContactPoint()}/typing`, {
     method: 'POST',
     credentials: 'include',
     body: JSON.stringify({text, typing}),
@@ -48,14 +48,14 @@ export const updateMessagePreview = (text: string, typing: boolean) => {
 };
 
 export const sendRegistration = (fields: {[string]: string}) =>
-  fetch(`${getUrlForContactPoint()}/register`, {
+  quiqFetch(`${getUrlForContactPoint()}/register`, {
     method: 'POST',
     credentials: 'include',
     body: JSON.stringify({form: fields}),
   });
 
 export const checkForAgents = (): Promise<{available: boolean}> =>
-  fetch(
+  quiqFetch(
     formatQueryParams(`${getPublicApiUrl()}/agents-available`, {
       platform: 'Chat',
       contactPoint: getContactPoint(),

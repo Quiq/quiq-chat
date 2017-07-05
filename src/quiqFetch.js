@@ -1,9 +1,10 @@
 // @flow
-import isomorphicFetch from 'isomorphic-fetch';
+import fetch from 'isomorphic-fetch';
 import {burnItDown} from './utils';
 import {getBurned} from './globals';
+import {merge} from 'lodash';
 
-const fetch = (url: string, overrides?: Object, requestType: ?string = 'JSON') => {
+const quiqFetch = (url: string, overrides?: Object, requestType: ?string = 'JSON') => {
   if (getBurned()) return Promise.reject();
 
   let request: RequestOptions = {
@@ -22,12 +23,13 @@ const fetch = (url: string, overrides?: Object, requestType: ?string = 'JSON') =
   }
 
   if (overrides) {
-    request = Object.assign({}, request, overrides);
-    request.headers = Object.assign({}, request.headers, headers);
+    request.headers = merge(request.headers, headers);
+    request = merge(request, overrides);
   }
 
   request.method = request.method || 'GET';
-  return isomorphicFetch(url, request)
+
+  return fetch(url, request)
     .then(res => {
       if (res.status === 466) {
         burnItDown();
@@ -43,4 +45,4 @@ const fetch = (url: string, overrides?: Object, requestType: ?string = 'JSON') =
     });
 };
 
-export default fetch;
+export default quiqFetch;
