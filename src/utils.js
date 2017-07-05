@@ -1,6 +1,8 @@
 // @flow
 import {UAParser} from 'ua-parser-js';
-import type {BrowserNames} from 'types';
+import {unsubscribe} from './index';
+import {setBurned} from './globals';
+import type {BrowserNames, BurnItDownResponse} from 'types';
 
 /**
  * Formats the params object as query params in the url
@@ -35,3 +37,16 @@ const getBrowserName = (): BrowserNames => parser.getResult().browser.name;
 const getMajor = (): number => parseInt(parser.getResult().browser.major, 10);
 
 export const isIE9 = () => getBrowserName() === 'IE' && getMajor() <= 9;
+
+export const burnItDown = (message?: BurnItDownResponse) => {
+  let timeToBurnItDown =
+    message && !message.force && message.before ? message.before - new Date().getTime() : 0;
+  if (timeToBurnItDown < 0) {
+    timeToBurnItDown = 0;
+  }
+
+  setTimeout(() => {
+    setBurned();
+    unsubscribe();
+  }, timeToBurnItDown);
+};

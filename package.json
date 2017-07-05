@@ -1,11 +1,12 @@
 {
   "name": "quiq-chat",
-  "version": "1.1.3",
+  "version": "1.2.0",
   "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
-    "test": "flow && jest --env=jsdom --coverage",
+    "test": "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
+    "lint": "node ./node_modules/eslint/bin/eslint.js src/",
     "flow": "flow",
     "jest": "jest --watch --env=jsdom",
     "build": "rollup -c",
@@ -33,10 +34,12 @@
   "dependencies": {
     "atmosphere.js": "https://github.com/Quiq/atmosphere-js/tarball/cf35c913143cf2c391b6bcb694ae8a47794a1b88",
     "isomorphic-fetch": "2.2.1",
+    "lodash": "4.17.4",
     "ua-parser-js": "0.7.12"
   },
   "devDependencies": {
     "babel-core": "^6.24.1",
+    "babel-eslint": "^7.2.3",
     "babel-jest": "^20.0.3",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
@@ -44,6 +47,12 @@
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "babel-preset-stage-1": "^6.24.1",
+    "eslint": "3.19.0",
+    "eslint-config-airbnb": "14.1.0",
+    "eslint-plugin-flowtype": "2.11.4",
+    "eslint-plugin-import": "2.2.0",
+    "eslint-plugin-jsx-a11y": "4.0.0",
+    "eslint-plugin-react": "6.9.0",
     "flow-bin": "^0.47.0",
     "husky": "^0.13.4",
     "jest": "^20.0.4",

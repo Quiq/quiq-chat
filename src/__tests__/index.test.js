@@ -38,5 +38,3 @@ describe('quiq-chat', () => {
     });
   });
 });
-
-// NOTE: Not adding tests for the API call passthroughs right now. If you want to, go for it
