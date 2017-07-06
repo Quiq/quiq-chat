@@ -85,6 +85,9 @@ Called whenever the error from the API has been resolved
 #### onConnectionStatusChanged(connected: boolean) => [QuiqChatClient](#quiqchatclient)
 Called when a connection is established or terminated
 
+#### onBurn() => [QuiqChatClient](#quiqchatclient)
+Called when quiq-chat gets in a fatal state and page holding webchat needs to be refreshed
+
 #### start() => Promise<[QuiqChatClient](#quiqchatclient)>
 Establishes the connection to QuiqMessaging
 
