@@ -9,8 +9,12 @@ export const setBurned = () => {
 
 let quiqChatSettings: QuiqChatSettings;
 
+const defaults = {
+  CONTACT_POINT: 'default',
+};
+
 export const setGlobals = (globals: QuiqChatSettings) => {
-  quiqChatSettings = globals;
+  quiqChatSettings = Object.assign({}, defaults, globals);
 };
 
 export const checkRequiredSettings = () => {

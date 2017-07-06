@@ -2,6 +2,7 @@
 import * as API from './apiCalls';
 import {setGlobals, checkRequiredSettings} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
+import QuiqChatClient from './QuiqChatClient';
 import type {WebsocketCallbacks} from 'types';
 
 export const init = (settings: {HOST: string, CONTACT_POINT?: string}) => {
@@ -60,3 +61,5 @@ export const sendRegistration = (fields: {[string]: string}) => {
   checkRequiredSettings();
   return API.sendRegistration(fields);
 };
+
+export default QuiqChatClient;

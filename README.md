@@ -15,6 +15,39 @@ yarn add quiq-chat
 
 ## Usage
 
+### Using `QuiqChatClient`
+
+The default export of `quiq-chat` is the `QuiqChatClient` class which will fetch information about the current webchat, initialize a websocket connection, and allow you to register callbacks so that you can keep your app's UI in sync with the webchat state.
+
+All the functions to register callbacks return the `QuiqChatClient` object so that you can chain them together. You also need to call `start()` to connect to Quiq Messaging. The `start` method returns a promise that resolves to the `QuiqChatClient`, so you can add a callback that will be executed after the connection is opened;
+
+```javascript
+import QuiqChatClient from 'quiq-chat';
+
+const client = new QuiqChatClient()
+  .onNewMessages(messages => {
+    // Update your app with the new array of messages
+  })
+  .onAgentTyping(typing => {
+    // Show or hide the typing indicator
+  })
+  .onConnectionStatusChange(connected => {
+    // Show the connection status of the app
+  })
+  .onError(error => {
+    // Show some error message
+  })
+  .onErrorResolved(() => {
+    // Remove the error message
+  })
+  .start()
+  .then(client => {
+    // Run some code after the webchat app is connected
+  });
+```
+
+### Without using `QuiqChatClient`
+
 Before `quiq-chat` can call any APIs, you need to call `init` and pass in your site's host (i.e. `https://your-company.goquiq.com`) and the contact point you want your chat client to connect to
 
 ```javascript
@@ -35,7 +68,35 @@ Trying to call any other methods before `init` will throw an error
 
 ## Documentation
 
-### subscribe(callbacks: WebsocketCallbacks) => void
+### QuiqChatClient
+
+#### onNewMessages(messages: Array<[Message](#message)>) => [QuiqChatClient](#quiqchatclient)
+Called whenever new messages are received. `messages` is an array containing all the messages in the current chat (not just the ones that are new)
+
+#### onAgentTyping(typing: boolean) => [QuiqChatClient](#quiqchatclient)
+Called whenever the support agent starts or stops typing
+
+#### onError(error: ?ApiError) => [QuiqChatClient](#quiqchatclient)
+Called whenever there is an error from the API
+
+#### onErrorResolved() => [QuiqChatClient](#quiqchatclient)
+Called whenever the error from the API has been resolved
+
+#### onConnectionStatusChanged(connected: boolean) => [QuiqChatClient](#quiqchatclient)
+Called when a connection is established or terminated
+
+#### onBurn() => [QuiqChatClient](#quiqchatclient)
+Called when quiq-chat gets in a fatal state and page holding webchat needs to be refreshed
+
+#### start() => Promise<[QuiqChatClient](#quiqchatclient)>
+Establishes the connection to QuiqMessaging
+
+#### stop() => void
+Disconnects the websocket from Quiq
+
+### Other methods
+
+#### subscribe(callbacks: WebsocketCallbacks) => void
 Opens a websocket connection and hook up some callbacks
 
 ```javascript
@@ -77,28 +138,28 @@ The `message` object in `handleMessage` is of the type
 }
 ```
 
-### unsubscribe() => void
+#### unsubscribe() => void
 Unsubscribes from the current websocket connection
 
-### fetchConversation() => Promise\<Conversation\>
+#### fetchConversation() => Promise\<Conversation\>
 Fetches the current conversation object from Quiq
 
-### addMessage(text:string) => void
+#### addMessage(text:string) => void
 Sends the text as a webchat message in to Quiq Messaging
 
-### joinChat() => void
+#### joinChat() => void
 Sends a message to Quiq Messaging that the end user has opened the chat window
 
-### leaveChat() => void
+#### leaveChat() => void
 Sends a message to Quiq Messaging that the end user has closed the chat window
 
-### updateMessagePreview(text:string, typing:boolean) => void
+#### updateMessagePreview(text:string, typing:boolean) => void
 Sends a message to Quiq Messaging that the end user is typing and what they've typed in the message field
 
-### checkForAgents() => Promise<{available: boolean}>
+#### checkForAgents() => Promise<{available: boolean}>
 Fetches whether or not there are agents available for the contact point the webchat is connected to
 
-### sendRegistration(data: {[string]: string}) => Promise<void>
+#### sendRegistration(data: {[string]: string}) => Promise<void>
 Submits a map of custom `(key, value)` pairs to be included in the data for the current chat.
 Method accepts a single parameter, a JavaScript object with values of type `String`.
 `key` is limited to 80 characters and must be unique; `value` is limited to 1000 characters.

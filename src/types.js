@@ -246,3 +246,17 @@ export type OSNames =
   | 'Windows Mobile'
   | 'Zenwalk'
   | null;
+
+export type ApiError = {
+  code?: number,
+  message?: string,
+  status?: number,
+};
+
+export type CookieDef = {
+  id: string,
+  expiration?: number,
+  path?: string,
+};
+
+export type UserEventTypes = 'Join' | 'Leave';
