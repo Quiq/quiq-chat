@@ -71,7 +71,7 @@ Trying to call any other methods before `init` will throw an error
 ### QuiqChatClient
 
 #### onNewMessages(messages: Array<[Message](#message)>) => [QuiqChatClient](#quiqchatclient)
-Called whenever new messages are received. `messages` is an array containing all the messages in the current chat (not just the ones that are new)
+Called whenever new messages are received. `messages` is an array containing the new messages in the current chat
 
 #### onAgentTyping(typing: boolean) => [QuiqChatClient](#quiqchatclient)
 Called whenever the support agent starts or stops typing
