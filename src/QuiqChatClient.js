@@ -2,22 +2,25 @@
 import * as API from './apiCalls';
 import {setGlobals, checkRequiredSettings} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
-import type {AtmosphereMessage, Message, ApiError, UserEventTypes} from './types';
+import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
 import {MessageTypes, quiqChatContinuationCookie} from './appConstants';
 import {set, get} from 'js-cookie';
-import {differenceBy, last} from 'lodash';
+import {differenceBy, last, partition} from 'lodash';
+import {sortByTimestamp} from './utils';
 
-const getConversationMessages = async () => {
+const getConversation = async (): Promise<{events: Array<Event>, messages: Array<TextMessage>}> => {
   const conversation = await API.fetchConversation();
-  return conversation.messages.filter(
-    m =>
-      m.type === MessageTypes.TEXT &&
-      !m.text.trim().includes('Quiq Welcome Form Customer Submission'),
+  const partitionedConversation = partition(conversation.messages, {type: MessageTypes.TEXT});
+  // NOTE: For backwards compatibility, we must filter out 'Quiq Welcome Form Customer Submission' textMessages
+  const messages = partitionedConversation[0].filter(
+    m => !m.text.trim().includes('Quiq Welcome Form Customer Submission'),
   );
+  const events = partitionedConversation[1];
+  return {messages, events};
 };
 
 export type QuiqChatCallbacks = {
-  onNewMessages?: (messages: Array<Message>) => void,
+  onNewMessages?: (messages: Array<TextMessage>) => void,
   onAgentTyping?: (typing: boolean) => void,
   onError?: (error: ?ApiError) => void,
   onErrorResolved?: () => void,
@@ -29,13 +32,19 @@ class QuiqChatClient {
   host: string;
   contactPoint: string;
   callbacks: QuiqChatCallbacks;
-  messages: Array<Message>;
+  textMessages: Array<TextMessage>;
+  events: Array<Event>;
+  connected: boolean;
+  userIsRegistered: boolean;
 
   constructor(host: string, contactPoint: string) {
     this.host = host;
     this.contactPoint = contactPoint;
     this.callbacks = {};
-    this.messages = [];
+    this.textMessages = [];
+    this.events = [];
+    this.userIsRegistered = false;
+    this.connected = false;
 
     setGlobals({
       HOST: this.host,
@@ -45,7 +54,7 @@ class QuiqChatClient {
 
   /*** Fluent client builder functions: these all return the client object ***/
 
-  onNewMessages = (callback: (messages: Array<Message>) => void): QuiqChatClient => {
+  onNewMessages = (callback: (messages: Array<TextMessage>) => void): QuiqChatClient => {
     this.callbacks.onNewMessages = callback;
     return this;
   };
@@ -79,14 +88,16 @@ class QuiqChatClient {
     checkRequiredSettings();
 
     try {
-      // Order Matters here.  Ensure we succesfully complete this fetchConversation request before connecting to
+      // Order Matters here.  Ensure we successfully complete this fetchConversation request before connecting to
       // the websocket below!
-      this.messages = await getConversationMessages();
+      const {messages, events} = await getConversation();
 
-      // Fire onNewMessages callback with initial Messages
-      if (this.callbacks.onNewMessages) {
-        this.callbacks.onNewMessages(this.messages);
-      }
+      // Process initial messages, but do not send callback. We'll send all messages in callback next.
+      this._processNewMessagesAndEvents(messages, events, false);
+
+      // Send all messages in initial newMessages callback
+      if (this.callbacks.onNewMessages && this.textMessages.length)
+        this.callbacks.onNewMessages(this.textMessages);
 
       // Set cookie
       set(quiqChatContinuationCookie.id, 'true', {
@@ -123,11 +134,13 @@ class QuiqChatClient {
     disconnectSocket();
   };
 
-  getMessages = async (cache: boolean = true): Promise<Array<Message>> => {
-    if (cache) return this.messages;
+  getMessages = async (cache: boolean = true): Promise<Array<TextMessage>> => {
+    if (!cache || !this.connected) {
+      const {messages, events} = await getConversation();
+      this._processNewMessagesAndEvents(messages, events);
+    }
 
-    this.messages = await getConversationMessages();
-    return this.messages;
+    return this.textMessages;
   };
 
   /*** API wrappers: these return Promises around the API response ***/
@@ -161,16 +174,20 @@ class QuiqChatClient {
     return get(quiqChatContinuationCookie.id);
   };
 
-  getLastUserEvent = async (): Promise<UserEventTypes | null> => {
-    const conversation = await API.fetchConversation();
-    if (conversation && conversation.messages.length) {
-      const lastStatusMessage = last(
-        conversation.messages.filter(m => m.type === 'Join' || m.type === 'Leave'),
-      );
-      if (lastStatusMessage) return lastStatusMessage.type;
+  getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
+    if (!cache || !this.connected) {
+      const {messages, events} = await getConversation();
+      this._processNewMessagesAndEvents(messages, events);
     }
 
-    return null;
+    const lastStatusMessage = last(
+      this.events.filter(m => m.type === MessageTypes.JOIN || m.type === MessageTypes.LEAVE),
+    );
+    return lastStatusMessage ? lastStatusMessage.type : null;
+  };
+
+  isRegistered = (): boolean => {
+    return this.userIsRegistered;
   };
 
   /*** Private Members ***/
@@ -178,20 +195,20 @@ class QuiqChatClient {
   _handleWebsocketMessage = (message: AtmosphereMessage) => {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
       switch (message.data.type) {
-        case 'Text':
-          if (!this.messages.some(m => m.id === message.data.id)) {
-            this.messages.push(message.data);
-            if (this.callbacks.onNewMessages) {
-              this.callbacks.onNewMessages([message.data]);
-            }
-          }
+        case MessageTypes.TEXT:
+          this._processNewMessagesAndEvents([message.data]);
           break;
-        case 'AgentTyping':
+        case MessageTypes.JOIN:
+        case MessageTypes.LEAVE:
+        case MessageTypes.REGISTER:
+          this._processNewMessagesAndEvents([], [message.data]);
+          break;
+        case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {
             this.callbacks.onAgentTyping(message.data.typing);
           }
           break;
-        case 'BurnItDown':
+        case MessageTypes.BURN_IT_DOWN:
           // The BurnItDown script for this lives in the websockets file, but if we get this message
           // we'll want to let the app know that they're burned
           if (this.callbacks.onBurn) {
@@ -215,24 +232,45 @@ class QuiqChatClient {
   };
 
   _handleConnectionLoss = () => {
+    this.connected = false;
+
     if (this.callbacks.onConnectionStatusChange) {
       this.callbacks.onConnectionStatusChange(false);
     }
   };
 
-  _handleConnectionEstablish = () => {
-    const messages = getConversationMessages();
+  _handleConnectionEstablish = async () => {
+    const {messages, events} = await getConversation();
 
-    // If messages came in while disconnected, push to callback
-    const newMessages = differenceBy(this.messages, messages, 'id');
+    this._processNewMessagesAndEvents(messages, events);
 
-    if (newMessages.length && this.callbacks.onNewMessages) {
-      this.callbacks.onNewMessages(newMessages);
-    }
+    this.connected = true;
 
     if (this.callbacks.onConnectionStatusChange) {
       this.callbacks.onConnectionStatusChange(true);
     }
+  };
+
+  _processNewMessagesAndEvents = (
+    messages: Array<TextMessage>,
+    events: Array<Event> = [],
+    sendNewMessageCallback: boolean = true,
+  ): void => {
+    const newMessages = differenceBy(messages, this.textMessages, 'id');
+    const newEvents = differenceBy(events, this.events, 'id');
+
+    if (newMessages.length && this.callbacks.onNewMessages && sendNewMessageCallback) {
+      this.callbacks.onNewMessages(newMessages);
+    }
+
+    const sortedMessages = sortByTimestamp(this.textMessages.concat(newMessages));
+    const sortedEvents = sortByTimestamp(this.textMessages.concat(newEvents));
+
+    this.textMessages = sortedMessages;
+    this.events = sortedEvents;
+
+    // Update user registration status
+    this.userIsRegistered = this.events.some(e => e.type === MessageTypes.REGISTER);
   };
 }
 

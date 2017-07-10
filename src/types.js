@@ -6,21 +6,38 @@ export type QuiqChatSettings = {
   BURNED?: boolean,
 };
 
-export type EventType = 'Text' | 'Join' | 'Leave';
+export type EventType = 'Join' | 'Leave' | 'Register';
 export type AuthorType = 'Customer' | 'Agent';
-export type MessageType = 'Text' | 'ChatMessage' | 'BurnItDown';
+export type TextMessageType = 'Text';
+export type WebsocketMessageType = 'ChatMessage';
+export type UserEventTypes = 'Join' | 'Leave';
 
-export type Message = {
+export type TextMessage = {
   authorType: AuthorType,
   text: string,
+  id: string,
+  timestamp: number,
+  type: TextMessageType,
+};
+
+export type Event = {
   id: string,
   timestamp: number,
   type: EventType,
 };
 
+export type AgentTypingMessage = {
+  type: 'AgentTyping',
+  typing: boolean,
+};
+
+export type BurnItDownMessage = {
+  type: 'BurnItDown',
+};
+
 export type Conversation = {
   id: string,
-  messages: Array<Message>,
+  messages: Array<TextMessage | Event>,
 };
 export type AtmosphereTransportType =
   | 'websocket'
@@ -97,18 +114,18 @@ export type AtmosphereConnection = {
 };
 
 export type AtmosphereMessage = {
-  data: Object,
-  messageType: MessageType,
   tenantId: string,
+  messageType: WebsocketMessageType,
+  data: Event | TextMessage | AgentTypingMessage | BurnItDownMessage,
 };
 
 export type WebsocketCallbacks = {
-  onConnectionLoss?: () => void,
-  onConnectionEstablish?: () => void,
-  onMessage?: (message: AtmosphereMessage) => void,
-  onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => void,
-  onClose?: () => void,
-  onBurn?: (burnData: BurnItDownResponse) => void,
+  onConnectionLoss?: () => any,
+  onConnectionEstablish?: () => any,
+  onMessage?: (message: AtmosphereMessage) => any,
+  onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => any,
+  onClose?: () => any,
+  onBurn?: (burnData: BurnItDownResponse) => any,
 };
 
 export type BrowserNames =
@@ -258,5 +275,3 @@ export type CookieDef = {
   expiration?: number,
   path?: string,
 };
-
-export type UserEventTypes = 'Join' | 'Leave';
