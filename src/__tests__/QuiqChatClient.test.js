@@ -150,7 +150,13 @@ describe('QuiqChatClient', () => {
   });
 
   describe('getting new messages', () => {
-    const newMessage = {type: 'Text', id: 'msg3', timestamp: 3, text: 'blorp'};
+    const newMessage = {
+      authorType: 'Customer',
+      type: 'Text',
+      id: 'msg3',
+      timestamp: 3,
+      text: 'blorp',
+    };
 
     beforeEach(() => {
       if (!client) {
@@ -165,7 +171,25 @@ describe('QuiqChatClient', () => {
     });
 
     it('calls onNewMessages', () => {
-      expect(onNewMessages).toBeCalledWith([...initialConvo.messages, newMessage]);
+      expect(onNewMessages).toBeCalledWith([newMessage]);
+    });
+  });
+
+  describe('getting new Register event', () => {
+    const newEvent = {type: 'Register', id: 'reg1', timestamp: 3};
+
+    it('updates userIsRegistered', () => {
+      if (!client) {
+        throw new Error('Client should be defined');
+      }
+
+      expect(client.isRegistered()).toBe(false);
+      client._handleWebsocketMessage({
+        messageType: 'ChatMessage',
+        tenantId: 'test',
+        data: newEvent,
+      });
+      expect(client.isRegistered()).toBe(true);
     });
   });
 

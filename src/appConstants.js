@@ -6,6 +6,11 @@ export const MessageTypes = {
   // eslint-disable-line import/prefer-default-export
   TEXT: 'Text',
   CHAT_MESSAGE: 'ChatMessage',
+  JOIN: 'Join',
+  LEAVE: 'Leave',
+  REGISTER: 'Register',
+  BURN_IT_DOWN: 'BurnItDown',
+  AGENT_TYPING: 'AgentTyping',
 };
 
 export const SupportedWebchatUrls = [

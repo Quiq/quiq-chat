@@ -50,3 +50,7 @@ export const burnItDown = (message?: BurnItDownResponse) => {
     unsubscribe();
   }, timeToBurnItDown);
 };
+
+export const sortByTimestamp = (messages: Array<{timestamp: number}>): Array<Object> => {
+  return messages.sort((a, b) => a.timestamp - b.timestamp);
+};
