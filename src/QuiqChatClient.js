@@ -256,9 +256,10 @@ class QuiqChatClient {
     const newMessages = differenceBy(messages, this.textMessages, 'id');
     const newEvents = differenceBy(events, this.events, 'id');
 
+    const sortedNewMessages = sortByTimestamp(newMessages);
+
     if (newMessages.length && this.callbacks.onNewMessages && sendNewMessageCallback) {
-      // $FlowIssue - flow doesn't believe thie below callback is defined at this point
-      this.callbacks.onNewMessages(sortByTimestamp(newMessages));
+      this.callbacks.onNewMessages(sortedNewMessages);
     }
 
     const sortedMessages = sortByTimestamp(this.textMessages.concat(newMessages));
