@@ -166,7 +166,7 @@ type JestExpectType = {
    */
   toBeInstanceOf(cls: Class<*>): void,
   /**
-   * .toBeNull() is the same as .toBe(null) but the error textMessages are a bit
+   * .toBeNull() is the same as .toBe(null) but the error messages are a bit
    * nicer.
    */
   toBeNull(): void,
@@ -389,7 +389,7 @@ declare function afterEach(fn: Function): void;
 declare function beforeEach(fn: Function): void;
 /** Runs this function after all tests have finished inside this context */
 declare function afterAll(fn: Function): void;
-/** Runs this function before any tests have connected inside this context */
+/** Runs this function before any tests have started inside this context */
 declare function beforeAll(fn: Function): void;
 /** A context for grouping tests together */
 declare function describe(name: string, fn: Function): void;
