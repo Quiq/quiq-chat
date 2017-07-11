@@ -11,10 +11,7 @@ import {sortByTimestamp} from './utils';
 const getConversation = async (): Promise<{events: Array<Event>, messages: Array<TextMessage>}> => {
   const conversation = await API.fetchConversation();
   const partitionedConversation = partition(conversation.messages, {type: MessageTypes.TEXT});
-  // NOTE: For backwards compatibility, we must filter out 'Quiq Welcome Form Customer Submission' textMessages
-  const messages = partitionedConversation[0].filter(
-    m => !m.text.trim().includes('Quiq Welcome Form Customer Submission'),
-  );
+  const messages = partitionedConversation[0];
   const events = partitionedConversation[1];
   return {messages, events};
 };
@@ -260,7 +257,8 @@ class QuiqChatClient {
     const newEvents = differenceBy(events, this.events, 'id');
 
     if (newMessages.length && this.callbacks.onNewMessages && sendNewMessageCallback) {
-      this.callbacks.onNewMessages(newMessages);
+      // $FlowIssue - flow doesn't believe thie below callback is defined at this point
+      this.callbacks.onNewMessages(sortByTimestamp(newMessages));
     }
 
     const sortedMessages = sortByTimestamp(this.textMessages.concat(newMessages));

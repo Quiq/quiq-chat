@@ -51,6 +51,5 @@ export const burnItDown = (message?: BurnItDownResponse) => {
   }, timeToBurnItDown);
 };
 
-export const sortByTimestamp = (messages: Array<{timestamp: number}>): Array<Object> => {
-  return messages.sort((a, b) => a.timestamp - b.timestamp);
-};
+export const sortByTimestamp = (arr: Array<Object>): Array<Object> =>
+  arr.slice().sort((a, b) => a.timestamp - b.timestamp);
