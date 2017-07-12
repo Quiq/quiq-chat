@@ -9,3 +9,4 @@ export const getHost = () => 'someHost';
 export const getContactPoint = () => 'someContactPoint';
 export const getPublicApiUrl = () => 'somePublicApiUrl';
 export const getUrlForContactPoint = () => 'someUrlForContactPoint';
+export const isActive = jest.fn().mockReturnValue(true);

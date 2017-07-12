@@ -1,16 +1,8 @@
 // @flow
 import {formatQueryParams} from './utils';
-import {getUrlForContactPoint, getPublicApiUrl, getContactPoint} from './globals';
+import {getUrlForContactPoint, getPublicApiUrl, getContactPoint, getSessionApiUrl} from './globals';
 import quiqFetch from './quiqFetch';
 import type {Conversation} from 'types';
-
-const parseResponse = (response: Response): Promise<*> => {
-  if (response.status && response.status >= 300) {
-    return response.json().then(res => Promise.reject(res)).catch(err => Promise.reject(err));
-  }
-
-  return response.json();
-};
 
 export const joinChat = () => {
   quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST', credentials: 'include'});
@@ -29,15 +21,17 @@ export const addMessage = (text: string) => {
 };
 
 export const fetchWebsocketInfo = (): Promise<{url: string}> =>
-  quiqFetch(`${getUrlForContactPoint()}/socket-info`, {credentials: 'include'}, null).then(
-    parseResponse,
+  quiqFetch(
+    `${getUrlForContactPoint()}/socket-info`,
+    {credentials: 'include'},
+    {responseType: 'JSON'},
   );
 
 // Use socket-info as a ping since the ping endpoint isn't publicly exposed
 export const ping = () => fetchWebsocketInfo();
 
 export const fetchConversation = (): Promise<Conversation> =>
-  quiqFetch(getUrlForContactPoint(), {credentials: 'include'}, null).then(parseResponse);
+  quiqFetch(getUrlForContactPoint(), {credentials: 'include'}, {responseType: 'JSON'});
 
 export const updateMessagePreview = (text: string, typing: boolean) => {
   quiqFetch(`${getUrlForContactPoint()}/typing`, {
@@ -60,4 +54,14 @@ export const checkForAgents = (): Promise<{available: boolean}> =>
       platform: 'Chat',
       contactPoint: getContactPoint(),
     }),
-  ).then(parseResponse);
+    undefined,
+    {responseType: 'JSON'},
+  );
+
+export const login = (host?: string) =>
+  quiqFetch(`${getSessionApiUrl(host)}/generate`, {credentials: 'include', method: 'POST'});
+
+export const validateSession = () => quiqFetch(getSessionApiUrl(), {credentials: 'include'});
+
+export const logout = () =>
+  quiqFetch(getSessionApiUrl(), {credentials: 'include', method: 'DELETE'});

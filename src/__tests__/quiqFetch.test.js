@@ -1,23 +1,25 @@
 // @flow
-jest.mock('isomorphic-fetch');
+jest.mock('../stubbornFetch');
 jest.mock('../utils');
 jest.mock('../globals');
-import iso from 'isomorphic-fetch';
+import fetch from '../stubbornFetch';
 import quiqFetch from '../quiqFetch';
 
 describe('quiqFetch', () => {
+  const mockFetch = (fetch: any);
+
   beforeEach(() => {
-    iso.mockReturnValue({then: () => ({catch: jest.fn()})});
+    mockFetch.mockReturnValue({then: () => ({catch: jest.fn()})});
   });
 
   afterEach(() => {
-    iso.mockClear();
+    mockFetch.mockClear();
   });
 
   it('transforms data', () => {
     quiqFetch('someUrl');
-    expect(iso.mock.calls[0][0]).toBe('someUrl');
-    expect(iso.mock.calls[0][1]).toMatchSnapshot();
+    expect(mockFetch.mock.calls[0][0]).toBe('someUrl');
+    expect(mockFetch.mock.calls[0][1]).toMatchSnapshot();
   });
 
   it('respects overrides', () => {
@@ -27,11 +29,11 @@ describe('quiqFetch', () => {
       },
       customProp: 'crazy',
     });
-    expect(iso.mock.calls[0][1]).toMatchSnapshot();
+    expect(mockFetch.mock.calls[0][1]).toMatchSnapshot();
   });
 
   it('respects requestType', () => {
-    quiqFetch('someUrl', undefined, 'crazyRequestType');
-    expect(iso.mock.calls[0][1]).toMatchSnapshot();
+    quiqFetch('someUrl', undefined, {requestType: 'crazyRequestType'});
+    expect(mockFetch.mock.calls[0][1]).toMatchSnapshot();
   });
 });

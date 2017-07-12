@@ -90,7 +90,7 @@ describe('Websockets', () => {
               responseBody: JSON.stringify(message),
             });
             expect(Utils.burnItDown).toBeCalledWith(message.data);
-            expect(callbacks.onBurn).toBeCalledWith(message.data);
+            expect(callbacks.onBurn).toBeCalled();
           });
         });
       });

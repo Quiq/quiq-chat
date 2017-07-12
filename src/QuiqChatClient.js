@@ -1,12 +1,14 @@
 // @flow
 import * as API from './apiCalls';
-import {setGlobals, checkRequiredSettings} from './globals';
+import {setGlobals} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
 import {MessageTypes, quiqChatContinuationCookie} from './appConstants';
+import {registerCallbacks, onInit} from './stubbornFetch';
 import {set, get} from 'js-cookie';
 import {differenceBy, last, partition} from 'lodash';
 import {sortByTimestamp} from './utils';
+import type {QuiqChatCallbacks} from 'types';
 
 const getConversation = async (): Promise<{events: Array<Event>, messages: Array<TextMessage>}> => {
   const conversation = await API.fetchConversation();
@@ -14,15 +16,6 @@ const getConversation = async (): Promise<{events: Array<Event>, messages: Array
   const messages = partitionedConversation[0];
   const events = partitionedConversation[1];
   return {messages, events};
-};
-
-export type QuiqChatCallbacks = {
-  onNewMessages?: (messages: Array<TextMessage>) => void,
-  onAgentTyping?: (typing: boolean) => void,
-  onError?: (error: ?ApiError) => void,
-  onErrorResolved?: () => void,
-  onConnectionStatusChange?: (connected: boolean) => void,
-  onBurn?: () => void,
 };
 
 class QuiqChatClient {
@@ -47,9 +40,23 @@ class QuiqChatClient {
       HOST: this.host,
       CONTACT_POINT: this.contactPoint,
     });
+
+    window.addEventListener('online', () => {
+      this.stop();
+      this.start();
+      this._handleConnectionEstablish();
+      if (this.callbacks.onErrorResolved) {
+        this.callbacks.onErrorResolved();
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      this._handleConnectionLoss();
+      this.stop();
+    });
   }
 
-  /*** Fluent client builder functions: these all return the client object ***/
+  /** Fluent client builder functions: these all return the client object **/
 
   onNewMessages = (callback: (messages: Array<TextMessage>) => void): QuiqChatClient => {
     this.callbacks.onNewMessages = callback;
@@ -63,11 +70,19 @@ class QuiqChatClient {
 
   onError = (callback: (error: ?ApiError) => void): QuiqChatClient => {
     this.callbacks.onError = callback;
+    registerCallbacks({onError: callback});
+    return this;
+  };
+
+  onRetryableError = (callback: (error: ?ApiError) => void): QuiqChatClient => {
+    this.callbacks.onRetryableError = callback;
+    registerCallbacks({onRetryableError: callback});
     return this;
   };
 
   onErrorResolved = (callback: () => void): QuiqChatClient => {
     this.callbacks.onErrorResolved = callback;
+    registerCallbacks({onErrorResolved: callback});
     return this;
   };
 
@@ -78,17 +93,18 @@ class QuiqChatClient {
 
   onBurn = (callback: () => void): QuiqChatClient => {
     this.callbacks.onBurn = callback;
+    registerCallbacks({onBurn: callback});
     return this;
   };
 
   start = async (): Promise<?QuiqChatClient> => {
-    checkRequiredSettings();
-
     try {
-      // Order Matters here.  Ensure we successfully complete this fetchConversation request before connecting to
+      // Order Matters here.  Ensure we succesfully complete this fetchConversation request before connecting to
       // the websocket below!
-      const {messages, events} = await getConversation();
+      await API.login();
+      onInit();
 
+      const {messages, events} = await getConversation();
       // Process initial messages, but do not send callback. We'll send all messages in callback next.
       this._processNewMessagesAndEvents(messages, events, false);
 
@@ -96,34 +112,31 @@ class QuiqChatClient {
       if (this.callbacks.onNewMessages && this.textMessages.length)
         this.callbacks.onNewMessages(this.textMessages);
 
-      // Set cookie
       set(quiqChatContinuationCookie.id, 'true', {
         expires: quiqChatContinuationCookie.expiration,
       });
 
-      // Establish websocket connection
       disconnectSocket(); // Ensure we only have one websocket connection open
       const wsInfo: {url: string} = await API.fetchWebsocketInfo();
-
       connectSocket({
         socketUrl: wsInfo.url,
         callbacks: {
           onConnectionLoss: this._handleConnectionLoss,
           onConnectionEstablish: this._handleConnectionEstablish,
           onMessage: this._handleWebsocketMessage,
+          onBurn: this._handleBurnItDown,
         },
       });
 
       if (this.callbacks.onConnectionStatusChange) {
         this.callbacks.onConnectionStatusChange(true);
       }
-      if (this.callbacks.onErrorResolved) {
-        this.callbacks.onErrorResolved();
-      }
     } catch (err) {
-      console.error(err);
       disconnectSocket();
-      this._handleRetryableError(err, this.start);
+
+      if (this.callbacks.onError) {
+        this.callbacks.onError(err);
+      }
     }
   };
 
@@ -140,7 +153,7 @@ class QuiqChatClient {
     return this.textMessages;
   };
 
-  /*** API wrappers: these return Promises around the API response ***/
+  /** API wrappers: these return Promises around the API response **/
 
   joinChat = () => {
     return API.joinChat();
@@ -187,7 +200,7 @@ class QuiqChatClient {
     return this.userIsRegistered;
   };
 
-  /*** Private Members ***/
+  /** Private Members **/
 
   _handleWebsocketMessage = (message: AtmosphereMessage) => {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
@@ -216,15 +229,9 @@ class QuiqChatClient {
     }
   };
 
-  _handleRetryableError = (err?: ApiError, retry?: () => ?Promise<*>) => {
-    if (err && err.status && err.status > 404) {
-      if (retry) {
-        setTimeout(retry, 5000);
-      }
-    } else {
-      if (this.callbacks.onError) {
-        this.callbacks.onError(err);
-      }
+  _handleBurnItDown = () => {
+    if (this.callbacks.onBurn) {
+      this.callbacks.onBurn();
     }
   };
 

@@ -5,7 +5,7 @@
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
-    "start": "./node_modules/.bin/nodemon --watch src -e js,sass --exec npm run build",
+    "start": "./node_modules/.bin/nodemon --watch src -e js,sass --exec npm run build && cp -R build ../webchat/node_modules/quiq-chat",
     "lint": "node ./node_modules/eslint/bin/eslint.js src/",
     "test": "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
     "flow": "flow",
@@ -21,10 +21,15 @@
     ]
   },
   "jest": {
-    "modulePaths": ["src", "node_modules"],
+    "modulePaths": [
+      "src",
+      "node_modules"
+    ],
     "rootDir": "src"
   },
-  "keywords": ["quiq"],
+  "keywords": [
+    "quiq"
+  ],
   "author": "nate.norberg@goquiq.com",
   "license": "MIT",
   "dependencies": {
@@ -59,6 +64,7 @@
     "prettier": "^1.5.2",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
-    "rollup-plugin-flow": "^1.1.1"
+    "rollup-plugin-flow": "^1.1.1",
+    "rollup-plugin-json": "^2.3.0"
   }
 }

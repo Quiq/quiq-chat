@@ -76,10 +76,6 @@ describe('QuiqChatClient', () => {
     it('calls onConnectionStatusChange', () => {
       expect(onConnectionStatusChange).toBeCalledWith(true);
     });
-
-    it('calls onErrorResolved', () => {
-      expect(onErrorResolved).toBeCalled();
-    });
   });
 
   describe('start with retryable error', () => {
@@ -102,12 +98,6 @@ describe('QuiqChatClient', () => {
 
     it('calls disconnectSocket', () => {
       expect(disconnectSocket).toBeCalled();
-    });
-
-    it('tries again', () => {
-      expect(connectSocket).toBeCalled();
-      expect(onConnectionStatusChange).toBeCalledWith(true);
-      expect(onErrorResolved).toBeCalled();
     });
   });
 

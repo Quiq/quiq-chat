@@ -37,6 +37,9 @@ const client = new QuiqChatClient()
   .onError(error => {
     // Show some error message
   })
+  .onRetryableError(error => {
+    // Show some error message
+  }).
   .onErrorResolved(() => {
     // Remove the error message
   })
@@ -77,10 +80,13 @@ Called whenever new messages are received. `messages` is an array containing the
 Called whenever the support agent starts or stops typing
 
 #### onError(error: ?ApiError) => [QuiqChatClient](#quiqchatclient)
-Called whenever there is an error from the API
+Called whenever there is a non-retryable error or an error that has exceeded the maximum number of retries from the API.
+
+#### onRetryableError(error: ?ApiError) => [QuiqChatClient](#quiqchatclient)
+Called whenever there is a retryable error from the API
 
 #### onErrorResolved() => [QuiqChatClient](#quiqchatclient)
-Called whenever the error from the API has been resolved
+Called whenever any error from the API has been resolved
 
 #### onConnectionStatusChanged(connected: boolean) => [QuiqChatClient](#quiqchatclient)
 Called when a connection is established or terminated

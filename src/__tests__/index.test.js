@@ -3,20 +3,27 @@ jest.mock('../globals');
 jest.mock('../apiCalls');
 jest.mock('../websockets');
 import * as Quiq from '../index';
-import {setGlobals} from '../globals';
-import {fetchWebsocketInfo} from '../apiCalls';
+import {setGlobals, isActive} from '../globals';
+import {fetchWebsocketInfo, login} from '../apiCalls';
 import {connectSocket} from '../websockets';
 
 describe('quiq-chat', () => {
+  beforeEach(() => {
+    const mockLogin = (login: any);
+    mockLogin.mockReturnValue(Promise.resolve());
+    const mockIsActive = (isActive: any);
+    mockIsActive.mockReturnValue(false);
+  });
+
   describe('init', () => {
-    it('calls setGlobals', () => {
-      Quiq.init({HOST: 'testhost', CONTACT_POINT: 'test'});
-      expect(setGlobals).toBeCalledWith({HOST: 'testhost', CONTACT_POINT: 'test'});
+    it('applies defaults', async () => {
+      await Quiq.init({HOST: 'testhost'});
+      expect(setGlobals).toBeCalledWith({ACTIVE: true, HOST: 'testhost', CONTACT_POINT: 'default'});
     });
 
-    it('applies defaults', () => {
-      Quiq.init({HOST: 'testhost'});
-      expect(setGlobals).toBeCalledWith({HOST: 'testhost', CONTACT_POINT: 'default'});
+    it('calls setGlobals', async () => {
+      await Quiq.init({HOST: 'testhost', CONTACT_POINT: 'test'});
+      expect(setGlobals).toBeCalledWith({ACTIVE: true, HOST: 'testhost', CONTACT_POINT: 'test'});
     });
   });
 
