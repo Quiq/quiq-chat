@@ -164,6 +164,11 @@ Submits a map of custom `(key, value)` pairs to be included in the data for the 
 Method accepts a single parameter, a JavaScript object with values of type `String`.
 `key` is limited to 80 characters and must be unique; `value` is limited to 1000 characters.
 
+#### hasActiveChat() => boolean
+Returns whether the end-user has performed a meaningful action that triggers a conversation, such as
+submitting the Welcome Form, or sending a message to the agent.  State persists through
+page flips using `quiq-chat-continuation` cookie.
+
 #### isChatVisible() => boolean
 Returns the last state of chat's visibility.  Only includes actions that call the joinChat and leaveChat events.
 For instance, if your user maximizes chat, but you never call joinChat, isChatVisible won't reflect this change.

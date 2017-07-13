@@ -6,7 +6,7 @@ import QuiqChatClient from '../QuiqChatClient';
 import * as ApiCalls from '../apiCalls';
 import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'js-cookie';
-import {quiqChatVisible} from '../appConstants';
+import {quiqChatVisibleCookie, quiqChatContinuationCookie} from '../appConstants';
 
 const initialConvo = {
   id: 'testConvo',
@@ -239,7 +239,7 @@ describe('QuiqChatClient', () => {
       });
 
       it('sets the continuation cookie to true', () => {
-        const {id, expiration} = quiqChatVisible;
+        const {id, expiration} = quiqChatVisibleCookie;
         expect(set).toBeCalledWith(id, 'true', {expires: expiration});
       });
     });
@@ -258,7 +258,7 @@ describe('QuiqChatClient', () => {
       });
 
       it('sets the continuation cookie to false', () => {
-        const {id, expiration} = quiqChatVisible;
+        const {id, expiration} = quiqChatVisibleCookie;
         expect(set).toBeCalledWith(id, 'false', {expires: expiration});
       });
     });
@@ -271,6 +271,8 @@ describe('QuiqChatClient', () => {
 
         client.sendMessage('text');
         expect(API.addMessage).toBeCalledWith('text');
+        const {id, expiration} = quiqChatContinuationCookie;
+        expect(set).toBeCalledWith(id, 'true', {expires: expiration});
       });
     });
 
@@ -294,6 +296,8 @@ describe('QuiqChatClient', () => {
 
         client.sendRegistration(data);
         expect(API.sendRegistration).toBeCalledWith(data);
+        const {id, expiration} = quiqChatContinuationCookie;
+        expect(set).toBeCalledWith(id, 'true', {expires: expiration});
       });
     });
   });
