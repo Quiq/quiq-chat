@@ -3,7 +3,7 @@ import * as API from './apiCalls';
 import {setGlobals, checkRequiredSettings} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
-import {MessageTypes, quiqChatContinuationCookie} from './appConstants';
+import {MessageTypes, quiqChatVisible} from './appConstants';
 import {set, get} from 'js-cookie';
 import {differenceBy, last, partition} from 'lodash';
 import {sortByTimestamp} from './utils';
@@ -49,7 +49,7 @@ class QuiqChatClient {
     });
   }
 
-  /*** Fluent client builder functions: these all return the client object ***/
+  /** Fluent client builder functions: these all return the client object **/
 
   onNewMessages = (callback: (messages: Array<TextMessage>) => void): QuiqChatClient => {
     this.callbacks.onNewMessages = callback;
@@ -96,11 +96,6 @@ class QuiqChatClient {
       if (this.callbacks.onNewMessages && this.textMessages.length)
         this.callbacks.onNewMessages(this.textMessages);
 
-      // Set cookie
-      set(quiqChatContinuationCookie.id, 'true', {
-        expires: quiqChatContinuationCookie.expiration,
-      });
-
       // Establish websocket connection
       disconnectSocket(); // Ensure we only have one websocket connection open
       const wsInfo: {url: string} = await API.fetchWebsocketInfo();
@@ -121,7 +116,7 @@ class QuiqChatClient {
         this.callbacks.onErrorResolved();
       }
     } catch (err) {
-      console.error(err);
+      console.error(err); // eslint-disable-line no-console
       disconnectSocket();
       this._handleRetryableError(err, this.start);
     }
@@ -140,13 +135,19 @@ class QuiqChatClient {
     return this.textMessages;
   };
 
-  /*** API wrappers: these return Promises around the API response ***/
+  /** API wrappers: these return Promises around the API response **/
 
   joinChat = () => {
+    set(quiqChatVisible.id, 'true', {
+      expires: quiqChatVisible.expiration,
+    });
     return API.joinChat();
   };
 
   leaveChat = () => {
+    set(quiqChatVisible.id, 'false', {
+      expires: quiqChatVisible.expiration,
+    });
     return API.leaveChat();
   };
 
@@ -166,9 +167,8 @@ class QuiqChatClient {
     return API.checkForAgents();
   };
 
-  hasActiveChat = (): boolean => {
-    // quiq-chat-continuation is a cookie to tell if the user has already initiated a chat
-    return get(quiqChatContinuationCookie.id);
+  isChatVisible = (): boolean => {
+    return get(quiqChatVisible.id) === 'true';
   };
 
   getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
@@ -187,7 +187,7 @@ class QuiqChatClient {
     return this.userIsRegistered;
   };
 
-  /*** Private Members ***/
+  /** Private Members **/
 
   _handleWebsocketMessage = (message: AtmosphereMessage) => {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {

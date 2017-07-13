@@ -24,8 +24,8 @@ export const SupportedWebchatUrls = [
   'centricient.dev:41014/app/webchat',
 ];
 
-export const quiqChatContinuationCookie: CookieDef = {
-  id: 'quiq-chat-continuation',
+export const quiqChatVisible: CookieDef = {
+  id: 'quiq-chat-visible',
   expiration: 1, // 1 day
 };
 
