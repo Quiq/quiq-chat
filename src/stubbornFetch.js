@@ -32,6 +32,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
     new Promise(resolve => {
       window.setTimeout(function() {
         resolve();
+        // Exponential backoff with a cap of 30 seconds
       }, clamp((retryCount ** 2 - 1) / 2 * 1000, 0, 30000));
     });
 

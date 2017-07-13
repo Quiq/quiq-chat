@@ -143,6 +143,14 @@ The `message` object in `handleMessage` is of the type
   tenantId: string
 }
 ```
+The `ApiError` object in `onError` and`onRetryableError` is of the type
+```javascript
+{
+  code?: number,
+  message?: string,
+  status?: number,
+}
+```
 
 #### unsubscribe() => void
 Unsubscribes from the current websocket connection

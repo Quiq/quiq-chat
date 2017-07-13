@@ -5,7 +5,7 @@
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
-    "start": "./node_modules/.bin/nodemon --watch src -e js,sass --exec npm run build && cp -R build ../webchat/node_modules/quiq-chat",
+    "start": "./node_modules/.bin/nodemon --watch src -e js,sass --exec npm run build",
     "lint": "node ./node_modules/eslint/bin/eslint.js src/",
     "test": "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
     "flow": "flow",
