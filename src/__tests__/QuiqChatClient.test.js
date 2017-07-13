@@ -6,7 +6,7 @@ import QuiqChatClient from '../QuiqChatClient';
 import * as ApiCalls from '../apiCalls';
 import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'js-cookie';
-import {quiqChatContinuationCookie} from '../appConstants';
+import {quiqChatVisibleCookie, quiqChatContinuationCookie} from '../appConstants';
 
 const initialConvo = {
   id: 'testConvo',
@@ -58,11 +58,6 @@ describe('QuiqChatClient', () => {
   describe('start', () => {
     it('calls onNewMessages with the initial messages', () => {
       expect(onNewMessages).toBeCalledWith(initialConvo.messages);
-    });
-
-    it('sets the continuation cookie', () => {
-      const {id, expiration} = quiqChatContinuationCookie;
-      expect(set).toBeCalledWith(id, 'true', {expires: expiration});
     });
 
     it('tries to disconnect the websocket before making a new connection', () => {
@@ -231,24 +226,40 @@ describe('QuiqChatClient', () => {
 
   describe('API wrappers', () => {
     describe('joinChat', () => {
-      it('proxies call', () => {
+      beforeEach(() => {
         if (!client) {
           throw new Error('Client undefined');
         }
 
         client.joinChat();
+      });
+
+      it('proxies call', () => {
         expect(API.joinChat).toBeCalled();
+      });
+
+      it('sets the continuation cookie to true', () => {
+        const {id, expiration} = quiqChatVisibleCookie;
+        expect(set).toBeCalledWith(id, 'true', {expires: expiration});
       });
     });
 
     describe('leaveChat', () => {
-      it('proxies call', () => {
+      beforeEach(() => {
         if (!client) {
           throw new Error('Client undefined');
         }
 
         client.leaveChat();
+      });
+
+      it('proxies call', () => {
         expect(API.leaveChat).toBeCalled();
+      });
+
+      it('sets the continuation cookie to false', () => {
+        const {id, expiration} = quiqChatVisibleCookie;
+        expect(set).toBeCalledWith(id, 'false', {expires: expiration});
       });
     });
 
@@ -260,6 +271,8 @@ describe('QuiqChatClient', () => {
 
         client.sendMessage('text');
         expect(API.addMessage).toBeCalledWith('text');
+        const {id, expiration} = quiqChatContinuationCookie;
+        expect(set).toBeCalledWith(id, 'true', {expires: expiration});
       });
     });
 
@@ -283,6 +296,8 @@ describe('QuiqChatClient', () => {
 
         client.sendRegistration(data);
         expect(API.sendRegistration).toBeCalledWith(data);
+        const {id, expiration} = quiqChatContinuationCookie;
+        expect(set).toBeCalledWith(id, 'true', {expires: expiration});
       });
     });
   });

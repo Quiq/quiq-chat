@@ -3,7 +3,7 @@ import * as API from './apiCalls';
 import {setGlobals, checkRequiredSettings} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
-import {MessageTypes, quiqChatContinuationCookie} from './appConstants';
+import {MessageTypes, quiqChatVisibleCookie, quiqChatContinuationCookie} from './appConstants';
 import {set, get} from 'js-cookie';
 import {differenceBy, last, partition} from 'lodash';
 import {sortByTimestamp} from './utils';
@@ -49,7 +49,7 @@ class QuiqChatClient {
     });
   }
 
-  /*** Fluent client builder functions: these all return the client object ***/
+  /** Fluent client builder functions: these all return the client object **/
 
   onNewMessages = (callback: (messages: Array<TextMessage>) => void): QuiqChatClient => {
     this.callbacks.onNewMessages = callback;
@@ -96,11 +96,6 @@ class QuiqChatClient {
       if (this.callbacks.onNewMessages && this.textMessages.length)
         this.callbacks.onNewMessages(this.textMessages);
 
-      // Set cookie
-      set(quiqChatContinuationCookie.id, 'true', {
-        expires: quiqChatContinuationCookie.expiration,
-      });
-
       // Establish websocket connection
       disconnectSocket(); // Ensure we only have one websocket connection open
       const wsInfo: {url: string} = await API.fetchWebsocketInfo();
@@ -121,7 +116,7 @@ class QuiqChatClient {
         this.callbacks.onErrorResolved();
       }
     } catch (err) {
-      console.error(err);
+      console.error(err); // eslint-disable-line no-console
       disconnectSocket();
       this._handleRetryableError(err, this.start);
     }
@@ -140,17 +135,26 @@ class QuiqChatClient {
     return this.textMessages;
   };
 
-  /*** API wrappers: these return Promises around the API response ***/
+  /** API wrappers: these return Promises around the API response **/
 
   joinChat = () => {
+    set(quiqChatVisibleCookie.id, 'true', {
+      expires: quiqChatVisibleCookie.expiration,
+    });
     return API.joinChat();
   };
 
   leaveChat = () => {
+    set(quiqChatVisibleCookie.id, 'false', {
+      expires: quiqChatVisibleCookie.expiration,
+    });
     return API.leaveChat();
   };
 
   sendMessage = (text: string) => {
+    set(quiqChatContinuationCookie.id, 'true', {
+      expires: quiqChatContinuationCookie.expiration,
+    });
     return API.addMessage(text);
   };
 
@@ -159,6 +163,9 @@ class QuiqChatClient {
   };
 
   sendRegistration = (fields: {[string]: string}) => {
+    set(quiqChatContinuationCookie.id, 'true', {
+      expires: quiqChatContinuationCookie.expiration,
+    });
     return API.sendRegistration(fields);
   };
 
@@ -166,9 +173,19 @@ class QuiqChatClient {
     return API.checkForAgents();
   };
 
-  hasActiveChat = (): boolean => {
+  isChatVisible = (): boolean => {
+    return get(quiqChatVisibleCookie.id) === 'true';
+  };
+
+  hasActiveChat = async () => {
     // quiq-chat-continuation is a cookie to tell if the user has already initiated a chat
-    return get(quiqChatContinuationCookie.id);
+    if (get(quiqChatContinuationCookie.id) !== 'true') return false;
+    if (this.textMessages.length > 0) return true;
+
+    checkRequiredSettings();
+    await this.getMessages();
+
+    return this.textMessages.length > 0;
   };
 
   getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
@@ -187,7 +204,7 @@ class QuiqChatClient {
     return this.userIsRegistered;
   };
 
-  /*** Private Members ***/
+  /** Private Members **/
 
   _handleWebsocketMessage = (message: AtmosphereMessage) => {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
