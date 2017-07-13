@@ -21,6 +21,12 @@ export type TextMessage = {
   type: TextMessageType,
 };
 
+export type IsomorphicFetchNetworkError = {
+  message: string,
+  stack: string,
+  status?: number, // We manually append this, it is not normally present on the object.
+};
+
 export type Event = {
   id: string,
   timestamp: number,
@@ -153,11 +159,11 @@ export type AtmosphereMessage = {
 
 export type WebsocketCallbacks = {
   onConnectionLoss?: () => void,
-  onConnectionEstablish?: () => void,
+  onConnectionEstablish?: () => ?Promise<void>,
   onMessage?: (message: AtmosphereMessage) => void,
   onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => void,
   onClose?: () => void,
-  onBurn?: (burnData?: BurnItDownResponse) => void,
+  onBurn?: () => void,
 };
 
 export type BrowserNames =

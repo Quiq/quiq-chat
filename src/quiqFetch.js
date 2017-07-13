@@ -44,9 +44,11 @@ const quiqFetch = (
   request.method = request.method || 'GET';
 
   return stubbornFetch(url, request)
-    .then(res => {
-      if (options.responseType === 'JSON') {
-        return res.json().then(result => result).catch(err => err);
+    .then((res: Promise<Response> | Response): any => {
+      if (options.responseType === 'JSON' && res && res.json) {
+        return ((res: any): Response).json().then(result => result).catch(err => err);
+      } else if (options.responseType === 'NONE') {
+        return;
       }
 
       return res;

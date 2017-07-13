@@ -4,7 +4,7 @@ import {login, validateSession} from './apiCalls';
 import {clamp} from 'lodash';
 import {burnItDown} from './utils';
 import {getBurned} from './globals';
-import type {ApiError} from 'types';
+import type {ApiError, IsomorphicFetchNetworkError} from 'types';
 
 type FetchCallbacks = {
   onBurn?: () => void,
@@ -52,7 +52,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
 
       delayIfNeeded().then(() =>
         fetch(url, fetchRequest).then(
-          response => {
+          (response: Response) => {
             // Special Case
             if (response.status === 401) {
               if (
@@ -61,7 +61,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
                 fetchRequest.method.toUpperCase() === 'POST'
               ) {
                 if (callbacks.onError) {
-                  callbacks.onError(response);
+                  callbacks.onError();
                 }
 
                 return reject(response);
@@ -101,16 +101,15 @@ export default (url: string, fetchRequest: RequestOptions) => {
                 callbacks.onErrorResolved();
               }
 
-              // $FlowIssue flow is complaining that resolve takes a Response | Promise<Response>.  We are giving it a Response
               return resolve(response);
             }
 
             // Reject
             return reject(response);
           },
-          error => {
-            // We have no way of knowing status code if we get into this failed fetch state.
-            // Try re-authing for good measure then retry the fetch.
+          (error: IsomorphicFetchNetworkError) => {
+            // We aren't given a status code in this code path.  If we didn't get here from an auth call,
+            // try re-authing
             if (!timedOut && retryCount < 4) {
               if (
                 url.includes('/session/web/generate') &&
@@ -136,7 +135,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
               callbacks.onError();
             }
 
-            const err = error;
+            const err: IsomorphicFetchNetworkError = error;
             err.status = 1000;
             window.clearTimeout(timerId);
             return reject(err);
