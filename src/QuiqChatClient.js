@@ -3,7 +3,7 @@ import * as API from './apiCalls';
 import {setGlobals} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
-import {MessageTypes, quiqChatContinuationCookie} from './appConstants';
+import {MessageTypes, quiqChatVisibleCookie, quiqChatContinuationCookie} from './appConstants';
 import {registerCallbacks, onInit} from './stubbornFetch';
 import {set, get} from 'js-cookie';
 import {differenceBy, last, partition} from 'lodash';
@@ -112,10 +112,6 @@ class QuiqChatClient {
       if (this.callbacks.onNewMessages && this.textMessages.length)
         this.callbacks.onNewMessages(this.textMessages);
 
-      set(quiqChatContinuationCookie.id, 'true', {
-        expires: quiqChatContinuationCookie.expiration,
-      });
-
       disconnectSocket(); // Ensure we only have one websocket connection open
       const wsInfo: {url: string} = await API.fetchWebsocketInfo();
       connectSocket({
@@ -156,14 +152,23 @@ class QuiqChatClient {
   /** API wrappers: these return Promises around the API response **/
 
   joinChat = () => {
+    set(quiqChatVisibleCookie.id, 'true', {
+      expires: quiqChatVisibleCookie.expiration,
+    });
     return API.joinChat();
   };
 
   leaveChat = () => {
+    set(quiqChatVisibleCookie.id, 'false', {
+      expires: quiqChatVisibleCookie.expiration,
+    });
     return API.leaveChat();
   };
 
   sendMessage = (text: string) => {
+    set(quiqChatContinuationCookie.id, 'true', {
+      expires: quiqChatContinuationCookie.expiration,
+    });
     return API.addMessage(text);
   };
 
@@ -172,6 +177,9 @@ class QuiqChatClient {
   };
 
   sendRegistration = (fields: {[string]: string}) => {
+    set(quiqChatContinuationCookie.id, 'true', {
+      expires: quiqChatContinuationCookie.expiration,
+    });
     return API.sendRegistration(fields);
   };
 
@@ -179,9 +187,18 @@ class QuiqChatClient {
     return API.checkForAgents();
   };
 
-  hasActiveChat = (): boolean => {
+  isChatVisible = (): boolean => {
+    return get(quiqChatVisibleCookie.id) === 'true';
+  };
+
+  hasActiveChat = async () => {
     // quiq-chat-continuation is a cookie to tell if the user has already initiated a chat
-    return get(quiqChatContinuationCookie.id);
+    if (get(quiqChatContinuationCookie.id) !== 'true') return false;
+    if (this.textMessages.length > 0) return true;
+
+    await this.getMessages();
+
+    return this.textMessages.length > 0;
   };
 
   getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
