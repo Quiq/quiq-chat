@@ -37,6 +37,9 @@ const client = new QuiqChatClient()
   .onError(error => {
     // Show some error message
   })
+  .onRetryableError(error => {
+    // Show some error message
+  }).
   .onErrorResolved(() => {
     // Remove the error message
   })
@@ -77,10 +80,13 @@ Called whenever new messages are received. `messages` is an array containing the
 Called whenever the support agent starts or stops typing
 
 #### onError(error: ?ApiError) => [QuiqChatClient](#quiqchatclient)
-Called whenever there is an error from the API
+Called whenever there is a non-retryable error or an error that has exceeded the maximum number of retries from the API.
+
+#### onRetryableError(error: ?ApiError) => [QuiqChatClient](#quiqchatclient)
+Called whenever there is a retryable error from the API
 
 #### onErrorResolved() => [QuiqChatClient](#quiqchatclient)
-Called whenever the error from the API has been resolved
+Called whenever any error from the API has been resolved
 
 #### onConnectionStatusChanged(connected: boolean) => [QuiqChatClient](#quiqchatclient)
 Called when a connection is established or terminated
@@ -137,6 +143,14 @@ The `message` object in `handleMessage` is of the type
   tenantId: string
 }
 ```
+The `ApiError` object in `onError` and`onRetryableError` is of the type
+```javascript
+{
+  code?: number,
+  message?: string,
+  status?: number,
+}
+```
 
 #### unsubscribe() => void
 Unsubscribes from the current websocket connection
@@ -167,12 +181,12 @@ Method accepts a single parameter, a JavaScript object with values of type `Stri
 #### hasActiveChat() => boolean
 Returns whether the end-user has performed a meaningful action that triggers a conversation, such as
 submitting the Welcome Form, or sending a message to the agent.  State persists through
-page flips using `quiq-chat-continuation` cookie.
+page flips using `quiq-chat-launcher-visible` cookie.
 
 #### isChatVisible() => boolean
 Returns the last state of chat's visibility.  Only includes actions that call the joinChat and leaveChat events.
 For instance, if your user maximizes chat, but you never call joinChat, isChatVisible won't reflect this change.
-State persists through page flips using `quiq-chat-visible` cookie.  Can be used to re-open webchat on page
+State persists through page flips using `quiq-chat-container-visible` cookie.  Can be used to re-open webchat on page
 turns if the user had chat previously open. Defaults to false if user has taken no actions.
 
 ## Data types

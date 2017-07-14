@@ -1,12 +1,14 @@
 // @flow
 jest.mock('../apiCalls');
 jest.mock('../websockets');
+jest.mock('../cookies');
 jest.mock('js-cookie');
+
 import QuiqChatClient from '../QuiqChatClient';
 import * as ApiCalls from '../apiCalls';
+import * as cookies from '../cookies';
 import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'js-cookie';
-import {quiqChatVisibleCookie, quiqChatContinuationCookie} from '../appConstants';
 
 const initialConvo = {
   id: 'testConvo',
@@ -39,10 +41,13 @@ describe('QuiqChatClient', () => {
   const contactPoint = 'test';
   const API = (ApiCalls: Object);
   let client: ?QuiqChatClient;
+  const mockCookies = (cookies: any);
 
   beforeEach(() => {
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
     API.fetchWebsocketInfo.mockReturnValue({url: 'https://websocket.test'});
+    mockCookies.getQuiqChatContainerVisibleCookie.mockReturnValue(true);
+    mockCookies.getQuiqLauncherVisibleCookie.mockReturnValue(true);
 
     client = new QuiqChatClient(host, contactPoint)
       .onNewMessages(onNewMessages)
@@ -56,6 +61,10 @@ describe('QuiqChatClient', () => {
   });
 
   describe('start', () => {
+    it('calls login', () => {
+      expect(API.login).toBeCalled();
+    });
+
     it('calls onNewMessages with the initial messages', () => {
       expect(onNewMessages).toBeCalledWith(initialConvo.messages);
     });
@@ -71,17 +80,12 @@ describe('QuiqChatClient', () => {
     it('calls onConnectionStatusChange', () => {
       expect(onConnectionStatusChange).toBeCalledWith(true);
     });
-
-    it('calls onErrorResolved', () => {
-      expect(onErrorResolved).toBeCalled();
-    });
   });
 
-  describe('start with retryable error', () => {
+  describe('start with an error', () => {
     beforeEach(() => {
       global.console.error = jest.fn();
 
-      // Return a retryable error once
       API.fetchWebsocketInfo.mockReturnValueOnce(Promise.reject({status: 405}));
 
       client = new QuiqChatClient(host, contactPoint)
@@ -97,12 +101,7 @@ describe('QuiqChatClient', () => {
 
     it('calls disconnectSocket', () => {
       expect(disconnectSocket).toBeCalled();
-    });
-
-    it('tries again', () => {
-      expect(connectSocket).toBeCalled();
-      expect(onConnectionStatusChange).toBeCalledWith(true);
-      expect(onErrorResolved).toBeCalled();
+      expect(onError).toBeCalledWith({status: 405});
     });
   });
 
@@ -225,6 +224,10 @@ describe('QuiqChatClient', () => {
   });
 
   describe('API wrappers', () => {
+    afterEach(() => {
+      set.mockClear();
+    });
+
     describe('joinChat', () => {
       beforeEach(() => {
         if (!client) {
@@ -238,9 +241,65 @@ describe('QuiqChatClient', () => {
         expect(API.joinChat).toBeCalled();
       });
 
-      it('sets the continuation cookie to true', () => {
-        const {id, expiration} = quiqChatVisibleCookie;
-        expect(set).toBeCalledWith(id, 'true', {expires: expiration});
+      it('sets the quiq-chat-container-visible cookie to true', () => {
+        expect(mockCookies.setQuiqChatContainerVisibleCookie).toBeCalledWith(true);
+      });
+    });
+
+    describe('isChatVisible', () => {
+      it('returns the value of the quiq-chat-container-visible cookie value', () => {
+        if (!client) {
+          throw new Error('Client undefined');
+        }
+
+        mockCookies.getQuiqChatContainerVisibleCookie.mockReturnValueOnce(false);
+        expect(client.isChatVisible()).toBe(false);
+      });
+    });
+
+    describe('hasActiveChat', () => {
+      beforeEach(() => {
+        if (!client) {
+          throw new Error('Client should be defined');
+        }
+      });
+
+      describe('when launcher is not visible', () => {
+        it('returns false', async () => {
+          if (!client) {
+            throw new Error('Client undefined');
+          }
+
+          mockCookies.getQuiqLauncherVisibleCookie.mockReturnValue(false);
+          const res = await client.hasActiveChat();
+          expect(res).toBe(false);
+        });
+      });
+
+      describe('when there are no messages', () => {
+        it('returns false', async () => {
+          if (!client) {
+            throw new Error('Client undefined');
+          }
+
+          mockCookies.getQuiqLauncherVisibleCookie.mockReturnValue(false);
+          API.fetchConversation.mockReturnValue([]);
+          const res = await client.hasActiveChat();
+          expect(res).toBe(false);
+        });
+      });
+
+      describe('when there are messages', () => {
+        it('returns true', async () => {
+          if (!client) {
+            throw new Error('Client undefined');
+          }
+
+          mockCookies.getQuiqLauncherVisibleCookie.mockReturnValue(true);
+          API.fetchConversation.mockReturnValue(initialConvo);
+          const res = await client.hasActiveChat();
+          expect(res).toBe(true);
+        });
       });
     });
 
@@ -257,9 +316,8 @@ describe('QuiqChatClient', () => {
         expect(API.leaveChat).toBeCalled();
       });
 
-      it('sets the continuation cookie to false', () => {
-        const {id, expiration} = quiqChatVisibleCookie;
-        expect(set).toBeCalledWith(id, 'false', {expires: expiration});
+      it('sets the quiq-chat-container-visible cookie to false', () => {
+        expect(mockCookies.setQuiqChatContainerVisibleCookie).toBeCalledWith(false);
       });
     });
 
@@ -271,8 +329,8 @@ describe('QuiqChatClient', () => {
 
         client.sendMessage('text');
         expect(API.addMessage).toBeCalledWith('text');
-        const {id, expiration} = quiqChatContinuationCookie;
-        expect(set).toBeCalledWith(id, 'true', {expires: expiration});
+        expect(mockCookies.setQuiqChatContainerVisibleCookie).toBeCalledWith(true);
+        expect(mockCookies.setQuiqLauncherVisibleCookie).toBeCalledWith(true);
       });
     });
 
@@ -296,8 +354,8 @@ describe('QuiqChatClient', () => {
 
         client.sendRegistration(data);
         expect(API.sendRegistration).toBeCalledWith(data);
-        const {id, expiration} = quiqChatContinuationCookie;
-        expect(set).toBeCalledWith(id, 'true', {expires: expiration});
+        expect(mockCookies.setQuiqChatContainerVisibleCookie).toBeCalledWith(true);
+        expect(mockCookies.setQuiqLauncherVisibleCookie).toBeCalledWith(true);
       });
     });
   });

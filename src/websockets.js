@@ -91,7 +91,7 @@ const onMessage = (res: AtmosphereResponse) => {
     message = atmosphere.util.parseJSON(res.responseBody);
     if (message.messageType === 'BurnItDown') {
       burnItDown(message.data);
-      if (callbacks.onBurn) callbacks.onBurn(message.data);
+      if (callbacks.onBurn) callbacks.onBurn();
       return;
     }
 

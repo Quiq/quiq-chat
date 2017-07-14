@@ -4,6 +4,7 @@ export type QuiqChatSettings = {
   HOST: string,
   CONTACT_POINT: string,
   BURNED?: boolean,
+  ACTIVE?: boolean,
 };
 
 export type EventType = 'Join' | 'Leave' | 'Register';
@@ -20,6 +21,12 @@ export type TextMessage = {
   type: TextMessageType,
 };
 
+export type IsomorphicFetchNetworkError = {
+  message: string,
+  stack: string,
+  status?: number, // We manually append this, it is not normally present on the object.
+};
+
 export type Event = {
   id: string,
   timestamp: number,
@@ -33,6 +40,37 @@ export type AgentTypingMessage = {
 
 export type BurnItDownMessage = {
   type: 'BurnItDown',
+};
+
+export type QuiqChatCallbacks = {
+  onNewMessages?: (messages: Array<TextMessage>) => void,
+  onAgentTyping?: (typing: boolean) => void,
+  onError?: (error: ?ApiError) => void,
+  onRetryableError?: (error: ?ApiError) => void,
+  onErrorResolved?: () => void,
+  onConnectionStatusChange?: (connected: boolean) => void,
+  onBurn?: () => void,
+};
+
+export type QuiqChatClientType = {
+  host: string,
+  contactPoint: string,
+  callbacks: QuiqChatCallbacks,
+  messages: Array<TextMessage>,
+  onNewMessages: (callback: (messages: Array<TextMessage>) => void) => QuiqChatClientType,
+  onAgentTyping: (callback: (typing: boolean) => void) => QuiqChatClientType,
+  onError: (callback: (error: ?ApiError) => void) => QuiqChatClientType,
+  onErrorResolved: (callback: () => void) => QuiqChatClientType,
+  onConnectionStatusChange: (callback: (connected: boolean) => void) => QuiqChatClientType,
+  onBurn: (callback: () => void) => QuiqChatClientType,
+  stop: () => void,
+  joinChat: () => void,
+  leaveChat: () => void,
+  sendMessage: (text: string) => void,
+  updateMessagePreview: (text: string, typing: boolean) => void,
+  sendRegistration: (fields: {[string]: string}) => void,
+  checkForAgents: () => Promise<{available: boolean}>,
+  hasActiveChat: () => boolean,
 };
 
 export type Conversation = {
@@ -120,12 +158,12 @@ export type AtmosphereMessage = {
 };
 
 export type WebsocketCallbacks = {
-  onConnectionLoss?: () => any,
-  onConnectionEstablish?: () => any,
-  onMessage?: (message: AtmosphereMessage) => any,
-  onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => any,
-  onClose?: () => any,
-  onBurn?: (burnData: BurnItDownResponse) => any,
+  onConnectionLoss?: () => void,
+  onConnectionEstablish?: () => ?Promise<void>,
+  onMessage?: (message: AtmosphereMessage) => void,
+  onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => void,
+  onClose?: () => void,
+  onBurn?: () => void,
 };
 
 export type BrowserNames =
@@ -268,10 +306,4 @@ export type ApiError = {
   code?: number,
   message?: string,
   status?: number,
-};
-
-export type CookieDef = {
-  id: string,
-  expiration?: number,
-  path?: string,
 };
