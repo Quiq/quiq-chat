@@ -1,7 +1,5 @@
 // @flow
 
-import type {CookieDef} from 'types';
-
 export const MessageTypes = {
   // eslint-disable-line import/prefer-default-export
   TEXT: 'Text',
@@ -23,15 +21,5 @@ export const SupportedWebchatUrls = [
   'quiq.dev:41014/app/webchat',
   'centricient.dev:41014/app/webchat',
 ];
-
-export const quiqChatVisibleCookie: CookieDef = {
-  id: 'quiq-chat-visible',
-  expiration: 1, // 1 day
-};
-
-export const quiqChatContinuationCookie: CookieDef = {
-  id: 'quiq-chat-continuation',
-  expiration: 1, // 1 day
-};
 
 export const noAgentsAvailableClass = 'noAgentsAvailable';

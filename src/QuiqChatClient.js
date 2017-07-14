@@ -3,12 +3,12 @@ import * as API from './apiCalls';
 import {setGlobals} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
-import {MessageTypes, quiqChatVisibleCookie, quiqChatContinuationCookie} from './appConstants';
+import {MessageTypes} from './appConstants';
 import {registerCallbacks, onInit} from './stubbornFetch';
-import {set, get} from 'js-cookie';
 import {differenceBy, last, partition} from 'lodash';
 import {sortByTimestamp} from './utils';
 import type {QuiqChatCallbacks} from 'types';
+import * as cookies from './cookies';
 
 const getConversation = async (): Promise<{events: Array<Event>, messages: Array<TextMessage>}> => {
   const conversation = await API.fetchConversation();
@@ -99,7 +99,7 @@ class QuiqChatClient {
 
   start = async (): Promise<?QuiqChatClient> => {
     try {
-      // Order Matters here.  Ensure we succesfully complete this fetchConversation request before connecting to
+      // Order Matters here.  Ensure we successfully complete this fetchConversation request before connecting to
       // the websocket below!
       await API.login();
       onInit();
@@ -152,23 +152,18 @@ class QuiqChatClient {
   /** API wrappers: these return Promises around the API response **/
 
   joinChat = () => {
-    set(quiqChatVisibleCookie.id, 'true', {
-      expires: quiqChatVisibleCookie.expiration,
-    });
+    cookies.setQuiqChatContainerVisibleCookie(true);
     return API.joinChat();
   };
 
   leaveChat = () => {
-    set(quiqChatVisibleCookie.id, 'false', {
-      expires: quiqChatVisibleCookie.expiration,
-    });
+    cookies.setQuiqChatContainerVisibleCookie(false);
     return API.leaveChat();
   };
 
   sendMessage = (text: string) => {
-    set(quiqChatContinuationCookie.id, 'true', {
-      expires: quiqChatContinuationCookie.expiration,
-    });
+    cookies.setQuiqChatContainerVisibleCookie(true);
+    cookies.setQuiqLauncherVisibleCookie(true);
     return API.addMessage(text);
   };
 
@@ -177,9 +172,8 @@ class QuiqChatClient {
   };
 
   sendRegistration = (fields: {[string]: string}) => {
-    set(quiqChatContinuationCookie.id, 'true', {
-      expires: quiqChatContinuationCookie.expiration,
-    });
+    cookies.setQuiqChatContainerVisibleCookie(true);
+    cookies.setQuiqLauncherVisibleCookie(true);
     return API.sendRegistration(fields);
   };
 
@@ -188,12 +182,12 @@ class QuiqChatClient {
   };
 
   isChatVisible = (): boolean => {
-    return get(quiqChatVisibleCookie.id) === 'true';
+    return cookies.getQuiqChatContainerVisibleCookie();
   };
 
   hasActiveChat = async () => {
-    // quiq-chat-continuation is a cookie to tell if the user has already initiated a chat
-    if (get(quiqChatContinuationCookie.id) !== 'true') return false;
+    if (!cookies.getQuiqLauncherVisibleCookie()) return false;
+
     if (this.textMessages.length > 0) return true;
 
     await this.getMessages();

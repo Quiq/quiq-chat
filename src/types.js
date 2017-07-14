@@ -307,9 +307,3 @@ export type ApiError = {
   message?: string,
   status?: number,
 };
-
-export type CookieDef = {
-  id: string,
-  expiration?: number,
-  path?: string,
-};

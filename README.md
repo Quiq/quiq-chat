@@ -181,12 +181,12 @@ Method accepts a single parameter, a JavaScript object with values of type `Stri
 #### hasActiveChat() => boolean
 Returns whether the end-user has performed a meaningful action that triggers a conversation, such as
 submitting the Welcome Form, or sending a message to the agent.  State persists through
-page flips using `quiq-chat-continuation` cookie.
+page flips using `quiq-chat-launcher-visible` cookie.
 
 #### isChatVisible() => boolean
 Returns the last state of chat's visibility.  Only includes actions that call the joinChat and leaveChat events.
 For instance, if your user maximizes chat, but you never call joinChat, isChatVisible won't reflect this change.
-State persists through page flips using `quiq-chat-visible` cookie.  Can be used to re-open webchat on page
+State persists through page flips using `quiq-chat-container-visible` cookie.  Can be used to re-open webchat on page
 turns if the user had chat previously open. Defaults to false if user has taken no actions.
 
 ## Data types
