@@ -274,17 +274,15 @@ class QuiqChatClient {
     const newMessages = differenceBy(messages, this.textMessages, 'id');
     const newEvents = differenceBy(events, this.events, 'id');
 
-    const sortedNewMessages = sortByTimestamp(newMessages);
-
-    if (newMessages.length && this.callbacks.onNewMessages && sendNewMessageCallback) {
-      this.callbacks.onNewMessages(sortedNewMessages);
-    }
-
     const sortedMessages = sortByTimestamp(this.textMessages.concat(newMessages));
     const sortedEvents = sortByTimestamp(this.textMessages.concat(newEvents));
 
     this.textMessages = sortedMessages;
     this.events = sortedEvents;
+
+    if (newMessages.length && this.callbacks.onNewMessages && sendNewMessageCallback) {
+      this.callbacks.onNewMessages(this.textMessages);
+    }
 
     // Update user registration status
     this.userIsRegistered = this.events.some(e => e.type === MessageTypes.REGISTER);

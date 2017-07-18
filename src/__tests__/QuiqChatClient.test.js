@@ -165,7 +165,7 @@ describe('QuiqChatClient', () => {
     });
 
     it('calls onNewMessages', () => {
-      expect(onNewMessages).toBeCalledWith([newMessage]);
+      expect(onNewMessages).lastCalledWith(initialConvo.messages.concat(newMessage));
     });
   });
 
