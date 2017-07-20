@@ -163,7 +163,7 @@ class QuiqChatClient {
 
   sendMessage = (text: string) => {
     cookies.setQuiqChatContainerVisibleCookie(true);
-    cookies.setQuiqLauncherVisibleCookie(true);
+    cookies.setQuiqUserTakenMeaningfulActionCookie(true);
     return API.addMessage(text);
   };
 
@@ -173,7 +173,7 @@ class QuiqChatClient {
 
   sendRegistration = (fields: {[string]: string}) => {
     cookies.setQuiqChatContainerVisibleCookie(true);
-    cookies.setQuiqLauncherVisibleCookie(true);
+    cookies.setQuiqUserTakenMeaningfulActionCookie(true);
     return API.sendRegistration(fields);
   };
 
@@ -181,19 +181,8 @@ class QuiqChatClient {
     return API.checkForAgents();
   };
 
-  isChatVisible = (): boolean => {
-    return cookies.getQuiqChatContainerVisibleCookie();
-  };
-
-  hasActiveChat = async () => {
-    if (!cookies.getQuiqLauncherVisibleCookie()) return false;
-
-    if (this.textMessages.length > 0) return true;
-
-    await this.getMessages();
-
-    return this.textMessages.length > 0;
-  };
+  isChatVisible = (): boolean => cookies.getQuiqChatContainerVisibleCookie();
+  hasTakenMeaningfulAction = (): boolean => cookies.getQuiqUserTakenMeaningfulActionCookie();
 
   getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
     if (!cache || !this.connected) {
