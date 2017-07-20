@@ -70,7 +70,8 @@ export type QuiqChatClientType = {
   updateMessagePreview: (text: string, typing: boolean) => void,
   sendRegistration: (fields: {[string]: string}) => void,
   checkForAgents: () => Promise<{available: boolean}>,
-  hasActiveChat: () => boolean,
+  isChatVisible: () => boolean,
+  hasTakenMeaningfulAction: () => boolean,
 };
 
 export type Conversation = {

@@ -47,7 +47,7 @@ describe('QuiqChatClient', () => {
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
     API.fetchWebsocketInfo.mockReturnValue({url: 'https://websocket.test'});
     mockCookies.getQuiqChatContainerVisibleCookie.mockReturnValue(true);
-    mockCookies.getQuiqLauncherVisibleCookie.mockReturnValue(true);
+    mockCookies.getQuiqUserTakenMeaningfulActionCookie.mockReturnValue(true);
 
     client = new QuiqChatClient(host, contactPoint)
       .onNewMessages(onNewMessages)
@@ -257,49 +257,20 @@ describe('QuiqChatClient', () => {
       });
     });
 
-    describe('hasActiveChat', () => {
+    describe('hasTakenMeaningfulAction', () => {
       beforeEach(() => {
         if (!client) {
           throw new Error('Client should be defined');
         }
       });
 
-      describe('when launcher is not visible', () => {
-        it('returns false', async () => {
-          if (!client) {
-            throw new Error('Client undefined');
-          }
+      it('returns the value of the quiq-user-taken-meaningful-action cookie value', () => {
+        if (!client) {
+          throw new Error('Client undefined');
+        }
 
-          mockCookies.getQuiqLauncherVisibleCookie.mockReturnValue(false);
-          const res = await client.hasActiveChat();
-          expect(res).toBe(false);
-        });
-      });
-
-      describe('when there are no messages', () => {
-        it('returns false', async () => {
-          if (!client) {
-            throw new Error('Client undefined');
-          }
-
-          mockCookies.getQuiqLauncherVisibleCookie.mockReturnValue(false);
-          API.fetchConversation.mockReturnValue([]);
-          const res = await client.hasActiveChat();
-          expect(res).toBe(false);
-        });
-      });
-
-      describe('when there are messages', () => {
-        it('returns true', async () => {
-          if (!client) {
-            throw new Error('Client undefined');
-          }
-
-          mockCookies.getQuiqLauncherVisibleCookie.mockReturnValue(true);
-          API.fetchConversation.mockReturnValue(initialConvo);
-          const res = await client.hasActiveChat();
-          expect(res).toBe(true);
-        });
+        mockCookies.getQuiqUserTakenMeaningfulActionCookie.mockReturnValueOnce(false);
+        expect(client.hasTakenMeaningfulAction()).toBe(false);
       });
     });
 
@@ -330,7 +301,7 @@ describe('QuiqChatClient', () => {
         client.sendMessage('text');
         expect(API.addMessage).toBeCalledWith('text');
         expect(mockCookies.setQuiqChatContainerVisibleCookie).toBeCalledWith(true);
-        expect(mockCookies.setQuiqLauncherVisibleCookie).toBeCalledWith(true);
+        expect(mockCookies.setQuiqUserTakenMeaningfulActionCookie).toBeCalledWith(true);
       });
     });
 
@@ -355,7 +326,7 @@ describe('QuiqChatClient', () => {
         client.sendRegistration(data);
         expect(API.sendRegistration).toBeCalledWith(data);
         expect(mockCookies.setQuiqChatContainerVisibleCookie).toBeCalledWith(true);
-        expect(mockCookies.setQuiqLauncherVisibleCookie).toBeCalledWith(true);
+        expect(mockCookies.setQuiqUserTakenMeaningfulActionCookie).toBeCalledWith(true);
       });
     });
   });
