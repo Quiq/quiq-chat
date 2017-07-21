@@ -49,6 +49,7 @@ export type QuiqChatCallbacks = {
   onRetryableError?: (error: ?ApiError) => void,
   onErrorResolved?: () => void,
   onConnectionStatusChange?: (connected: boolean) => void,
+  onWelcomeFormRegistration: () => void,
   onBurn?: () => void,
 };
 

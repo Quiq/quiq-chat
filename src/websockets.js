@@ -2,6 +2,7 @@
 import atmosphere from 'atmosphere.js';
 import {ping} from './apiCalls';
 import {isIE9, burnItDown} from './utils';
+import * as cookies from './cookies';
 import type {
   AtmosphereRequest,
   AtmosphereResponse,
@@ -89,10 +90,23 @@ const onMessage = (res: AtmosphereResponse) => {
   let message;
   try {
     message = atmosphere.util.parseJSON(res.responseBody);
-    if (message.messageType === 'BurnItDown') {
-      burnItDown(message.data);
-      if (callbacks.onBurn) callbacks.onBurn();
-      return;
+    switch (message.messageType) {
+      case 'BurnItDown': {
+        burnItDown(message.data);
+        if (callbacks.onBurn) callbacks.onBurn();
+        return;
+      }
+      case 'ChatMessage': {
+        const {data} = message;
+        // If we took a meaninful action in an undocked window, ensure we update the parent
+        if (data && data.type && (data.type === 'Register' || data.type === 'Text')) {
+          cookies.setQuiqUserTakenMeaningfulActionCookie(true);
+
+          if (data.type === 'Register' && callbacks.onWelcomeFormRegistration) {
+            callbacks.onWelcomeFormRegistration();
+          }
+        }
+      }
     }
 
     callbacks.onMessage && callbacks.onMessage(message);
