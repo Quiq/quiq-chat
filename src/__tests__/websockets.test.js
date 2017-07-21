@@ -73,8 +73,8 @@ describe('Websockets', () => {
         let message;
         beforeEach(() => {
           message = {
-            data: {favoriteNumber: 7},
-            messageType: 'Text',
+            data: {type: 'Text'},
+            messageType: 'ChatMessage',
             tenantId: 'test',
           };
         });
