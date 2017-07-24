@@ -31,6 +31,9 @@ const client = new QuiqChatClient()
   .onAgentTyping(typing => {
     // Show or hide the typing indicator
   })
+  .onRegistration(() => {
+    // Hide form, or show main app
+  })
   .onConnectionStatusChange(connected => {
     // Show the connection status of the app
   })
@@ -87,6 +90,9 @@ Called whenever there is a retryable error from the API
 
 #### onErrorResolved() => [QuiqChatClient](#quiqchatclient)
 Called whenever any error from the API has been resolved
+
+#### onRegistration() => [QuiqChatClient](#quiqchatclient)
+Called when Register event is received through a websocket message
 
 #### onConnectionStatusChanged(connected: boolean) => [QuiqChatClient](#quiqchatclient)
 Called when a connection is established or terminated
