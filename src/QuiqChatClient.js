@@ -74,6 +74,11 @@ class QuiqChatClient {
     return this;
   };
 
+  onRegistration = (callback: () => void): QuiqChatClient => {
+    this.callbacks.onRegistration = callback;
+    return this;
+  };
+
   onRetryableError = (callback: (error: ?ApiError) => void): QuiqChatClient => {
     this.callbacks.onRetryableError = callback;
     registerCallbacks({onRetryableError: callback});
@@ -153,6 +158,7 @@ class QuiqChatClient {
 
   joinChat = () => {
     cookies.setQuiqChatContainerVisibleCookie(true);
+
     return API.joinChat();
   };
 
@@ -210,8 +216,13 @@ class QuiqChatClient {
           break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
-        case MessageTypes.REGISTER:
           this._processNewMessagesAndEvents([], [message.data]);
+          break;
+        case MessageTypes.REGISTER:
+          if (this.callbacks.onRegistration) {
+            this.callbacks.onRegistration();
+          }
+          this.userIsRegistered = true;
           break;
         case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {
@@ -264,7 +275,7 @@ class QuiqChatClient {
     const newEvents = differenceBy(events, this.events, 'id');
 
     const sortedMessages = sortByTimestamp(this.textMessages.concat(newMessages));
-    const sortedEvents = sortByTimestamp(this.textMessages.concat(newEvents));
+    const sortedEvents = sortByTimestamp(this.events.concat(newEvents));
 
     this.textMessages = sortedMessages;
     this.events = sortedEvents;
@@ -272,9 +283,6 @@ class QuiqChatClient {
     if (newMessages.length && this.callbacks.onNewMessages && sendNewMessageCallback) {
       this.callbacks.onNewMessages(this.textMessages);
     }
-
-    // Update user registration status
-    this.userIsRegistered = this.events.some(e => e.type === MessageTypes.REGISTER);
   };
 }
 

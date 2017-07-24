@@ -37,6 +37,7 @@ describe('QuiqChatClient', () => {
   const onErrorResolved = jest.fn();
   const onConnectionStatusChange = jest.fn();
   const onBurn = jest.fn();
+  const onRegistration = jest.fn();
   const host = 'https://test.goquiq.fake';
   const contactPoint = 'test';
   const API = (ApiCalls: Object);
@@ -55,6 +56,7 @@ describe('QuiqChatClient', () => {
       .onError(onError)
       .onErrorResolved(onErrorResolved)
       .onConnectionStatusChange(onConnectionStatusChange)
+      .onRegistration(onRegistration)
       .onBurn(onBurn);
 
     client.start();
@@ -184,6 +186,7 @@ describe('QuiqChatClient', () => {
         data: newEvent,
       });
       expect(client.isRegistered()).toBe(true);
+      expect(onRegistration).toBeCalled();
     });
   });
 

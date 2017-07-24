@@ -1,6 +1,6 @@
 {
   "name": "quiq-chat",
-  "version": "1.7.1",
+  "version": "1.8.1",
   "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
@@ -21,15 +21,10 @@
     ]
   },
   "jest": {
-    "modulePaths": [
-      "src",
-      "node_modules"
-    ],
+    "modulePaths": ["src", "node_modules"],
     "rootDir": "src"
   },
-  "keywords": [
-    "quiq"
-  ],
+  "keywords": ["quiq"],
   "author": "nate.norberg@goquiq.com",
   "license": "MIT",
   "dependencies": {
