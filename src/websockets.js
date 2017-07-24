@@ -102,8 +102,8 @@ const onMessage = (res: AtmosphereResponse) => {
         if (data && data.type && (data.type === 'Register' || data.type === 'Text')) {
           cookies.setQuiqUserTakenMeaningfulActionCookie(true);
 
-          if (data.type === 'Register' && callbacks.onWelcomeFormRegistration) {
-            callbacks.onWelcomeFormRegistration();
+          if (data.type === 'Register' && callbacks.onRegistration) {
+            callbacks.onRegistration();
           }
         }
       }

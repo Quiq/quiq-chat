@@ -74,8 +74,8 @@ class QuiqChatClient {
     return this;
   };
 
-  onWelcomeFormRegistration = (callback: () => void): QuiqChatClient => {
-    this.callbacks.onWelcomeFormRegistration = callback;
+  onRegistration = (callback: () => void): QuiqChatClient => {
+    this.callbacks.onRegistration = callback;
     return this;
   };
 
@@ -219,8 +219,8 @@ class QuiqChatClient {
           this._processNewMessagesAndEvents([], [message.data]);
           break;
         case MessageTypes.REGISTER:
-          if (this.callbacks.onWelcomeFormRegistration) {
-            this.callbacks.onWelcomeFormRegistration();
+          if (this.callbacks.onRegistration) {
+            this.callbacks.onRegistration();
           }
           this.userIsRegistered = true;
           break;

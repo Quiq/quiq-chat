@@ -49,7 +49,7 @@ export type QuiqChatCallbacks = {
   onRetryableError?: (error: ?ApiError) => void,
   onErrorResolved?: () => void,
   onConnectionStatusChange?: (connected: boolean) => void,
-  onWelcomeFormRegistration?: () => void,
+  onRegistration?: () => void,
   onBurn?: () => void,
 };
 
@@ -164,7 +164,7 @@ export type WebsocketCallbacks = {
   onConnectionEstablish?: () => ?Promise<void>,
   onMessage?: (message: AtmosphereMessage) => void,
   onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => void,
-  onWelcomeFormRegistration?: () => void,
+  onRegistration?: () => void,
   onClose?: () => void,
   onBurn?: () => void,
 };

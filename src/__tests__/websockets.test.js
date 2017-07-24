@@ -14,7 +14,7 @@ describe('Websockets', () => {
     onConnectionEstablish: jest.fn(),
     onMessage: jest.fn(),
     onTransportFailure: jest.fn(),
-    onWelcomeFormRegistration: jest.fn(),
+    onRegistration: jest.fn(),
     onClose: jest.fn(),
     onBurn: jest.fn(),
   };
@@ -98,7 +98,7 @@ describe('Websockets', () => {
             expect(setQuiqUserTakenMeaningfulActionCookie).toBeCalled();
           });
 
-          it('calls onWelcomeFormRegistration for register event', () => {
+          it('calls onRegistration for register event', () => {
             message.messageType = 'ChatMessage';
             message.data = {
               type: 'Register',
@@ -107,7 +107,7 @@ describe('Websockets', () => {
               responseBody: JSON.stringify(message),
             });
             expect(setQuiqUserTakenMeaningfulActionCookie).toBeCalled();
-            expect(callbacks.onWelcomeFormRegistration).toBeCalled();
+            expect(callbacks.onRegistration).toBeCalled();
           });
         });
 
