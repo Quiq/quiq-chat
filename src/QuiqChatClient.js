@@ -5,7 +5,7 @@ import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
 import {MessageTypes} from './appConstants';
 import {registerCallbacks, onInit} from './stubbornFetch';
-import {differenceBy, last, partition} from 'lodash';
+import {differenceBy, unionBy, last, partition} from 'lodash';
 import {sortByTimestamp} from './utils';
 import type {QuiqChatCallbacks} from 'types';
 import * as cookies from './cookies';
@@ -54,6 +54,9 @@ class QuiqChatClient {
       this._handleConnectionLoss();
       this.stop();
     });
+
+    // Register with apiCalls for new session events
+    API.registerNewSessionCallback(this._handleNewSession);
   }
 
   /** Fluent client builder functions: these all return the client object **/
@@ -119,15 +122,7 @@ class QuiqChatClient {
 
       disconnectSocket(); // Ensure we only have one websocket connection open
       const wsInfo: {url: string} = await API.fetchWebsocketInfo();
-      connectSocket({
-        socketUrl: wsInfo.url,
-        callbacks: {
-          onConnectionLoss: this._handleConnectionLoss,
-          onConnectionEstablish: this._handleConnectionEstablish,
-          onMessage: this._handleWebsocketMessage,
-          onBurn: this._handleBurnItDown,
-        },
-      });
+      this._connectSocket(wsInfo);
 
       if (this.callbacks.onConnectionStatusChange) {
         this.callbacks.onConnectionStatusChange(true);
@@ -207,6 +202,29 @@ class QuiqChatClient {
   };
 
   /** Private Members **/
+  _connectSocket = (wsInfo: {url: string}) => {
+    connectSocket({
+      socketUrl: wsInfo.url,
+      callbacks: {
+        onConnectionLoss: this._handleConnectionLoss,
+        onConnectionEstablish: this._handleConnectionEstablish,
+        onMessage: this._handleWebsocketMessage,
+        onBurn: this._handleBurnItDown,
+      },
+    });
+  };
+
+  _handleNewSession = async () => {
+    // Clear message and events caches (tracking ID is different now, so we essentially have a new Conversation)
+    this.textMessages = this.events = [];
+    this.userIsRegistered = false;
+
+    // Disconnect/reconnect websocket
+    // (Connection establishment handler will refresh messages)
+    disconnectSocket(); // Ensure we only have one websocket connection open
+    const wsInfo: {url: string} = await API.fetchWebsocketInfo();
+    this._connectSocket(wsInfo);
+  };
 
   _handleWebsocketMessage = (message: AtmosphereMessage) => {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
@@ -271,16 +289,13 @@ class QuiqChatClient {
     events: Array<Event> = [],
     sendNewMessageCallback: boolean = true,
   ): void => {
-    const newMessages = differenceBy(messages, this.textMessages, 'id');
-    const newEvents = differenceBy(events, this.events, 'id');
+    const newMessages = unionBy(messages, this.textMessages, 'id');
+    const newEvents = unionBy(events, this.events, 'id');
 
-    const sortedMessages = sortByTimestamp(this.textMessages.concat(newMessages));
-    const sortedEvents = sortByTimestamp(this.events.concat(newEvents));
+    this.textMessages = sortByTimestamp(newMessages);
+    this.events = sortByTimestamp(newEvents);
 
-    this.textMessages = sortedMessages;
-    this.events = sortedEvents;
-
-    if (newMessages.length && this.callbacks.onNewMessages && sendNewMessageCallback) {
+    if (this.textMessages && this.callbacks.onNewMessages && sendNewMessageCallback) {
       this.callbacks.onNewMessages(this.textMessages);
     }
   };
