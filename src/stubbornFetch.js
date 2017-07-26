@@ -81,7 +81,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
                 callbacks.onRetryableError();
               }
 
-              return login().then(validateSession).then(request);
+              return login(null, true).then(validateSession).then(request);
             }
 
             // Retry
@@ -129,7 +129,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
               }
 
               retryCount++;
-              return login().then(validateSession).then(request);
+              return login(null, true).then(validateSession).then(request);
             }
 
             if (callbacks.onError) {
