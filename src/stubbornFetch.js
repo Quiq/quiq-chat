@@ -22,12 +22,13 @@ export const onInit = () => {
   initialized = true;
 };
 
-const bypassUrls = ['/session/web', '/agents-available'];
+const bypassUrls = ['/session/web', '/agents-available', '/chat'];
 
-let retryCount = 0;
-let timedOut = false;
-let timerId;
 export default (url: string, fetchRequest: RequestOptions) => {
+  let retryCount = 0;
+  let timedOut = false;
+  let timerId;
+
   const delayIfNeeded = () =>
     new Promise(resolve => {
       window.setTimeout(function() {
@@ -71,7 +72,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
                 callbacks.onRetryableError();
               }
 
-              return login(null, true).then(validateSession).then(request);
+              return login().then(validateSession).then(request);
             }
 
             // Retry
@@ -128,7 +129,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
               }
 
               retryCount++;
-              return login(null, true).then(validateSession).then(request);
+              return login().then(validateSession).then(request);
             }
 
             if (callbacks.onError) {

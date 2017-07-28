@@ -30,11 +30,14 @@ const initialConvo = {
   ],
 };
 
+const testTrackingId = 'dsafdsafaweufh';
+
 describe('QuiqChatClient', () => {
   const onNewMessages = jest.fn();
   const onAgentTyping = jest.fn();
   const onError = jest.fn();
   const onErrorResolved = jest.fn();
+  const onNewSession = jest.fn();
   const onConnectionStatusChange = jest.fn();
   const onBurn = jest.fn();
   const onRegistration = jest.fn();
@@ -57,6 +60,7 @@ describe('QuiqChatClient', () => {
       .onErrorResolved(onErrorResolved)
       .onConnectionStatusChange(onConnectionStatusChange)
       .onRegistration(onRegistration)
+      .onNewSession(onNewSession)
       .onBurn(onBurn);
 
     client.start();
@@ -168,6 +172,84 @@ describe('QuiqChatClient', () => {
 
     it('calls onNewMessages', () => {
       expect(onNewMessages).lastCalledWith(initialConvo.messages.concat(newMessage));
+    });
+  });
+
+  describe('handling new session', () => {
+    describe('when no trackingId is defined, i.e., this is first session', () => {
+      it('updates cached trackingId', () => {
+        if (!client) {
+          throw new Error('Client should be defined');
+        }
+
+        client._handleNewSession(testTrackingId);
+        expect(client.trackingId).toBe(testTrackingId);
+      });
+
+      it('does NOT fire new session callback', () => {
+        if (!client) {
+          throw new Error('Client should be defined');
+        }
+
+        client._handleNewSession(testTrackingId);
+        expect(client.callbacks.onNewSession).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when trackingId has not changed, i.e. session was refreshed', () => {
+      beforeEach(() => {
+        if (!client) {
+          throw new Error('Client should be defined');
+        }
+
+        client.trackingId = testTrackingId;
+      });
+
+      it('updates cached trackingId', () => {
+        if (!client) {
+          throw new Error('Client should be defined');
+        }
+
+        client._handleNewSession(testTrackingId);
+        expect(client.trackingId).toBe(testTrackingId);
+      });
+
+      it('does NOT fire new session callback', () => {
+        if (!client) {
+          throw new Error('Client should be defined');
+        }
+
+        client._handleNewSession(testTrackingId);
+        expect(client.callbacks.onNewSession).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when trackingId has changed, i.e. new conversation', () => {
+      beforeEach(() => {
+        if (!client) {
+          throw new Error('Client should be defined');
+        }
+
+        client.trackingId = 'oldId';
+      });
+
+      it('updates cached trackingId', async () => {
+        if (!client) {
+          throw new Error('Client should be defined');
+        }
+
+        await client._handleNewSession(testTrackingId);
+        expect(client.trackingId).toBe(testTrackingId);
+      });
+
+      it('does fire new session callback', () => {
+        if (!client) {
+          throw new Error('Client should be defined');
+        }
+
+        client._handleNewSession(testTrackingId);
+        expect(client.callbacks.onNewSession).toHaveBeenCalled();
+      });
     });
   });
 

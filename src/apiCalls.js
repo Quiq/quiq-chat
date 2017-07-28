@@ -4,9 +4,9 @@ import {getUrlForContactPoint, getPublicApiUrl, getContactPoint, getSessionApiUr
 import quiqFetch from './quiqFetch';
 import type {Conversation} from 'types';
 
-let _onNewSession: () => void;
+let _onNewSession: (newTrackingId: string) => any;
 
-export const registerNewSessionCallback = (callback: () => void) => {
+export const registerNewSessionCallback = (callback: (newTrackingId: string) => any) => {
   _onNewSession = callback;
 };
 
@@ -69,12 +69,18 @@ export const checkForAgents = (): Promise<{available: boolean}> =>
  * @param host - Host against which to call /generate
  * @param sessionChange - Indicates whether this is being called to replace old session. Results in newSession callback being fired.
  */
-export const login = (host?: string, sessionChange?: boolean = false) =>
-  quiqFetch(`${getSessionApiUrl(host)}/generate`, {
-    credentials: 'include',
-    method: 'POST',
-  }).then(() => {
-    if (sessionChange && _onNewSession) _onNewSession();
+export const login = (host?: string) =>
+  quiqFetch(
+    `${getSessionApiUrl(host)}/generate`,
+    {
+      credentials: 'include',
+      method: 'POST',
+    },
+    {
+      responseType: 'JSON',
+    },
+  ).then(res => {
+    if (_onNewSession) _onNewSession(res.tokenId);
   });
 
 export const validateSession = () => quiqFetch(getSessionApiUrl(), {credentials: 'include'});

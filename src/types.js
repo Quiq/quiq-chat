@@ -51,6 +51,7 @@ export type QuiqChatCallbacks = {
   onConnectionStatusChange?: (connected: boolean) => void,
   onRegistration?: () => void,
   onBurn?: () => void,
+  onNewSession?: () => void,
 };
 
 export type QuiqChatClientType = {
