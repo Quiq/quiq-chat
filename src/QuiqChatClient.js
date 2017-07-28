@@ -26,6 +26,7 @@ class QuiqChatClient {
   events: Array<Event>;
   connected: boolean;
   userIsRegistered: boolean;
+  trackingId: ?string;
 
   constructor(host: string, contactPoint: string) {
     this.host = host;
@@ -35,6 +36,7 @@ class QuiqChatClient {
     this.events = [];
     this.userIsRegistered = false;
     this.connected = false;
+    this.trackingId = null;
 
     setGlobals({
       HOST: this.host,
@@ -96,6 +98,11 @@ class QuiqChatClient {
 
   onConnectionStatusChange = (callback: (connected: boolean) => void): QuiqChatClient => {
     this.callbacks.onConnectionStatusChange = callback;
+    return this;
+  };
+
+  onNewSession = (callback: () => void): QuiqChatClient => {
+    this.callbacks.onNewSession = callback;
     return this;
   };
 
@@ -214,16 +221,25 @@ class QuiqChatClient {
     });
   };
 
-  _handleNewSession = async () => {
-    // Clear message and events caches (tracking ID is different now, so we essentially have a new Conversation)
-    this.textMessages = this.events = [];
-    this.userIsRegistered = false;
+  _handleNewSession = async (newTrackingId: string) => {
+    if (this.trackingId && newTrackingId !== this.trackingId) {
+      // Clear message and events caches (tracking ID is different now, so we essentially have a new Conversation)
+      this.textMessages = [];
+      this.events = [];
+      this.userIsRegistered = false;
 
-    // Disconnect/reconnect websocket
-    // (Connection establishment handler will refresh messages)
-    disconnectSocket(); // Ensure we only have one websocket connection open
-    const wsInfo: {url: string} = await API.fetchWebsocketInfo();
-    this._connectSocket(wsInfo);
+      if (this.callbacks.onNewSession) {
+        this.callbacks.onNewSession();
+      }
+
+      // Disconnect/reconnect websocket
+      // (Connection establishment handler will refresh messages)
+      disconnectSocket(); // Ensure we only have one websocket connection open
+      const wsInfo: {url: string} = await API.fetchWebsocketInfo();
+      this._connectSocket(wsInfo);
+    }
+
+    this.trackingId = newTrackingId;
   };
 
   _handleWebsocketMessage = (message: AtmosphereMessage) => {
@@ -234,13 +250,8 @@ class QuiqChatClient {
           break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
-          this._processNewMessagesAndEvents([], [message.data]);
-          break;
         case MessageTypes.REGISTER:
-          if (this.callbacks.onRegistration) {
-            this.callbacks.onRegistration();
-          }
-          this.userIsRegistered = true;
+          this._processNewMessagesAndEvents([], [message.data]);
           break;
         case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {
@@ -289,14 +300,31 @@ class QuiqChatClient {
     events: Array<Event> = [],
     sendNewMessageCallback: boolean = true,
   ): void => {
-    const newMessages = unionBy(messages, this.textMessages, 'id');
-    const newEvents = unionBy(events, this.events, 'id');
+    const newMessages: Array<TextMessage> = differenceBy(messages, this.textMessages, 'id');
+    const newEvents: Array<Event> = differenceBy(events, this.events, 'id');
 
-    this.textMessages = sortByTimestamp(newMessages);
-    this.events = sortByTimestamp(newEvents);
+    // Apparently, it's possible (though not common) to receive duplicate messages in transcript response.
+    // We need to take union of new and current messages to account for this
 
-    if (this.textMessages && this.callbacks.onNewMessages && sendNewMessageCallback) {
-      this.callbacks.onNewMessages(this.textMessages);
+    // If we found new messages, sort them, update cached textMessages, and send callback
+    if (newMessages.length) {
+      this.textMessages = sortByTimestamp(unionBy(this.textMessages, newMessages, 'id'));
+
+      if (this.callbacks.onNewMessages && sendNewMessageCallback) {
+        this.callbacks.onNewMessages(this.textMessages);
+      }
+    }
+
+    // If we found new events, sort them, update cached events, and check if a new registration event was received. Fire callback if so.
+    if (newEvents.length) {
+      this.events = sortByTimestamp(unionBy(this.events, newEvents, 'id'));
+
+      if (newEvents.find(e => e.type === MessageTypes.REGISTER)) {
+        if (this.callbacks.onRegistration) {
+          this.callbacks.onRegistration();
+        }
+        this.userIsRegistered = true;
+      }
     }
   };
 }
