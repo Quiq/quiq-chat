@@ -53,6 +53,16 @@ export default (url: string, fetchRequest: RequestOptions) => {
       delayIfNeeded().then(() =>
         fetch(url, fetchRequest).then(
           (response: Response) => {
+            if (response.status === 466) {
+              window.clearTimeout(timerId);
+              burnItDown();
+              if (callbacks.onBurn) {
+                callbacks.onBurn();
+              }
+
+              return reject();
+            }
+
             // Special Case
             if (response.status === 401) {
               if (
@@ -85,15 +95,6 @@ export default (url: string, fetchRequest: RequestOptions) => {
             }
 
             window.clearTimeout(timerId);
-
-            if (response.status === 466) {
-              burnItDown();
-              if (callbacks.onBurn) {
-                callbacks.onBurn();
-              }
-
-              return reject();
-            }
 
             // Success
             if (response.status < 400) {
