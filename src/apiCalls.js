@@ -80,7 +80,7 @@ export const login = (host?: string) =>
       responseType: 'JSON',
     },
   ).then(res => {
-    if (_onNewSession) _onNewSession(res.tokenId);
+    if (res && res.tokenId && _onNewSession) _onNewSession(res.tokenId);
   });
 
 export const validateSession = () => quiqFetch(getSessionApiUrl(), {credentials: 'include'});
