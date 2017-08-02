@@ -27,6 +27,7 @@ class QuiqChatClient {
   connected: boolean;
   userIsRegistered: boolean;
   trackingId: ?string;
+  initialized: boolean;
 
   constructor(host: string, contactPoint: string) {
     this.host = host;
@@ -37,6 +38,7 @@ class QuiqChatClient {
     this.userIsRegistered = false;
     this.connected = false;
     this.trackingId = null;
+    this.initialized = false;
 
     setGlobals({
       HOST: this.host,
@@ -113,7 +115,12 @@ class QuiqChatClient {
   };
 
   start = async (): Promise<?QuiqChatClient> => {
+    // Avoid race conditions by only running start() once
+    if (this.initialized) return;
+
     try {
+      this.initialized = true;
+
       // Order Matters here.  Ensure we successfully complete this fetchConversation request before connecting to
       // the websocket below!
       await API.login();
@@ -145,6 +152,7 @@ class QuiqChatClient {
 
   stop = () => {
     disconnectSocket();
+    this.initialized = false;
   };
 
   getMessages = async (cache: boolean = true): Promise<Array<TextMessage>> => {
