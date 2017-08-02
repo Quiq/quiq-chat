@@ -108,7 +108,6 @@ describe('QuiqChatClient', () => {
 
       client.initialized = true;
 
-      console.log('calling start');
       client.start();
     });
 
