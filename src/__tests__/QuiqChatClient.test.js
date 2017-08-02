@@ -44,7 +44,7 @@ describe('QuiqChatClient', () => {
   const host = 'https://test.goquiq.fake';
   const contactPoint = 'test';
   const API = (ApiCalls: Object);
-  let client: ?QuiqChatClient;
+  let client: QuiqChatClient;
   const mockCookies = (cookies: any);
 
   beforeEach(() => {
@@ -67,6 +67,10 @@ describe('QuiqChatClient', () => {
   });
 
   describe('start', () => {
+    it('sets initialized flag to "true"', () => {
+      expect(client.initialized).toBe(true);
+    });
+
     it('calls login', () => {
       expect(API.login).toBeCalled();
     });
@@ -85,6 +89,47 @@ describe('QuiqChatClient', () => {
 
     it('calls onConnectionStatusChange', () => {
       expect(onConnectionStatusChange).toBeCalledWith(true);
+    });
+  });
+
+  describe('start with "initialized" set to true', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      client = new QuiqChatClient(host, contactPoint)
+        .onNewMessages(onNewMessages)
+        .onAgentTyping(onAgentTyping)
+        .onError(onError)
+        .onErrorResolved(onErrorResolved)
+        .onConnectionStatusChange(onConnectionStatusChange)
+        .onRegistration(onRegistration)
+        .onNewSession(onNewSession)
+        .onBurn(onBurn);
+
+      client.initialized = true;
+
+      console.log('calling start');
+      client.start();
+    });
+
+    it('does not call login', () => {
+      expect(API.login).not.toBeCalled();
+    });
+
+    it('does not call onNewMessages', () => {
+      expect(onNewMessages).not.toBeCalled();
+    });
+
+    it('does not try to disconnect the websocket before making a new connection', () => {
+      expect(disconnectSocket).not.toBeCalled();
+    });
+
+    it('does not connect the websocket', () => {
+      expect(connectSocket).not.toBeCalled();
+    });
+
+    it('does not call onConnectionStatusChange', () => {
+      expect(onConnectionStatusChange).not.toBeCalled();
     });
   });
 
