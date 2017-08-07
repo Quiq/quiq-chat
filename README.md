@@ -184,6 +184,10 @@ Submits a map of custom `(key, value)` pairs to be included in the data for the 
 Method accepts a single parameter, a JavaScript object with values of type `String`.
 `key` is limited to 80 characters and must be unique; `value` is limited to 1000 characters.
 
+#### areCookiesEnabled() => boolean
+Utility method to determine if cookies are enabled on the client's browser.  If cookies are not enabled, the
+quiq-chat library will not function properly.
+
 #### hasTakenMeaningfulAction() => boolean
 Returns whether the end-user has performed a meaningful action, such as
 submitting the Welcome Form, or sending a message to the agent.  State persists through
