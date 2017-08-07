@@ -1,7 +1,14 @@
 // @flow
 import {formatQueryParams} from './utils';
-import {getUrlForContactPoint, getPublicApiUrl, getContactPoint, getSessionApiUrl} from './globals';
+import {
+  getUrlForContactPoint,
+  getPublicApiUrl,
+  getContactPoint,
+  getSessionApiUrl,
+  getTokenApiUrl,
+} from './globals';
 import quiqFetch from './quiqFetch';
+import {setAccessToken} from './cookies';
 import type {Conversation} from 'types';
 
 let _onNewSession: (newTrackingId: string) => any;
@@ -11,38 +18,32 @@ export const registerNewSessionCallback = (callback: (newTrackingId: string) => 
 };
 
 export const joinChat = () => {
-  quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST', credentials: 'include'});
+  quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST'});
 };
 
 export const leaveChat = () => {
-  quiqFetch(`${getUrlForContactPoint()}/leave`, {method: 'POST', credentials: 'include'});
+  quiqFetch(`${getUrlForContactPoint()}/leave`, {method: 'POST'});
 };
 
 export const addMessage = (text: string) => {
   quiqFetch(`${getUrlForContactPoint()}/send-message`, {
     method: 'POST',
-    credentials: 'include',
     body: JSON.stringify({text}),
   });
 };
 
 export const fetchWebsocketInfo = (): Promise<{url: string}> =>
-  quiqFetch(
-    `${getUrlForContactPoint()}/socket-info`,
-    {credentials: 'include'},
-    {responseType: 'JSON'},
-  );
+  quiqFetch(`${getUrlForContactPoint()}/socket-info`, undefined, {responseType: 'JSON'});
 
 // Use socket-info as a ping since the ping endpoint isn't publicly exposed
 export const ping = () => fetchWebsocketInfo();
 
 export const fetchConversation = (): Promise<Conversation> =>
-  quiqFetch(getUrlForContactPoint(), {credentials: 'include'}, {responseType: 'JSON'});
+  quiqFetch(getUrlForContactPoint(), undefined, {responseType: 'JSON'});
 
 export const updateMessagePreview = (text: string, typing: boolean) => {
   quiqFetch(`${getUrlForContactPoint()}/typing`, {
     method: 'POST',
-    credentials: 'include',
     body: JSON.stringify({text, typing}),
   });
 };
@@ -50,7 +51,6 @@ export const updateMessagePreview = (text: string, typing: boolean) => {
 export const sendRegistration = (fields: {[string]: string}) =>
   quiqFetch(`${getUrlForContactPoint()}/register`, {
     method: 'POST',
-    credentials: 'include',
     body: JSON.stringify({form: fields}),
   });
 
@@ -71,19 +71,24 @@ export const checkForAgents = (): Promise<{available: boolean}> =>
  */
 export const login = (host?: string) =>
   quiqFetch(
-    `${getSessionApiUrl(host)}/generate`,
+    `${getTokenApiUrl(host)}/generate`,
     {
-      credentials: 'include',
       method: 'POST',
     },
     {
       responseType: 'JSON',
     },
   ).then(res => {
-    if (res && res.tokenId && _onNewSession) _onNewSession(res.tokenId);
+    if (res) {
+      if (res.accessToken) {
+        setAccessToken(res.accessToken);
+      }
+      if (res.tokenId && _onNewSession) {
+        _onNewSession(res.tokenId);
+      }
+    }
   });
 
-export const validateSession = () => quiqFetch(getSessionApiUrl(), {credentials: 'include'});
+export const validateSession = () => quiqFetch(getSessionApiUrl());
 
-export const logout = () =>
-  quiqFetch(getSessionApiUrl(), {credentials: 'include', method: 'DELETE'});
+export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'});

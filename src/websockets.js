@@ -22,11 +22,20 @@ const buildRequest = (socketUrl: string) => {
     transport = 'jsonp';
   }
 
+  let headers = {
+    'X-Quiq-Line': '1',
+  };
+  if (cookies.getAccessToken()) {
+    headers = {
+      'X-Quiq-Access-Token': cookies.getAccessToken(),
+      'X-Quiq-Line': '1',
+    };
+  }
+
   return {
     url: `https://${socketUrl}`,
     enableXDR: true,
-    headers: {'X-Quiq-Line': '1'},
-    withCredentials: true,
+    headers,
     contentType: 'application/json',
     logLevel: 'error',
     transport,
@@ -90,29 +99,31 @@ const onMessage = (res: AtmosphereResponse) => {
   let message;
   try {
     message = atmosphere.util.parseJSON(res.responseBody);
-    switch (message.messageType) {
-      case 'BurnItDown': {
-        burnItDown(message.data);
-        if (callbacks.onBurn) callbacks.onBurn();
-        return;
-      }
-      case 'ChatMessage': {
-        const {data} = message;
-        // If we took a meaninful action in an undocked window, ensure we update the parent
-        if (data && data.type && (data.type === 'Register' || data.type === 'Text')) {
-          cookies.setQuiqUserTakenMeaningfulActionCookie(true);
+  } catch (e) {
+    console.error('Error parsing Quiq websocket message'); // eslint-disable-line no-console
+    return;
+  }
 
-          if (data.type === 'Register' && callbacks.onRegistration) {
-            callbacks.onRegistration();
-          }
+  switch (message.messageType) {
+    case 'BurnItDown': {
+      burnItDown(message.data);
+      if (callbacks.onBurn) callbacks.onBurn();
+      return;
+    }
+    case 'ChatMessage': {
+      const {data} = message;
+      // If we took a meaninful action in an undocked window, ensure we update the parent
+      if (data && data.type && (data.type === 'Register' || data.type === 'Text')) {
+        cookies.setQuiqUserTakenMeaningfulActionCookie(true);
+
+        if (data.type === 'Register' && callbacks.onRegistration) {
+          callbacks.onRegistration();
         }
       }
     }
-
-    callbacks.onMessage && callbacks.onMessage(message);
-  } catch (e) {
-    console.error('Error parsing Quiq websocket message'); // eslint-disable-line no-console
   }
+
+  callbacks.onMessage && callbacks.onMessage(message);
 };
 
 const onTransportFailure = (errorMsg: string, req: AtmosphereRequest) => {

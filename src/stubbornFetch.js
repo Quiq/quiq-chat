@@ -1,9 +1,10 @@
 // @flow
 import fetch from 'isomorphic-fetch';
 import {login, validateSession} from './apiCalls';
-import {clamp} from 'lodash';
+import {clamp, merge} from 'lodash';
 import {burnItDown} from './utils';
 import {getBurned} from './globals';
+import {getAccessToken} from './cookies';
 import type {ApiError, IsomorphicFetchNetworkError} from 'types';
 
 type FetchCallbacks = {
@@ -22,7 +23,7 @@ export const onInit = () => {
   initialized = true;
 };
 
-const bypassUrls = ['/session/web', '/agents-available', '/chat'];
+const bypassUrls = ['/generate', '/agents-available', '/chat'];
 
 export default (url: string, fetchRequest: RequestOptions) => {
   let retryCount = 0;
@@ -51,8 +52,16 @@ export default (url: string, fetchRequest: RequestOptions) => {
         return reject(new Error('Client in bad state. Aborting call.'));
       }
 
+      const req = fetchRequest;
+      const accessToken = getAccessToken();
+      if (accessToken) {
+        req.headers = merge({}, req.headers, {
+          'X-Quiq-Access-Token': accessToken,
+        });
+      }
+
       delayIfNeeded().then(() =>
-        fetch(url, fetchRequest).then(
+        fetch(url, req).then(
           (response: Response) => {
             if (response.status === 466) {
               window.clearTimeout(timerId);
@@ -68,8 +77,8 @@ export default (url: string, fetchRequest: RequestOptions) => {
             if (response.status === 401) {
               if (
                 url.includes('/session/web/generate') &&
-                fetchRequest.method &&
-                fetchRequest.method.toUpperCase() === 'POST'
+                req.method &&
+                req.method.toUpperCase() === 'POST'
               ) {
                 if (callbacks.onError) {
                   callbacks.onError();
@@ -115,8 +124,8 @@ export default (url: string, fetchRequest: RequestOptions) => {
             if (!timedOut && retryCount < 4) {
               if (
                 url.includes('/session/web/generate') &&
-                fetchRequest.method &&
-                fetchRequest.method.toUpperCase() === 'POST'
+                req.method &&
+                req.method.toUpperCase() === 'POST'
               ) {
                 if (callbacks.onError) {
                   callbacks.onError();

@@ -1,6 +1,7 @@
 // @flow
 import stubbornFetch from './stubbornFetch';
 import {checkRequiredSettings} from './globals';
+import {cookiesEnabled} from './cookies';
 import {merge} from 'lodash';
 import {version} from '../package.json';
 
@@ -17,6 +18,10 @@ const quiqFetch = (
     checkRequiredSettings: true,
   },
 ) => {
+  if (!cookiesEnabled()) {
+    return Promise.reject('Cookies are not enabled, aborting call');
+  }
+
   if (options.checkRequiredSettings) checkRequiredSettings();
 
   let request: RequestOptions = {
@@ -42,7 +47,6 @@ const quiqFetch = (
   }
 
   request.method = request.method || 'GET';
-
   return stubbornFetch(url, request)
     .then((res: Promise<Response> | Response): any => {
       if (options.responseType === 'JSON' && res && res.json) {

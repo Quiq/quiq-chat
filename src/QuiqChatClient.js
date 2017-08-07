@@ -197,6 +197,7 @@ class QuiqChatClient {
     return API.checkForAgents();
   };
 
+  areCookiesEnabled = () => cookies.cookiesEnabled();
   isChatVisible = (): boolean => cookies.getQuiqChatContainerVisibleCookie();
   hasTakenMeaningfulAction = (): boolean => cookies.getQuiqUserTakenMeaningfulActionCookie();
 
