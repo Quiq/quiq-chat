@@ -375,6 +375,17 @@ describe('QuiqChatClient', () => {
       });
     });
 
+    describe('areCookiesEnabled', () => {
+      it('returns the value of the quiq-chat-container-visible cookie value', () => {
+        if (!client) {
+          throw new Error('Client undefined');
+        }
+
+        mockCookies.cookiesEnabled.mockReturnValueOnce(false);
+        expect(client.areCookiesEnabled()).toBe(false);
+      });
+    });
+
     describe('isChatVisible', () => {
       it('returns the value of the quiq-chat-container-visible cookie value', () => {
         if (!client) {
