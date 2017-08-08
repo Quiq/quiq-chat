@@ -2,7 +2,7 @@
 import atmosphere from 'atmosphere.js';
 import {ping} from './apiCalls';
 import {isIE9, burnItDown} from './utils';
-import * as cookies from './cookies';
+import * as storage from './storage';
 import type {
   AtmosphereRequest,
   AtmosphereResponse,
@@ -25,9 +25,9 @@ const buildRequest = (socketUrl: string) => {
   let headers = {
     'X-Quiq-Line': '1',
   };
-  if (cookies.getAccessToken()) {
+  if (storage.getAccessToken()) {
     headers = {
-      'X-Quiq-Access-Token': cookies.getAccessToken(),
+      'X-Quiq-Access-Token': storage.getAccessToken(),
       'X-Quiq-Line': '1',
     };
   }
@@ -114,7 +114,7 @@ const onMessage = (res: AtmosphereResponse) => {
       const {data} = message;
       // If we took a meaninful action in an undocked window, ensure we update the parent
       if (data && data.type && (data.type === 'Register' || data.type === 'Text')) {
-        cookies.setQuiqUserTakenMeaningfulActionCookie(true);
+        storage.setQuiqUserTakenMeaningfulAction(true);
 
         if (data.type === 'Register' && callbacks.onRegistration) {
           callbacks.onRegistration();

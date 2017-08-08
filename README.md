@@ -184,20 +184,25 @@ Submits a map of custom `(key, value)` pairs to be included in the data for the 
 Method accepts a single parameter, a JavaScript object with values of type `String`.
 `key` is limited to 80 characters and must be unique; `value` is limited to 1000 characters.
 
-#### areCookiesEnabled() => boolean
-Utility method to determine if cookies are enabled on the client's browser.  If cookies are not enabled, the
-quiq-chat library will not function properly.
+#### isStorageEnabled = () => boolean
+Utility function to tell the client if quiq-chat has the capability to set its required data.
+Note this will return true if quiq-chat is only able to set its data in a non-peristent way.
+This means the session would not persist through page flips.  If this is false, quiq-chat will
+block all API calls.
+
+#### isPersistentStorageEnabled = () => boolean
+Utility function to tell the client if quiq-chat has the capability to set its required data in a
+persistent way. If this returns true, it means its safe to assume session data will
+persist through page flips.
 
 #### hasTakenMeaningfulAction() => boolean
 Returns whether the end-user has performed a meaningful action, such as
-submitting the Welcome Form, or sending a message to the agent.  State persists through
-page flips using `quiq-user-taken-meaningful-action` cookie.
+submitting the Welcome Form, or sending a message to the agent.
 
 #### isChatVisible() => boolean
 Returns the last state of chat's visibility.  Only includes actions that call the joinChat and leaveChat events.
 For instance, if your user maximizes chat, but you never call joinChat, isChatVisible won't reflect this change.
-State persists through page flips using `quiq-chat-container-visible` cookie.  Can be used to re-open webchat on page
-turns if the user had chat previously open. Defaults to false if user has taken no actions.
+Can be used to re-open webchat on page turns if the user had chat previously open. Defaults to false if user has taken no actions.
 
 ## Data types
 

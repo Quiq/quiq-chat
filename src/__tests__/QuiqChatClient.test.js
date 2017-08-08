@@ -1,14 +1,14 @@
 // @flow
 jest.mock('../apiCalls');
 jest.mock('../websockets');
-jest.mock('../cookies');
-jest.mock('js-cookie');
+jest.mock('../storage');
+jest.mock('store');
 
 import QuiqChatClient from '../QuiqChatClient';
 import * as ApiCalls from '../apiCalls';
-import * as cookies from '../cookies';
+import * as storage from '../storage';
 import {connectSocket, disconnectSocket} from '../websockets';
-import {set} from 'js-cookie';
+import {set} from 'store';
 
 const initialConvo = {
   id: 'testConvo',
@@ -45,13 +45,13 @@ describe('QuiqChatClient', () => {
   const contactPoint = 'test';
   const API = (ApiCalls: Object);
   let client: QuiqChatClient;
-  const mockCookies = (cookies: any);
+  const mockStore = (storage: any);
 
   beforeEach(() => {
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
     API.fetchWebsocketInfo.mockReturnValue({url: 'https://websocket.test'});
-    mockCookies.getQuiqChatContainerVisibleCookie.mockReturnValue(true);
-    mockCookies.getQuiqUserTakenMeaningfulActionCookie.mockReturnValue(true);
+    mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
+    mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
 
     client = new QuiqChatClient(host, contactPoint)
       .onNewMessages(onNewMessages)
@@ -370,29 +370,29 @@ describe('QuiqChatClient', () => {
         expect(API.joinChat).toBeCalled();
       });
 
-      it('sets the quiq-chat-container-visible cookie to true', () => {
-        expect(mockCookies.setQuiqChatContainerVisibleCookie).toBeCalledWith(true);
+      it('sets the quiq-chat-container-visible value to true', () => {
+        expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(true);
       });
     });
 
-    describe('areCookiesEnabled', () => {
-      it('returns the value of the quiq-chat-container-visible cookie value', () => {
+    describe('isStorageEnabled', () => {
+      it('returns the value of the quiq-chat-container-visible', () => {
         if (!client) {
           throw new Error('Client undefined');
         }
 
-        mockCookies.cookiesEnabled.mockReturnValueOnce(false);
-        expect(client.areCookiesEnabled()).toBe(false);
+        mockStore.isStorageEnabled.mockReturnValueOnce(false);
+        expect(client.isStorageEnabled()).toBe(false);
       });
     });
 
     describe('isChatVisible', () => {
-      it('returns the value of the quiq-chat-container-visible cookie value', () => {
+      it('returns the value of the quiq-chat-container-visible value value', () => {
         if (!client) {
           throw new Error('Client undefined');
         }
 
-        mockCookies.getQuiqChatContainerVisibleCookie.mockReturnValueOnce(false);
+        mockStore.getQuiqChatContainerVisible.mockReturnValueOnce(false);
         expect(client.isChatVisible()).toBe(false);
       });
     });
@@ -404,12 +404,12 @@ describe('QuiqChatClient', () => {
         }
       });
 
-      it('returns the value of the quiq-user-taken-meaningful-action cookie value', () => {
+      it('returns the value of the quiq-user-taken-meaningful-action value value', () => {
         if (!client) {
           throw new Error('Client undefined');
         }
 
-        mockCookies.getQuiqUserTakenMeaningfulActionCookie.mockReturnValueOnce(false);
+        mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValueOnce(false);
         expect(client.hasTakenMeaningfulAction()).toBe(false);
       });
     });
@@ -427,8 +427,8 @@ describe('QuiqChatClient', () => {
         expect(API.leaveChat).toBeCalled();
       });
 
-      it('sets the quiq-chat-container-visible cookie to false', () => {
-        expect(mockCookies.setQuiqChatContainerVisibleCookie).toBeCalledWith(false);
+      it('sets the quiq-chat-container-visible value to false', () => {
+        expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(false);
       });
     });
 
@@ -440,8 +440,8 @@ describe('QuiqChatClient', () => {
 
         client.sendMessage('text');
         expect(API.addMessage).toBeCalledWith('text');
-        expect(mockCookies.setQuiqChatContainerVisibleCookie).toBeCalledWith(true);
-        expect(mockCookies.setQuiqUserTakenMeaningfulActionCookie).toBeCalledWith(true);
+        expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(true);
+        expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
       });
     });
 
@@ -465,8 +465,8 @@ describe('QuiqChatClient', () => {
 
         client.sendRegistration(data);
         expect(API.sendRegistration).toBeCalledWith(data);
-        expect(mockCookies.setQuiqChatContainerVisibleCookie).toBeCalledWith(true);
-        expect(mockCookies.setQuiqUserTakenMeaningfulActionCookie).toBeCalledWith(true);
+        expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(true);
+        expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
       });
     });
   });

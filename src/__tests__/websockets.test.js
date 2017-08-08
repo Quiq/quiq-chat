@@ -1,11 +1,11 @@
 // @flow
 jest.mock('atmosphere.js');
 jest.mock('../utils');
-jest.mock('../cookies.js');
+jest.mock('../storage.js');
 import * as Websockets from '../websockets';
 import * as Utils from '../utils';
 import atmosphere from 'atmosphere.js';
-import {setQuiqUserTakenMeaningfulActionCookie} from '../cookies';
+import {setQuiqUserTakenMeaningfulAction} from '../storage';
 
 describe('Websockets', () => {
   const socketUrl = 'www.fakesite.com';
@@ -87,7 +87,7 @@ describe('Websockets', () => {
         });
 
         describe('ChatMessage', () => {
-          it('sets cookie', () => {
+          it('sets storage', () => {
             message.messageType = 'ChatMessage';
             message.data = {
               type: 'Text',
@@ -95,7 +95,7 @@ describe('Websockets', () => {
             buildRequest.onMessage({
               responseBody: JSON.stringify(message),
             });
-            expect(setQuiqUserTakenMeaningfulActionCookie).toBeCalled();
+            expect(setQuiqUserTakenMeaningfulAction).toBeCalled();
           });
 
           it('calls onRegistration for register event', () => {
@@ -106,7 +106,7 @@ describe('Websockets', () => {
             buildRequest.onMessage({
               responseBody: JSON.stringify(message),
             });
-            expect(setQuiqUserTakenMeaningfulActionCookie).toBeCalled();
+            expect(setQuiqUserTakenMeaningfulAction).toBeCalled();
             expect(callbacks.onRegistration).toBeCalled();
           });
         });
