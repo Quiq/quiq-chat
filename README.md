@@ -186,9 +186,9 @@ Method accepts a single parameter, a JavaScript object with values of type `Stri
 
 #### isStorageEnabled = () => boolean
 Utility function to tell the client if quiq-chat has the capability to set its required data.
-Note this will return true if quiq-chat is only able to set its data in a non-peristent way.
-This means the session would not persist through page flips.  If this is false, quiq-chat will
-block all API calls.
+Note this will return true if quiq-chat is able to set its required data in any way,
+whether persistent or not. This means the session may not persist through page flips.  
+If this is false, quiq-chat will block all API calls.
 
 #### isPersistentStorageEnabled = () => boolean
 Utility function to tell the client if quiq-chat has the capability to set its required data in a
