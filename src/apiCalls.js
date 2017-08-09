@@ -8,7 +8,7 @@ import {
   getTokenApiUrl,
 } from './globals';
 import quiqFetch from './quiqFetch';
-import {setAccessToken} from './cookies';
+import {setAccessToken} from './storage';
 import type {Conversation} from 'types';
 
 let _onNewSession: (newTrackingId: string) => any;

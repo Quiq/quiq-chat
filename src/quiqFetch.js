@@ -1,7 +1,7 @@
 // @flow
 import stubbornFetch from './stubbornFetch';
 import {checkRequiredSettings} from './globals';
-import {cookiesEnabled} from './cookies';
+import {isStorageEnabled} from './storage';
 import {merge} from 'lodash';
 import {version} from '../package.json';
 
@@ -18,8 +18,8 @@ const quiqFetch = (
     checkRequiredSettings: true,
   },
 ) => {
-  if (!cookiesEnabled()) {
-    return Promise.reject('Cookies are not enabled, aborting call');
+  if (!isStorageEnabled()) {
+    return Promise.reject('Store is not enabled, aborting call');
   }
 
   if (options.checkRequiredSettings) checkRequiredSettings();

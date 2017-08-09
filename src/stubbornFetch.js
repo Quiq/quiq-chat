@@ -4,7 +4,7 @@ import {login, validateSession} from './apiCalls';
 import {clamp, merge} from 'lodash';
 import {burnItDown} from './utils';
 import {getBurned} from './globals';
-import {getAccessToken} from './cookies';
+import {getAccessToken} from './storage';
 import type {ApiError, IsomorphicFetchNetworkError} from 'types';
 
 type FetchCallbacks = {

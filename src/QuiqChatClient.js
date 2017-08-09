@@ -8,7 +8,7 @@ import {registerCallbacks, onInit} from './stubbornFetch';
 import {differenceBy, unionBy, last, partition} from 'lodash';
 import {sortByTimestamp} from './utils';
 import type {QuiqChatCallbacks} from 'types';
-import * as cookies from './cookies';
+import * as storage from './storage';
 
 const getConversation = async (): Promise<{events: Array<Event>, messages: Array<TextMessage>}> => {
   const conversation = await API.fetchConversation();
@@ -63,7 +63,7 @@ class QuiqChatClient {
     API.registerNewSessionCallback(this._handleNewSession);
   }
 
-  /** Fluent client builder functions: these all return the client object **/
+  /** Fluent client builder functions: these all return the client object * */
 
   onNewMessages = (callback: (messages: Array<TextMessage>) => void): QuiqChatClient => {
     this.callbacks.onNewMessages = callback;
@@ -164,22 +164,22 @@ class QuiqChatClient {
     return this.textMessages;
   };
 
-  /** API wrappers: these return Promises around the API response **/
+  /** API wrappers: these return Promises around the API response * */
 
   joinChat = () => {
-    cookies.setQuiqChatContainerVisibleCookie(true);
+    storage.setQuiqChatContainerVisible(true);
 
     return API.joinChat();
   };
 
   leaveChat = () => {
-    cookies.setQuiqChatContainerVisibleCookie(false);
+    storage.setQuiqChatContainerVisible(false);
     return API.leaveChat();
   };
 
   sendMessage = (text: string) => {
-    cookies.setQuiqChatContainerVisibleCookie(true);
-    cookies.setQuiqUserTakenMeaningfulActionCookie(true);
+    storage.setQuiqChatContainerVisible(true);
+    storage.setQuiqUserTakenMeaningfulAction(true);
     return API.addMessage(text);
   };
 
@@ -188,8 +188,8 @@ class QuiqChatClient {
   };
 
   sendRegistration = (fields: {[string]: string}) => {
-    cookies.setQuiqChatContainerVisibleCookie(true);
-    cookies.setQuiqUserTakenMeaningfulActionCookie(true);
+    storage.setQuiqChatContainerVisible(true);
+    storage.setQuiqUserTakenMeaningfulAction(true);
     return API.sendRegistration(fields);
   };
 
@@ -197,9 +197,10 @@ class QuiqChatClient {
     return API.checkForAgents();
   };
 
-  areCookiesEnabled = () => cookies.cookiesEnabled();
-  isChatVisible = (): boolean => cookies.getQuiqChatContainerVisibleCookie();
-  hasTakenMeaningfulAction = (): boolean => cookies.getQuiqUserTakenMeaningfulActionCookie();
+  isStorageEnabled = () => storage.isStorageEnabled();
+  isPersistentStorageEnabled = () => storage.isPersistentStorageEnabled();
+  isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
+  hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
 
   getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
     if (!cache || !this.connected) {
@@ -217,7 +218,7 @@ class QuiqChatClient {
     return this.userIsRegistered;
   };
 
-  /** Private Members **/
+  /** Private Members * */
   _connectSocket = (wsInfo: {url: string}) => {
     connectSocket({
       socketUrl: wsInfo.url,
