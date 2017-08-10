@@ -3,7 +3,7 @@ import fetch from 'isomorphic-fetch';
 import {login, validateSession} from './apiCalls';
 import {clamp} from 'lodash';
 import {burnItDown} from './utils';
-import {getBurned} from './globals';
+import {getBurned, getSessionApiUrl} from './globals';
 import type {ApiError, IsomorphicFetchNetworkError} from 'types';
 
 type FetchCallbacks = {
@@ -24,6 +24,7 @@ export const onInit = () => {
 
 const bypassUrls = ['/session/web', '/agents-available', '/chat'];
 
+let noOfErrors = 0;
 export default (url: string, fetchRequest: RequestOptions) => {
   let retryCount = 0;
   let timedOut = false;
@@ -50,6 +51,15 @@ export default (url: string, fetchRequest: RequestOptions) => {
       if (getBurned()) {
         return reject(new Error('Client in bad state. Aborting call.'));
       }
+      if (noOfErrors > 100) {
+        window.clearTimeout(timerId);
+        burnItDown();
+        if (callbacks.onBurn) {
+          callbacks.onBurn();
+        }
+
+        return reject();
+      }
 
       delayIfNeeded().then(() =>
         fetch(url, fetchRequest).then(
@@ -66,6 +76,16 @@ export default (url: string, fetchRequest: RequestOptions) => {
 
             // Special Case
             if (response.status === 401) {
+              if (url === getSessionApiUrl()) {
+                window.clearTimeout(timerId);
+                burnItDown();
+                if (callbacks.onBurn) {
+                  callbacks.onBurn();
+                }
+
+                return reject(response);
+              }
+
               if (
                 url.includes('/session/web/generate') &&
                 fetchRequest.method &&
@@ -82,6 +102,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
                 callbacks.onRetryableError();
               }
 
+              noOfErrors++;
               return login().then(validateSession).then(request);
             }
 
@@ -92,6 +113,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
               }
 
               retryCount++;
+              noOfErrors++;
               return request();
             }
 
@@ -118,6 +140,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
               }
 
               retryCount++;
+              noOfErrors++;
               return request();
             }
 
