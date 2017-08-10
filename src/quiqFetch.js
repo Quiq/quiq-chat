@@ -25,6 +25,10 @@ const quiqFetch = (
   if (options.checkRequiredSettings) checkRequiredSettings();
 
   let request: RequestOptions = {
+    // Leave this as cors even though we are on same origin for default webchat case.
+    // If anyone were to use quiq-chat directly without webchat, it would be on a non-goquiq.com domain.
+    // It also allows us to test our webchat as if it were cors enabled, even though we do not use
+    // cors capabilities.
     mode: 'cors',
     headers: {
       'X-Quiq-Line': '1',
