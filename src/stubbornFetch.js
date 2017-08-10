@@ -113,24 +113,12 @@ export default (url: string, fetchRequest: RequestOptions) => {
             // We aren't given a status code in this code path.  If we didn't get here from an auth call,
             // try re-authing
             if (!timedOut && retryCount < 4) {
-              if (
-                url.includes('/session/web/generate') &&
-                fetchRequest.method &&
-                fetchRequest.method.toUpperCase() === 'POST'
-              ) {
-                if (callbacks.onError) {
-                  callbacks.onError();
-                }
-
-                return reject();
-              }
-
               if (callbacks.onRetryableError) {
                 callbacks.onRetryableError();
               }
 
               retryCount++;
-              return login().then(validateSession).then(request);
+              return request();
             }
 
             if (callbacks.onError) {
