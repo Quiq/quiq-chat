@@ -22,7 +22,7 @@ const quiqFetch = (
   let request: RequestOptions = {
     mode: 'cors',
     headers: {
-      'X-Quiq-Line': '1',
+      'X-Quiq-Line': '2',
       'X-Quiq-Client-Id': 'Quiq-Chat-Client',
       'X-Quiq-Client-Version': version,
     },
