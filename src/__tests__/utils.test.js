@@ -8,14 +8,12 @@ describe('Utils', () => {
   describe('formatQueryParams', function() {
     it('adds params with ? and & syntax', function() {
       expect(Utils.formatQueryParams('/url', {a: 'one', b: 'two'})).toBe('/url?a=one&b=two');
-    });
-
-    describe('when a param is an array', function() {
-      it('adds it multiple times', function() {
-        expect(Utils.formatQueryParams('/url', {a: 'one', b: ['two', 'three']})).toBe(
-          '/url?a=one&b=two&b=three',
-        );
-      });
+      expect(Utils.formatQueryParams('/url?alreadyParamed=true', {a: 'one', b: 'two'})).toBe(
+        '/url?alreadyParamed=true&a=one&b=two',
+      );
+      expect(
+        Utils.formatQueryParams('/url?alreadyParamed=true&extraParam=crazy', {a: 'one', b: 'two'}),
+      ).toBe('/url?alreadyParamed=true&extraParam=crazy&a=one&b=two');
     });
   });
 

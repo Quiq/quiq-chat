@@ -22,7 +22,7 @@ describe('quiqFetch', () => {
     expect(mockFetch.mock.calls[0][0]).toBe('someUrl');
     expect(mockFetch.mock.calls[0][1].mode).toBe('cors');
     expect(mockFetch.mock.calls[0][1].method).toBe('GET');
-    expect(mockFetch.mock.calls[0][1].headers['X-Quiq-Line']).toBe('1');
+    expect(mockFetch.mock.calls[0][1].headers['X-Quiq-Line']).toBe('2');
     expect(mockFetch.mock.calls[0][1].headers['X-Quiq-Client-Id']).toBe('Quiq-Chat-Client');
     expect(mockFetch.mock.calls[0][1].headers['X-Quiq-Client-Version']).toBeDefined();
   });

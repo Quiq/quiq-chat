@@ -3,6 +3,7 @@ import atmosphere from 'atmosphere.js';
 import {ping} from './apiCalls';
 import {isIE9, burnItDown} from './utils';
 import * as storage from './storage';
+import {version} from '../package.json';
 import type {
   AtmosphereRequest,
   AtmosphereResponse,
@@ -22,14 +23,14 @@ const buildRequest = (socketUrl: string) => {
     transport = 'jsonp';
   }
 
-  let headers = {
+  const headers = {
     'X-Quiq-Line': '1',
+    'X-Quiq-Client-Id': 'Quiq-Chat-Client',
+    'X-Quiq-Client-Version': version,
   };
   if (storage.getAccessToken()) {
-    headers = {
-      'X-Quiq-Access-Token': storage.getAccessToken(),
-      'X-Quiq-Line': '1',
-    };
+    // $FlowIssue - Flow doesn't like that we are adding an extra header
+    headers['X-Quiq-Access-Token'] = storage.getAccessToken();
   }
 
   return {

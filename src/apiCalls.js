@@ -5,10 +5,10 @@ import {
   getPublicApiUrl,
   getContactPoint,
   getSessionApiUrl,
-  getTokenApiUrl,
+  getGenerateUrl,
 } from './globals';
 import quiqFetch from './quiqFetch';
-import {setAccessToken} from './storage';
+import {setAccessToken, setTrackingId} from './storage';
 import type {Conversation} from 'types';
 
 let _onNewSession: (newTrackingId: string) => any;
@@ -61,7 +61,7 @@ export const checkForAgents = (): Promise<{available: boolean}> =>
       contactPoint: getContactPoint(),
     }),
     undefined,
-    {responseType: 'JSON'},
+    {responseType: 'JSON', cached: true},
   );
 
 /**
@@ -71,7 +71,7 @@ export const checkForAgents = (): Promise<{available: boolean}> =>
  */
 export const login = (host?: string) =>
   quiqFetch(
-    `${getTokenApiUrl(host)}/generate`,
+    getGenerateUrl(host),
     {
       method: 'POST',
     },
@@ -82,6 +82,7 @@ export const login = (host?: string) =>
     if (res) {
       if (res.accessToken) {
         setAccessToken(res.accessToken);
+        setTrackingId(res.tokenId);
       }
       if (res.tokenId && _onNewSession) {
         _onNewSession(res.tokenId);

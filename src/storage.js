@@ -8,6 +8,9 @@ store.addPlugin(expirePlugin);
 const expireInDays = (numberOfDays: number) =>
   new Date().getTime() + numberOfDays * 1000 * 60 * 60 * 24;
 
+const expireInMinutes = (numberOfMinutes: number) =>
+  new Date().getTime() + numberOfMinutes * 1000 * 60;
+
 export const setQuiqChatContainerVisible = (visible: boolean) => {
   store.set('quiq-chat-container-visible', visible, expireInDays(1));
 };
@@ -17,11 +20,15 @@ export const setQuiqUserTakenMeaningfulAction = (visible: boolean) => {
 export const setAccessToken = (token: string) => {
   store.set('X-Quiq-Access-Token', token, expireInDays(365));
 };
+export const setTrackingId = (trackingId?: string) => {
+  store.set('quiq-tracking-id', trackingId, expireInMinutes(60));
+};
 
 export const getQuiqChatContainerVisible = () => store.get('quiq-chat-container-visible') === true;
 export const getQuiqUserTakenMeaningfulAction = () =>
   store.get('quiq-user-taken-meaningful-action') === true;
 export const getAccessToken = () => store.get('X-Quiq-Access-Token');
+export const getTrackingId = () => store.get('quiq-tracking-id');
 
 export const isStorageEnabled = () => store.enabled;
 

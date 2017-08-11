@@ -1,8 +1,9 @@
 // @flow
 import stubbornFetch from './stubbornFetch';
 import {checkRequiredSettings} from './globals';
-import {isStorageEnabled} from './storage';
+import {isStorageEnabled, getTrackingId} from './storage';
 import {merge} from 'lodash';
+import {formatQueryParams} from './utils';
 import {version} from '../package.json';
 
 const quiqFetch = (
@@ -12,7 +13,9 @@ const quiqFetch = (
     requestType?: string,
     responseType?: string,
     checkRequiredSettings?: boolean,
+    cached?: boolean,
   } = {
+    cached: false,
     requestType: 'JSON',
     responseType: 'NONE',
     checkRequiredSettings: true,
@@ -24,6 +27,14 @@ const quiqFetch = (
 
   if (options.checkRequiredSettings) checkRequiredSettings();
 
+  // Only append this data to a non-cached endpoint so we don't cache bust.
+  const parsedUrl = options.cached
+    ? url
+    : formatQueryParams(url, {
+        trackingId: getTrackingId() || 'noAssociatedTrackingId',
+        quiqVersion: version,
+      });
+
   let request: RequestOptions = {
     // Leave this as cors even though we are on same origin for default webchat case.
     // If anyone were to use quiq-chat directly without webchat, it would be on a non-goquiq.com domain.
@@ -31,7 +42,7 @@ const quiqFetch = (
     // cors capabilities.
     mode: 'cors',
     headers: {
-      'X-Quiq-Line': '1',
+      'X-Quiq-Line': '2',
       'X-Quiq-Client-Id': 'Quiq-Chat-Client',
       'X-Quiq-Client-Version': version,
     },
@@ -51,7 +62,7 @@ const quiqFetch = (
   }
 
   request.method = request.method || 'GET';
-  return stubbornFetch(url, request)
+  return stubbornFetch(parsedUrl, request)
     .then((res: Promise<Response> | Response): any => {
       if (options.responseType === 'JSON' && res && res.json) {
         return ((res: any): Response).json().then(result => result).catch(err => err);

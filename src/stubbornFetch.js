@@ -3,9 +3,19 @@ import fetch from 'isomorphic-fetch';
 import {login, validateSession} from './apiCalls';
 import {clamp, merge} from 'lodash';
 import {burnItDown} from './utils';
-import {getBurned} from './globals';
+import {getBurned, getSessionApiUrl, getGenerateUrl} from './globals';
 import {getAccessToken} from './storage';
 import type {ApiError, IsomorphicFetchNetworkError} from 'types';
+
+const messages = {
+  maxTriesExceeded: 'API call exceeded maximum time of 30 seconds',
+  clientNotInitialized: 'Attempted calling API without initializing chat client',
+  burned: 'Client in bad state. Aborting call.',
+  burnedInResponse: 'Client in bad state. Aborting response.',
+  burnedFromServer: 'Received 466 response code from server. Blocking any further API Calls.',
+  totalErrorsExceeded:
+    'Client has exceeded maximum number of errors for a single session. Aborting session.',
+};
 
 type FetchCallbacks = {
   onBurn?: () => void,
@@ -23,8 +33,8 @@ export const onInit = () => {
   initialized = true;
 };
 
+let errorCount = 0;
 const bypassUrls = ['/generate', '/agents-available', '/chat'];
-
 export default (url: string, fetchRequest: RequestOptions) => {
   let retryCount = 0;
   let timedOut = false;
@@ -38,68 +48,62 @@ export default (url: string, fetchRequest: RequestOptions) => {
       }, clamp((retryCount ** 2 - 1) / 2 * 1000, 0, 30000));
     });
 
+  const burnIt = () => {
+    window.clearTimeout(timerId);
+    burnItDown();
+    if (callbacks.onBurn) callbacks.onBurn();
+  };
+
   return new Promise((resolve, reject) => {
     timerId = window.setTimeout(() => {
       timedOut = true;
-      return reject(new Error('API call exceeded maximum time of 30 seconds'));
+      if (callbacks.onError) callbacks.onError();
+      return reject(new Error(messages.maxTriesExceeded));
     }, 30000);
 
     const request = () => {
       if (!bypassUrls.find(u => url.includes(u)) && !initialized) {
-        return reject(new Error('Attempted calling API without initializing chat client'));
+        return reject(new Error(messages.clientNotInitialized));
       }
       if (getBurned()) {
-        return reject(new Error('Client in bad state. Aborting call.'));
+        return reject(new Error(messages.burned));
+      }
+      if (errorCount > 100) {
+        burnIt();
+        return reject(new Error(messages.totalErrorsExceeded));
       }
 
       const req = fetchRequest;
       const accessToken = getAccessToken();
-      if (accessToken) {
-        req.headers = merge({}, req.headers, {
-          'X-Quiq-Access-Token': accessToken,
-        });
-      }
+      if (accessToken) req.headers = merge({}, req.headers, {'X-Quiq-Access-Token': accessToken});
 
       delayIfNeeded().then(() =>
         fetch(url, req).then(
           (response: Response) => {
-            if (response.status === 466) {
-              window.clearTimeout(timerId);
-              burnItDown();
-              if (callbacks.onBurn) {
-                callbacks.onBurn();
-              }
+            if (getBurned()) return reject(messages.burnedInResponse);
 
-              return reject();
+            if (response.status === 466) {
+              burnIt();
+              return reject(new Error(messages.burnedFromServer));
             }
 
             // Special Case
             if (response.status === 401) {
-              if (
-                url.includes('/session/web/generate') &&
-                req.method &&
-                req.method.toUpperCase() === 'POST'
-              ) {
-                if (callbacks.onError) {
-                  callbacks.onError();
-                }
-
+              // If we get a 401 during the handshake, things went south.  Get us out of here, Chewy!
+              if (url === getGenerateUrl() || url === getSessionApiUrl()) {
+                burnIt();
                 return reject(response);
               }
 
-              if (callbacks.onRetryableError) {
-                callbacks.onRetryableError();
-              }
-
+              if (callbacks.onRetryableError) callbacks.onRetryableError();
+              errorCount++;
               return login().then(validateSession).then(request);
             }
 
             // Retry
             if (!timedOut && response.status >= 402 && response.status !== 422 && retryCount < 4) {
-              if (callbacks.onRetryableError) {
-                callbacks.onRetryableError();
-              }
-
+              if (callbacks.onRetryableError) callbacks.onRetryableError();
+              errorCount++;
               retryCount++;
               return request();
             }
@@ -108,32 +112,27 @@ export default (url: string, fetchRequest: RequestOptions) => {
 
             // Success
             if (response.status < 400) {
-              if (retryCount > 0 && callbacks.onErrorResolved) {
-                callbacks.onErrorResolved();
-              }
-
+              if (retryCount > 0 && callbacks.onErrorResolved) callbacks.onErrorResolved();
               return resolve(response);
             }
 
             // Reject
+            if (callbacks.onError) callbacks.onError();
             return reject(response);
           },
           (error: IsomorphicFetchNetworkError) => {
+            if (getBurned()) return reject(messages.burnedInResponse);
+
             // We aren't given a status code in this code path.  If we didn't get here from an auth call,
             // try re-authing
             if (!timedOut && retryCount < 4) {
-              if (callbacks.onRetryableError) {
-                callbacks.onRetryableError();
-              }
-
+              if (callbacks.onRetryableError) callbacks.onRetryableError();
+              errorCount++;
               retryCount++;
               return request();
             }
 
-            if (callbacks.onError) {
-              callbacks.onError();
-            }
-
+            if (callbacks.onError) callbacks.onError();
             const err: IsomorphicFetchNetworkError = error;
             err.status = 1000;
             window.clearTimeout(timerId);

@@ -46,3 +46,5 @@ export const getUrlForContactPoint = () =>
 export const getSessionApiUrl = (host?: string) => `${host || quiqChatSettings.HOST}/session/web`;
 
 export const getTokenApiUrl = (host?: string) => `${host || quiqChatSettings.HOST}/api/v1/token`;
+
+export const getGenerateUrl = (host?: string) => `${getTokenApiUrl(host)}/generate`;
