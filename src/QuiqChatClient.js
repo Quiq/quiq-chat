@@ -3,7 +3,7 @@ import * as API from './apiCalls';
 import {setGlobals} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
-import {MessageTypes} from './appConstants';
+import {MessageTypes, minutesUntilInactive} from './appConstants';
 import {registerCallbacks, onInit} from './stubbornFetch';
 import {differenceBy, unionBy, last, partition} from 'lodash';
 import {sortByTimestamp} from './utils';
@@ -28,7 +28,7 @@ class QuiqChatClient {
   userIsRegistered: boolean;
   trackingId: ?string;
   initialized: boolean;
-  clientChatTimer: number;
+  clientInactiveTimer: number;
 
   constructor(host: string, contactPoint: string) {
     this.host = host;
@@ -179,7 +179,7 @@ class QuiqChatClient {
   };
 
   sendMessage = (text: string) => {
-    this._setTimeUntilTimeout(0.1);
+    this._setTimeUntilInactive(minutesUntilInactive);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
     return API.addMessage(text);
@@ -190,6 +190,7 @@ class QuiqChatClient {
   };
 
   sendRegistration = (fields: {[string]: string}) => {
+    this._setTimeUntilInactive(minutesUntilInactive);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
     return API.sendRegistration(fields);
@@ -203,6 +204,7 @@ class QuiqChatClient {
   isPersistentStorageEnabled = () => storage.isPersistentStorageEnabled();
   isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
   hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
+  getClientInactiveTime = (): number => storage.getClientInactiveTime() || 0;
 
   getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
     if (!cache || !this.connected) {
@@ -340,19 +342,18 @@ class QuiqChatClient {
     }
   };
 
-  _setTimeUntilTimeout = (minutesUntilTimeout: number) => {
-    storage.setClientTimeout(minutesUntilTimeout);
-    clearTimeout(this.clientChatTimer);
-    this.clientChatTimer = setTimeout(
+  _setTimeUntilInactive = (minutesUntilInactive: number) => {
+    storage.setClientInactiveTime(minutesUntilInactive);
+    clearTimeout(this.clientInactiveTimer);
+    this.clientInactiveTimer = setTimeout(
       () => {
-        if (!storage.getClientTimeout()) {
+        if (!storage.getClientInactiveTime()) {
           console.log(`Client timeout due to inactivity`);
           this.stop();
           this.leaveChat();
-          this._handleConnectionLoss();
         }
       },
-      minutesUntilTimeout * 60 * 1000 + 1000, // add a second to avoid timing issues
+      minutesUntilInactive * 60 * 1000 + 1000, // add a second to avoid timing issues
     );
   };
 }
