@@ -28,6 +28,7 @@ class QuiqChatClient {
   userIsRegistered: boolean;
   trackingId: ?string;
   initialized: boolean;
+  clientChatTimer: number;
 
   constructor(host: string, contactPoint: string) {
     this.host = host;
@@ -153,6 +154,7 @@ class QuiqChatClient {
   stop = () => {
     disconnectSocket();
     this.initialized = false;
+    this.connected = false;
   };
 
   getMessages = async (cache: boolean = true): Promise<Array<TextMessage>> => {
@@ -168,7 +170,6 @@ class QuiqChatClient {
 
   joinChat = () => {
     storage.setQuiqChatContainerVisible(true);
-
     return API.joinChat();
   };
 
@@ -178,6 +179,7 @@ class QuiqChatClient {
   };
 
   sendMessage = (text: string) => {
+    this._setTimeUntilTimeout(0.1);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
     return API.addMessage(text);
@@ -336,6 +338,22 @@ class QuiqChatClient {
         this.userIsRegistered = true;
       }
     }
+  };
+
+  _setTimeUntilTimeout = (minutesUntilTimeout: number) => {
+    storage.setClientTimeout(minutesUntilTimeout);
+    clearTimeout(this.clientChatTimer);
+    this.clientChatTimer = setTimeout(
+      () => {
+        if (!storage.getClientTimeout()) {
+          console.log(`Client timeout due to inactivity`);
+          this.stop();
+          this.leaveChat();
+          this._handleConnectionLoss();
+        }
+      },
+      minutesUntilTimeout * 60 * 1000 + 1000, // add a second to avoid timing issues
+    );
   };
 }
 

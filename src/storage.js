@@ -20,6 +20,14 @@ export const setQuiqUserTakenMeaningfulAction = (visible: boolean) => {
 export const setAccessToken = (token: string) => {
   store.set('X-Quiq-Access-Token', token, expireInDays(365));
 };
+export const setClientTimeout = (minutesUntilTimeout: number) => {
+  store.set(
+    'quiq-client-timeout',
+    expireInMinutes(minutesUntilTimeout),
+    expireInMinutes(minutesUntilTimeout),
+  );
+};
+
 export const setTrackingId = (trackingId?: string) => {
   store.set('quiq-tracking-id', trackingId, expireInMinutes(60));
 };
@@ -29,6 +37,7 @@ export const getQuiqUserTakenMeaningfulAction = () =>
   store.get('quiq-user-taken-meaningful-action') === true;
 export const getAccessToken = () => store.get('X-Quiq-Access-Token');
 export const getTrackingId = () => store.get('quiq-tracking-id');
+export const getClientTimeout = () => store.get('quiq-client-timeout');
 
 export const isStorageEnabled = () => store.enabled;
 
