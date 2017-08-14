@@ -115,6 +115,11 @@ class QuiqChatClient {
     return this;
   };
 
+  onClientInactiveTimeout = (callback: () => void): QuiqChatClient => {
+    this.callbacks.onClientInactiveTimeout = callback;
+    return this;
+  };
+
   start = async (): Promise<?QuiqChatClient> => {
     // Avoid race conditions by only running start() once
     if (this.initialized) return;
@@ -342,8 +347,8 @@ class QuiqChatClient {
     }
   };
 
-  _setTimeUntilInactive = (minutesUntilInactive: number) => {
-    storage.setClientInactiveTime(minutesUntilInactive);
+  _setTimeUntilInactive = (minutes: number) => {
+    storage.setClientInactiveTime(minutes);
     clearTimeout(this.clientInactiveTimer);
     this.clientInactiveTimer = setTimeout(
       () => {
@@ -351,9 +356,12 @@ class QuiqChatClient {
           console.log(`Client timeout due to inactivity`);
           this.stop();
           this.leaveChat();
+          if (this.callbacks.onClientInactiveTimeout) {
+            this.callbacks.onClientInactiveTimeout();
+          }
         }
       },
-      minutesUntilInactive * 60 * 1000 + 1000, // add a second to avoid timing issues
+      minutes * 60 * 1000 + 1000, // add a second to avoid timing issues
     );
   };
 }

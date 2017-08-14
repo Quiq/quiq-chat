@@ -24,4 +24,4 @@ export const SupportedWebchatUrls = [
 
 export const noAgentsAvailableClass = 'noAgentsAvailable';
 
-export const minutesUntilInactive = 0.2;
+export const minutesUntilInactive = 0.3;

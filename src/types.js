@@ -52,6 +52,7 @@ export type QuiqChatCallbacks = {
   onRegistration?: () => void,
   onBurn?: () => void,
   onNewSession?: () => void,
+  onClientInactiveTimeout?: () => void,
 };
 
 export type QuiqChatClientType = {

@@ -191,6 +191,14 @@ describe('QuiqChatClient', () => {
     it('disconnects the websocket', () => {
       expect(disconnectSocket).toBeCalled();
     });
+
+    it('sets initialzed flag to false', () => {
+      expect(client.initialized).toBe(false);
+    });
+
+    it('sets connected flag to false', () => {
+      expect(client.connected).toBe(false);
+    });
   });
 
   describe('getting new messages', () => {
