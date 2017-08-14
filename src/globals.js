@@ -47,4 +47,8 @@ export const getSessionApiUrl = (host?: string) => `${host || quiqChatSettings.H
 
 export const getTokenApiUrl = (host?: string) => `${host || quiqChatSettings.HOST}/api/v1/token`;
 
-export const getGenerateUrl = (host?: string) => `${getTokenApiUrl(host)}/generate`;
+export const getGenerateUrl = (host?: string) =>
+  `${getTokenApiUrl(host || quiqChatSettings.HOST)}/generate`;
+
+export const GET_DEPRECATED_AUTH_URL = (host?: string) =>
+  `${getSessionApiUrl(host || quiqChatSettings.HOST)}/generate`;
