@@ -9,13 +9,22 @@ import {
   GET_DEPRECATED_AUTH_URL,
 } from './globals';
 import quiqFetch from './quiqFetch';
-import {setAccessToken, setTrackingId} from './storage';
+import {setAccessToken, getAccessToken, setTrackingId} from './storage';
 import type {Conversation} from 'types';
 
 let _onNewSession: (newTrackingId: string) => any;
 
 export const registerNewSessionCallback = (callback: (newTrackingId: string) => any) => {
   _onNewSession = callback;
+};
+
+export const keepAlive = () => {
+  quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {
+    method: 'POST',
+    headers: {
+      'X-Quiq-Access-Token': getAccessToken(),
+    },
+  });
 };
 
 export const joinChat = () => {
@@ -84,6 +93,10 @@ export const login = (host?: string) =>
       if (res.accessToken) {
         setAccessToken(res.accessToken);
         setTrackingId(res.tokenId);
+
+        // Start calling the keepAlive endpoint
+        keepAlive();
+        setInterval(keepAlive, 60 * 1000);
       }
       if (res.tokenId && _onNewSession) {
         _onNewSession(res.tokenId);
