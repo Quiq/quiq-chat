@@ -9,7 +9,7 @@ import {
   GET_DEPRECATED_AUTH_URL,
 } from './globals';
 import quiqFetch from './quiqFetch';
-import {setAccessToken, getAccessToken, setTrackingId} from './storage';
+import {setAccessToken, setTrackingId} from './storage';
 import type {Conversation} from 'types';
 
 let _onNewSession: (newTrackingId: string) => any;
@@ -19,12 +19,7 @@ export const registerNewSessionCallback = (callback: (newTrackingId: string) => 
 };
 
 export const keepAlive = () => {
-  quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {
-    method: 'POST',
-    headers: {
-      'X-Quiq-Access-Token': getAccessToken(),
-    },
-  });
+  quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {method: 'POST'});
 };
 
 export const joinChat = () => {
