@@ -9,6 +9,7 @@ import * as ApiCalls from '../apiCalls';
 import * as storage from '../storage';
 import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'store';
+import {minutesUntilInactive} from '../appConstants';
 
 const initialConvo = {
   id: 'testConvo',
@@ -41,6 +42,7 @@ describe('QuiqChatClient', () => {
   const onConnectionStatusChange = jest.fn();
   const onBurn = jest.fn();
   const onRegistration = jest.fn();
+  const onClientInactiveTimeout = jest.fn();
   const host = 'https://test.goquiq.fake';
   const contactPoint = 'test';
   const API = (ApiCalls: Object);
@@ -61,7 +63,8 @@ describe('QuiqChatClient', () => {
       .onConnectionStatusChange(onConnectionStatusChange)
       .onRegistration(onRegistration)
       .onNewSession(onNewSession)
-      .onBurn(onBurn);
+      .onBurn(onBurn)
+      .onClientInactiveTimeout(onClientInactiveTimeout);
 
     client.start();
   });
@@ -360,6 +363,64 @@ describe('QuiqChatClient', () => {
     });
   });
 
+  describe('client inactivity timeout', () => {
+    beforeEach(() => {
+      if (!client) {
+        throw new Error('Client should be defined');
+      }
+    });
+
+    afterEach(() => {
+      clearTimeout(client.clientInactiveTimer);
+    });
+
+    it('initializes with no timer set', () => {
+      expect(client.clientInactiveTimer).toBeUndefined();
+    });
+
+    it('sets a timer when registration sent', () => {
+      client.sendRegistration({firstName: 'SpongeBob', lastName: 'SquarePants'});
+      expect(client.clientInactiveTimer).toBeDefined();
+    });
+
+    it('sets a timer when message sent', () => {
+      client.sendMessage('ahoy');
+      expect(client.clientInactiveTimer).toBeDefined();
+    });
+
+    describe('timeout logic when timer expires', () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+        client.stop = jest.fn();
+        client.leaveChat = jest.fn();
+        client._setTimeUntilInactive(minutesUntilInactive);
+      });
+
+      it('times out after appConstants.minutesUntilInactive minutes', () => {
+        expect(setTimeout.mock.calls.length).toBe(1);
+        expect(setTimeout.mock.calls[0][1]).toBe(minutesUntilInactive * 60 * 1000 + 1000);
+      });
+
+      it('calls onClientInactiveTimeout callback', () => {
+        expect(onClientInactiveTimeout).not.toBeCalled();
+        jest.runAllTimers();
+        expect(onClientInactiveTimeout).toBeCalled();
+      });
+
+      it('calls stop', () => {
+        expect(client.stop).not.toBeCalled();
+        jest.runAllTimers();
+        expect(client.stop).toBeCalled();
+      });
+
+      it('calls leaveChat', () => {
+        expect(client.leaveChat).not.toBeCalled();
+        jest.runAllTimers();
+        expect(client.leaveChat).toBeCalled();
+      });
+    });
+  });
+
   describe('API wrappers', () => {
     afterEach(() => {
       set.mockClear();
@@ -422,6 +483,23 @@ describe('QuiqChatClient', () => {
       });
     });
 
+    describe('getClientInactiveTime', () => {
+      beforeEach(() => {
+        if (!client) {
+          throw new Error('Client should be defined');
+        }
+      });
+
+      it('returns 0 when the client is inactive', () => {
+        expect(client.getClientInactiveTime()).toBe(0);
+      });
+
+      it('returns the value of the quiq-client-inactive-time if user is active', () => {
+        mockStore.getClientInactiveTime.mockReturnValueOnce(1000);
+        expect(client.getClientInactiveTime()).toBe(1000);
+      });
+    });
+
     describe('leaveChat', () => {
       beforeEach(() => {
         if (!client) {
@@ -441,15 +519,28 @@ describe('QuiqChatClient', () => {
     });
 
     describe('sendMessage', () => {
-      it('proxies call', () => {
+      beforeEach(() => {
         if (!client) {
           throw new Error('Client undefined');
         }
 
         client.sendMessage('text');
+      });
+
+      it('proxies call', () => {
         expect(API.addMessage).toBeCalledWith('text');
+      });
+
+      it('calls storage.setQuiqChatContainerVisible', () => {
         expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(true);
+      });
+
+      it('calls storage.setQuiqUserTakenMeaningfulAction', () => {
         expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
+      });
+
+      it('calls storage.setClientInactiveTime', () => {
+        expect(mockStore.setClientInactiveTime).toBeCalledWith(minutesUntilInactive);
       });
     });
 
@@ -465,16 +556,30 @@ describe('QuiqChatClient', () => {
     });
 
     describe('sendRegistration', () => {
-      it('proxies call', () => {
+      const data = {firstName: 'SpongeBob', lastName: 'SquarePants'};
+
+      beforeEach(() => {
         if (!client) {
           throw new Error('Client undefined');
         }
-        const data = {firstName: 'SpongeBob', lastName: 'SquarePants'};
 
         client.sendRegistration(data);
+      });
+
+      it('proxies call', () => {
         expect(API.sendRegistration).toBeCalledWith(data);
+      });
+
+      it('calls storage.setQuiqChatContainerVisible', () => {
         expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(true);
+      });
+
+      it('calls storage.setQuiqUserTakenMeaningfulAction', () => {
         expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
+      });
+
+      it('calls storage.setClientInactiveTime', () => {
+        expect(mockStore.setClientInactiveTime).toBeCalledWith(minutesUntilInactive);
       });
     });
   });

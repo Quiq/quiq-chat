@@ -353,7 +353,6 @@ class QuiqChatClient {
     this.clientInactiveTimer = setTimeout(
       () => {
         if (!storage.getClientInactiveTime()) {
-          console.log(`Client timeout due to inactivity`);
           this.stop();
           this.leaveChat();
           if (this.callbacks.onClientInactiveTimeout) {
