@@ -18,6 +18,10 @@ export const registerNewSessionCallback = (callback: (newTrackingId: string) => 
   _onNewSession = callback;
 };
 
+export const keepAlive = () => {
+  quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {method: 'POST'});
+};
+
 export const joinChat = () => {
   quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST'});
 };
@@ -84,6 +88,10 @@ export const login = (host?: string) =>
       if (res.accessToken) {
         setAccessToken(res.accessToken);
         setTrackingId(res.tokenId);
+
+        // Start calling the keepAlive endpoint
+        keepAlive();
+        setInterval(keepAlive, 60 * 1000);
       }
       if (res.tokenId && _onNewSession) {
         _onNewSession(res.tokenId);
