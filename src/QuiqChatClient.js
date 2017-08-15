@@ -147,6 +147,8 @@ class QuiqChatClient {
       if (this.callbacks.onConnectionStatusChange) {
         this.callbacks.onConnectionStatusChange(true);
       }
+
+      this._setTimeUntilInactive(minutesUntilInactive);
     } catch (err) {
       disconnectSocket();
 
