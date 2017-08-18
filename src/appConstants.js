@@ -22,4 +22,6 @@ export const SupportedWebchatUrls = [
   'centricient.dev:41014/app/webchat',
 ];
 
+export const MAX_SOCKET_CONNECTION_ATTEMPTS = 20;
+
 export const noAgentsAvailableClass = 'noAgentsAvailable';
