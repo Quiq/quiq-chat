@@ -3,6 +3,7 @@ import * as API from './apiCalls';
 import {setGlobals, isActive} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
 import QuiqChatClient from './QuiqChatClient';
+
 import type {WebsocketCallbacks} from 'types';
 
 export const init = async (settings: {HOST: string, CONTACT_POINT?: string}) => {

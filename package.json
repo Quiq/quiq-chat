@@ -21,10 +21,15 @@
     ]
   },
   "jest": {
-    "modulePaths": ["src", "node_modules"],
+    "modulePaths": [
+      "src",
+      "node_modules"
+    ],
     "rootDir": "src"
   },
-  "keywords": ["quiq"],
+  "keywords": [
+    "quiq"
+  ],
   "author": "nate.norberg@goquiq.com",
   "license": "MIT",
   "dependencies": {
@@ -32,6 +37,8 @@
     "isomorphic-fetch": "2.2.1",
     "js-cookie": "2.1.4",
     "lodash": "4.17.4",
+    "loglevel": "1.4.1",
+    "loglevel-plugin-prefix": "0.5.3",
     "qs": "6.5.0",
     "store": "2.0.12",
     "ua-parser-js": "0.7.12"
