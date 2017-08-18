@@ -355,8 +355,11 @@ class QuiqChatClient {
     this.clientInactiveTimer = setTimeout(
       () => {
         if (!storage.getClientInactiveTime()) {
+          console.log('Client timeout due to inactivity. Closing websocket...');
           this.stop();
-          this.leaveChat();
+          if (storage.getQuiqChatContainerVisible()) {
+            this.leaveChat();
+          }
           if (this.callbacks.onClientInactiveTimeout) {
             this.callbacks.onClientInactiveTimeout();
           }
