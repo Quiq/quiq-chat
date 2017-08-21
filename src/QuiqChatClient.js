@@ -356,7 +356,9 @@ class QuiqChatClient {
     this.clientInactiveTimer = setTimeout(
       () => {
         if (!storage.getClientInactiveTime()) {
-          console.log('Client timeout due to inactivity. Closing websocket...');
+          // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
+          // eslint-disable-next-line
+          console.log('Quiq Chat: Client timeout due to inactivity. Closing websocket.');
           this.stop();
           if (storage.getQuiqChatContainerVisible()) {
             this.leaveChat();
