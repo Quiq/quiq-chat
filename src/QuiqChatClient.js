@@ -148,6 +148,7 @@ class QuiqChatClient {
         this.callbacks.onConnectionStatusChange(true);
       }
 
+      // If start is successful, begin the client inactive timer
       this._setTimeUntilInactive(minutesUntilInactive);
     } catch (err) {
       disconnectSocket();

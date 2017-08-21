@@ -374,8 +374,8 @@ describe('QuiqChatClient', () => {
       clearTimeout(client.clientInactiveTimer);
     });
 
-    it('initializes with no timer set', () => {
-      expect(client.clientInactiveTimer).toBeUndefined();
+    it('initializes with a timer set', () => {
+      expect(client.clientInactiveTimer).toBeDefined();
     });
 
     it('sets a timer when registration sent', () => {
