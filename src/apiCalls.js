@@ -6,6 +6,7 @@ import {
   getContactPoint,
   getSessionApiUrl,
   getGenerateUrl,
+  GET_DEPRECATED_AUTH_URL,
 } from './globals';
 import quiqFetch from './quiqFetch';
 import {setAccessToken, setTrackingId} from './storage';
@@ -15,6 +16,10 @@ let _onNewSession: (newTrackingId: string) => any;
 
 export const registerNewSessionCallback = (callback: (newTrackingId: string) => any) => {
   _onNewSession = callback;
+};
+
+export const keepAlive = () => {
+  quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {method: 'POST'});
 };
 
 export const joinChat = () => {
@@ -83,12 +88,23 @@ export const login = (host?: string) =>
       if (res.accessToken) {
         setAccessToken(res.accessToken);
         setTrackingId(res.tokenId);
+
+        // Start calling the keepAlive endpoint
+        keepAlive();
+        setInterval(keepAlive, 60 * 1000);
       }
       if (res.tokenId && _onNewSession) {
         _onNewSession(res.tokenId);
       }
     }
   });
+
+export const DEPRECATED_AUTH_USER = (host?: string) =>
+  quiqFetch(
+    GET_DEPRECATED_AUTH_URL(host),
+    {method: 'POST', credentials: 'include'},
+    {responseType: 'JSON'},
+  );
 
 export const validateSession = () => quiqFetch(getSessionApiUrl());
 

@@ -4,6 +4,7 @@ import {ping} from './apiCalls';
 import {isIE9, burnItDown} from './utils';
 import * as storage from './storage';
 import {version} from '../package.json';
+import {MAX_SOCKET_CONNECTION_ATTEMPTS} from './appConstants';
 import type {
   AtmosphereRequest,
   AtmosphereResponse,
@@ -15,6 +16,7 @@ import type {
 let connection: AtmosphereConnection;
 let callbacks: WebsocketCallbacks;
 let ie9Ping: number;
+let connectionCount: number = 0;
 
 const buildRequest = (socketUrl: string) => {
   // TODO: Add a way to specify transport
@@ -58,6 +60,15 @@ const buildRequest = (socketUrl: string) => {
 };
 
 export const connectSocket = (builder: AtmosphereConnectionBuilder) => {
+  // Check that maximum retries not exceeded; increment connection count
+  if (connectionCount >= MAX_SOCKET_CONNECTION_ATTEMPTS) {
+    if (callbacks.onConnectionLoss) {
+      callbacks.onConnectionLoss();
+    }
+
+    throw new Error('Maximum socket connection attempts exceeded.');
+  }
+  connectionCount++;
   const {socketUrl, callbacks: websocketCallbacks} = builder;
 
   callbacks = websocketCallbacks;

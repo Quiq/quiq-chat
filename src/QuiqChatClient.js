@@ -230,6 +230,10 @@ class QuiqChatClient {
     return this.userIsRegistered;
   };
 
+  DEPRECATED_AUTH_USER_DO_NOT_USE = () => {
+    API.DEPRECATED_AUTH_USER();
+  };
+
   /** Private Members * */
   _connectSocket = (wsInfo: {url: string}) => {
     connectSocket({
