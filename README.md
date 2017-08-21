@@ -100,6 +100,9 @@ Called when a connection is established or terminated
 #### onBurn() => [QuiqChatClient](#quiqchatclient)
 Called when quiq-chat gets in a fatal state and page holding webchat needs to be refreshed
 
+#### onClientInactiveTimeout() => [QuiqChatClient](#quiqchatclient)
+Called when quiq-chat disconnects the websocket due to the chat client being inactive for a set amount of time
+
 #### start() => Promise<[QuiqChatClient](#quiqchatclient)>
 Establishes the connection to QuiqMessaging
 
