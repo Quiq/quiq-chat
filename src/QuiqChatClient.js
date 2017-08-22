@@ -1,21 +1,14 @@
 // @flow
 import * as API from './apiCalls';
 import {setGlobals} from './globals';
-import {
-  connectSocket as connectAtmosphere,
-  disconnectSocket as disconnectAtmosphere,
-} from './websockets';
-import QuiqSocket from './QuiqSockets/quiqSockets';
+import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
 import {MessageTypes, minutesUntilInactive} from './appConstants';
 import {registerCallbacks, onInit} from './stubbornFetch';
 import {differenceBy, unionBy, last, partition} from 'lodash';
-import {sortByTimestamp, burnItDown} from './utils';
+import {sortByTimestamp} from './utils';
 import type {QuiqChatCallbacks} from 'types';
 import * as storage from './storage';
-import logger from './logging';
-
-const log = logger('QuiqChatClient');
 
 const getConversation = async (): Promise<{events: Array<Event>, messages: Array<TextMessage>}> => {
   const conversation = await API.fetchConversation();
@@ -32,7 +25,6 @@ class QuiqChatClient {
   textMessages: Array<TextMessage>;
   events: Array<Event>;
   connected: boolean;
-  socketProtocol: 'quiq' | 'atmosphere' | undefined;
   userIsRegistered: boolean;
   trackingId: ?string;
   initialized: boolean;
@@ -52,6 +44,20 @@ class QuiqChatClient {
     setGlobals({
       HOST: this.host,
       CONTACT_POINT: this.contactPoint,
+    });
+
+    window.addEventListener('online', () => {
+      this.stop();
+      this.start();
+      this._handleConnectionEstablish();
+      if (this.callbacks.onErrorResolved) {
+        this.callbacks.onErrorResolved();
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      this._handleConnectionLoss();
+      this.stop();
     });
 
     // Register with apiCalls for new session events
@@ -134,7 +140,7 @@ class QuiqChatClient {
       if (this.callbacks.onNewMessages && this.textMessages.length)
         this.callbacks.onNewMessages(this.textMessages);
 
-      this._disconnectSocket(); // Ensure we only have one websocket connection open
+      disconnectSocket(); // Ensure we only have one websocket connection open
       const wsInfo: {url: string} = await API.fetchWebsocketInfo();
       this._connectSocket(wsInfo);
 
@@ -145,7 +151,7 @@ class QuiqChatClient {
       // If start is successful, begin the client inactive timer
       this._setTimeUntilInactive(minutesUntilInactive);
     } catch (err) {
-      this._disconnectSocket();
+      disconnectSocket();
 
       if (this.callbacks.onError) {
         this.callbacks.onError(err);
@@ -154,7 +160,7 @@ class QuiqChatClient {
   };
 
   stop = () => {
-    this._disconnectSocket();
+    disconnectSocket();
     this.initialized = false;
     this.connected = false;
   };
@@ -229,52 +235,16 @@ class QuiqChatClient {
   };
 
   /** Private Members * */
-  _connectSocket = (wsInfo: {url: string, protocol: string}) => {
-    this.socketProtocol = wsInfo.protocol;
-
-    // If we didn't get protocol, or it was an unsupported value, default to 'atmosphere'
-    if (!this.socketProtocol || !['atmosphere', 'quiq'].includes(this.socketProtocol)) {
-      this.socketProtocol = 'atmosphere';
-      log.warn(
-        `Unsupported socket protocol "${wsInfo.protocol}" received. Defaulting to "atmosphere"`,
-      );
-    }
-
-    switch (this.socketProtocol) {
-      case 'quiq':
-        QuiqSocket.withURL(`wss://${wsInfo.url}`)
-          .onConnectionLoss(this._handleConnectionLoss)
-          .onConnectionEstablish(this._handleConnectionEstablish)
-          .onMessage(this._handleWebsocketMessage)
-          .onFatalError(this._handleBurnItDown)
-          .connect();
-        break;
-      case 'atmosphere':
-        connectAtmosphere({
-          socketUrl: wsInfo.url,
-          callbacks: {
-            onConnectionLoss: this._handleConnectionLoss,
-            onConnectionEstablish: this._handleConnectionEstablish,
-            onMessage: this._handleWebsocketMessage,
-            onBurn: this._handleBurnItDown,
-          },
-        });
-        break;
-    }
-  };
-
-  _disconnectSocket = () => {
-    switch (this.socketProtocol) {
-      case 'quiq':
-        QuiqSocket.disconnect();
-        break;
-      case 'atmosphere':
-        disconnectAtmosphere();
-        break;
-      default:
-        log.warn(`Unable to disconnect socket. Unknown protocol "${this.socketProtocol}"`);
-        break;
-    }
+  _connectSocket = (wsInfo: {url: string}) => {
+    connectSocket({
+      socketUrl: wsInfo.url,
+      callbacks: {
+        onConnectionLoss: this._handleConnectionLoss,
+        onConnectionEstablish: this._handleConnectionEstablish,
+        onMessage: this._handleWebsocketMessage,
+        onBurn: this._handleBurnItDown,
+      },
+    });
   };
 
   _handleNewSession = async (newTrackingId: string) => {
@@ -290,7 +260,7 @@ class QuiqChatClient {
 
       // Disconnect/reconnect websocket
       // (Connection establishment handler will refresh messages)
-      this._disconnectSocket(); // Ensure we only have one websocket connection open
+      disconnectSocket(); // Ensure we only have one websocket connection open
       const wsInfo: {url: string} = await API.fetchWebsocketInfo();
       this._connectSocket(wsInfo);
     }
@@ -314,14 +284,13 @@ class QuiqChatClient {
             this.callbacks.onAgentTyping(message.data.typing);
           }
           break;
-      }
-    }
-
-    if (message.messageType === MessageTypes.BURN_IT_DOWN) {
-      // Handle BurnItDown message
-      burnItDown(message.data);
-      if (this.callbacks.onBurn) {
-        this.callbacks.onBurn();
+        case MessageTypes.BURN_IT_DOWN:
+          // The BurnItDown script for this lives in the websockets file, but if we get this message
+          // we'll want to let the app know that they're burned
+          if (this.callbacks.onBurn) {
+            this.callbacks.onBurn();
+          }
+          break;
       }
     }
   };
