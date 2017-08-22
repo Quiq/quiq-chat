@@ -1,3 +1,5 @@
+// @flow
+
 const StatusCodes: {[string]: number} = {
   closeNormal: 1000,
   closeGoingAway: 1001,

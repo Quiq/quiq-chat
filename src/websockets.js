@@ -117,11 +117,6 @@ const onMessage = (res: AtmosphereResponse) => {
   }
 
   switch (message.messageType) {
-    case 'BurnItDown': {
-      burnItDown(message.data);
-      if (callbacks.onBurn) callbacks.onBurn();
-      return;
-    }
     case 'ChatMessage': {
       const {data} = message;
       // If we took a meaninful action in an undocked window, ensure we update the parent
