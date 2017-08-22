@@ -26,4 +26,4 @@ export const MAX_SOCKET_CONNECTION_ATTEMPTS = 20;
 
 export const noAgentsAvailableClass = 'noAgentsAvailable';
 
-export const minutesUntilInactive = 0.2;
+export const minutesUntilInactive = 30;
