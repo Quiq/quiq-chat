@@ -10,6 +10,7 @@ import * as storage from '../storage';
 import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'store';
 import {minutesUntilInactive} from '../appConstants';
+import * as stubbornFetch from '../stubbornFetch';
 
 const initialConvo = {
   id: 'testConvo',
@@ -48,6 +49,7 @@ describe('QuiqChatClient', () => {
   const API = (ApiCalls: Object);
   let client: QuiqChatClient;
   const mockStore = (storage: any);
+  const setClientInactive = jest.spyOn(stubbornFetch, 'setClientInactive');
 
   beforeEach(() => {
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
@@ -93,6 +95,10 @@ describe('QuiqChatClient', () => {
     it('calls onConnectionStatusChange', () => {
       expect(onConnectionStatusChange).toBeCalledWith(true);
     });
+
+    it('calls setClientInactive with false', () => {
+      expect(setClientInactive).toBeCalledWith(false);
+    });
   });
 
   describe('start with "initialized" set to true', () => {
@@ -132,6 +138,10 @@ describe('QuiqChatClient', () => {
 
     it('does not call onConnectionStatusChange', () => {
       expect(onConnectionStatusChange).not.toBeCalled();
+    });
+
+    it('does not call setClientInactive', () => {
+      expect(setClientInactive).not.toBeCalled();
     });
   });
 
@@ -391,6 +401,7 @@ describe('QuiqChatClient', () => {
     describe('timeout logic when timer expires', () => {
       beforeEach(() => {
         jest.useFakeTimers();
+        jest.clearAllMocks();
         client.stop = jest.fn();
         client.leaveChat = jest.fn();
         client._setTimeUntilInactive(minutesUntilInactive);
@@ -417,6 +428,12 @@ describe('QuiqChatClient', () => {
         expect(client.leaveChat).not.toBeCalled();
         jest.runAllTimers();
         expect(client.leaveChat).toBeCalled();
+      });
+
+      it('calls setClientInactive with true', () => {
+        expect(setClientInactive).not.toBeCalled();
+        jest.runAllTimers();
+        expect(setClientInactive).toBeCalledWith(true);
       });
     });
   });

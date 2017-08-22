@@ -4,7 +4,7 @@ import {setGlobals} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
 import {MessageTypes, minutesUntilInactive} from './appConstants';
-import {registerCallbacks, onInit} from './stubbornFetch';
+import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
 import {differenceBy, unionBy, last, partition} from 'lodash';
 import {sortByTimestamp} from './utils';
 import type {QuiqChatCallbacks} from 'types';
@@ -126,6 +126,7 @@ class QuiqChatClient {
 
     try {
       this.initialized = true;
+      setClientInactive(false);
 
       // Order Matters here.  Ensure we successfully complete this fetchConversation request before connecting to
       // the websocket below!
@@ -370,6 +371,7 @@ class QuiqChatClient {
           if (this.callbacks.onClientInactiveTimeout) {
             this.callbacks.onClientInactiveTimeout();
           }
+          setClientInactive(true);
         }
       },
       minutes * 60 * 1000 + 1000, // add a second to avoid timing issues
