@@ -424,10 +424,10 @@ describe('QuiqChatClient', () => {
         expect(client.stop).toBeCalled();
       });
 
-      it('calls leaveChat', () => {
+      it('no longer calls leaveChat', () => {
         expect(client.leaveChat).not.toBeCalled();
         jest.runAllTimers();
-        expect(client.leaveChat).toBeCalled();
+        expect(client.leaveChat).not.toBeCalled();
       });
 
       it('calls setClientInactive with true', () => {
@@ -538,10 +538,6 @@ describe('QuiqChatClient', () => {
       it('calls storage.setQuiqUserTakenMeaningfulAction', () => {
         expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
       });
-
-      it('calls storage.setClientInactiveTime', () => {
-        expect(mockStore.setClientInactiveTime).toBeCalledWith(MINUTES_UNTIL_INACTIVE);
-      });
     });
 
     describe('updateMessagePreview', () => {
@@ -576,10 +572,6 @@ describe('QuiqChatClient', () => {
 
       it('calls storage.setQuiqUserTakenMeaningfulAction', () => {
         expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
-      });
-
-      it('calls storage.setClientInactiveTime', () => {
-        expect(mockStore.setClientInactiveTime).toBeCalledWith(MINUTES_UNTIL_INACTIVE);
       });
     });
   });
