@@ -3,7 +3,7 @@ import * as API from './apiCalls';
 import {setGlobals} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
-import {MessageTypes, minutesUntilInactive} from './appConstants';
+import {MessageTypes, MINUTES_UNTIL_INACTIVE} from './appConstants';
 import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
 import {differenceBy, unionBy, last, partition} from 'lodash';
 import {sortByTimestamp} from './utils';
@@ -150,7 +150,7 @@ class QuiqChatClient {
       }
 
       // If start is successful, begin the client inactive timer
-      this._setTimeUntilInactive(minutesUntilInactive);
+      this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     } catch (err) {
       disconnectSocket();
 
@@ -188,7 +188,7 @@ class QuiqChatClient {
   };
 
   sendMessage = (text: string) => {
-    this._setTimeUntilInactive(minutesUntilInactive);
+    this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
     return API.addMessage(text);
@@ -199,7 +199,7 @@ class QuiqChatClient {
   };
 
   sendRegistration = (fields: {[string]: string}) => {
-    this._setTimeUntilInactive(minutesUntilInactive);
+    this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
     return API.sendRegistration(fields);

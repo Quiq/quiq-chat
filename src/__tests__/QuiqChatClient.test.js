@@ -9,7 +9,7 @@ import * as ApiCalls from '../apiCalls';
 import * as storage from '../storage';
 import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'store';
-import {minutesUntilInactive} from '../appConstants';
+import {MINUTES_UNTIL_INACTIVE} from '../appConstants';
 import * as stubbornFetch from '../stubbornFetch';
 
 const initialConvo = {
@@ -404,12 +404,12 @@ describe('QuiqChatClient', () => {
         jest.clearAllMocks();
         client.stop = jest.fn();
         client.leaveChat = jest.fn();
-        client._setTimeUntilInactive(minutesUntilInactive);
+        client._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
       });
 
-      it('times out after appConstants.minutesUntilInactive minutes', () => {
+      it('times out after appConstants.MINUTES_UNTIL_INACTIVE minutes', () => {
         expect(setTimeout.mock.calls.length).toBe(1);
-        expect(setTimeout.mock.calls[0][1]).toBe(minutesUntilInactive * 60 * 1000 + 1000);
+        expect(setTimeout.mock.calls[0][1]).toBe(MINUTES_UNTIL_INACTIVE * 60 * 1000 + 1000);
       });
 
       it('calls onClientInactiveTimeout callback', () => {
@@ -557,7 +557,7 @@ describe('QuiqChatClient', () => {
       });
 
       it('calls storage.setClientInactiveTime', () => {
-        expect(mockStore.setClientInactiveTime).toBeCalledWith(minutesUntilInactive);
+        expect(mockStore.setClientInactiveTime).toBeCalledWith(MINUTES_UNTIL_INACTIVE);
       });
     });
 
@@ -596,7 +596,7 @@ describe('QuiqChatClient', () => {
       });
 
       it('calls storage.setClientInactiveTime', () => {
-        expect(mockStore.setClientInactiveTime).toBeCalledWith(minutesUntilInactive);
+        expect(mockStore.setClientInactiveTime).toBeCalledWith(MINUTES_UNTIL_INACTIVE);
       });
     });
   });
