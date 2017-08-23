@@ -213,7 +213,6 @@ class QuiqChatClient {
   isPersistentStorageEnabled = () => storage.isPersistentStorageEnabled();
   isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
   hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
-  getClientInactiveTime = (): number => storage.getClientInactiveTime() || 0;
 
   getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
     if (!cache || !this.connected) {
@@ -356,23 +355,17 @@ class QuiqChatClient {
   };
 
   _setTimeUntilInactive = (minutes: number) => {
-    storage.setClientInactiveTime(minutes);
     clearTimeout(this.clientInactiveTimer);
     this.clientInactiveTimer = setTimeout(
       () => {
-        if (!storage.getClientInactiveTime()) {
-          // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
-          // eslint-disable-next-line
-          console.log('Quiq Chat: Client timeout due to inactivity. Closing websocket.');
-          this.stop();
-          if (storage.getQuiqChatContainerVisible()) {
-            this.leaveChat();
-          }
-          if (this.callbacks.onClientInactiveTimeout) {
-            this.callbacks.onClientInactiveTimeout();
-          }
-          setClientInactive(true);
+        // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
+        // eslint-disable-next-line
+        console.log('Quiq Chat: Client timeout due to inactivity. Closing websocket.');
+        this.stop();
+        if (this.callbacks.onClientInactiveTimeout) {
+          this.callbacks.onClientInactiveTimeout();
         }
+        setClientInactive(true);
       },
       minutes * 60 * 1000 + 1000, // add a second to avoid timing issues
     );

@@ -500,23 +500,6 @@ describe('QuiqChatClient', () => {
       });
     });
 
-    describe('getClientInactiveTime', () => {
-      beforeEach(() => {
-        if (!client) {
-          throw new Error('Client should be defined');
-        }
-      });
-
-      it('returns 0 when the client is inactive', () => {
-        expect(client.getClientInactiveTime()).toBe(0);
-      });
-
-      it('returns the value of the quiq-client-inactive-time if user is active', () => {
-        mockStore.getClientInactiveTime.mockReturnValueOnce(1000);
-        expect(client.getClientInactiveTime()).toBe(1000);
-      });
-    });
-
     describe('leaveChat', () => {
       beforeEach(() => {
         if (!client) {
