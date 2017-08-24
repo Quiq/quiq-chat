@@ -24,6 +24,7 @@ export const keepAlive = () => {
 
 let keepAliveInterval: number;
 
+// eslint-disable-next-line no-unused-vars
 const startHeartbeat = () => {
   clearInterval(keepAliveInterval);
 
@@ -31,6 +32,7 @@ const startHeartbeat = () => {
   keepAliveInterval = setInterval(keepAlive, 60 * 1000);
 };
 
+// eslint-disable-next-line no-unused-vars
 const stopHeartbeat = () => {
   clearInterval(keepAliveInterval);
 };
@@ -103,7 +105,8 @@ export const login = (host?: string) =>
         setTrackingId(res.tokenId);
 
         // Start calling the keepAlive endpoint
-        startHeartbeat();
+        // TODO: Check this back in when we're ready
+        // startHeartbeat();
       }
       if (res.tokenId && _onNewSession) {
         _onNewSession(res.tokenId);
@@ -120,4 +123,6 @@ export const DEPRECATED_AUTH_USER = (host?: string) =>
 
 export const validateSession = () => quiqFetch(getSessionApiUrl());
 
-export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'}).then(stopHeartbeat);
+export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'});
+// TODO: Check this back in with the heartbeat stuff
+// .then(stopHeartbeat);
