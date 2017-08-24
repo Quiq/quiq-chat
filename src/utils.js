@@ -3,7 +3,10 @@ import {UAParser} from 'ua-parser-js';
 import {unsubscribe} from './index';
 import {setBurned} from './globals';
 import qs from 'qs';
+import logger from './logging';
 import type {BrowserNames, BurnItDownResponse} from 'types';
+
+const log = logger('Utils');
 
 export const formatQueryParams = (url: string, params: Object): string => {
   if (url.includes('?')) {
@@ -28,6 +31,7 @@ export const burnItDown = (message?: BurnItDownResponse) => {
   }
 
   setTimeout(() => {
+    log.error('Webchat has been burned down.');
     setBurned();
     unsubscribe();
   }, timeToBurnItDown);

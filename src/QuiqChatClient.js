@@ -6,9 +6,16 @@ import {
   disconnectSocket as disconnectAtmosphere,
 } from './websockets';
 import QuiqSocket from './QuiqSockets/quiqSockets';
-import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
 import {MessageTypes, MINUTES_UNTIL_INACTIVE} from './appConstants';
 import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
+import type {
+  ChatMessage,
+  BurnItDownMessage,
+  TextMessage,
+  ApiError,
+  UserEventTypes,
+  Event,
+} from './types';
 import {differenceBy, unionBy, last, partition} from 'lodash';
 import {sortByTimestamp, burnItDown} from './utils';
 import type {QuiqChatCallbacks} from 'types';
@@ -32,7 +39,7 @@ class QuiqChatClient {
   textMessages: Array<TextMessage>;
   events: Array<Event>;
   connected: boolean;
-  socketProtocol: 'quiq' | 'atmosphere' | undefined;
+  socketProtocol: ?string;
   userIsRegistered: boolean;
   trackingId: ?string;
   initialized: boolean;
@@ -136,7 +143,7 @@ class QuiqChatClient {
         this.callbacks.onNewMessages(this.textMessages);
 
       this._disconnectSocket(); // Ensure we only have one websocket connection open
-      const wsInfo: {url: string} = await API.fetchWebsocketInfo();
+      const wsInfo: {url: string, protocol: string} = await API.fetchWebsocketInfo();
       this._connectSocket(wsInfo);
 
       if (this.callbacks.onConnectionStatusChange) {
@@ -234,11 +241,12 @@ class QuiqChatClient {
 
     // If we didn't get protocol, or it was an unsupported value, default to 'atmosphere'
     if (!this.socketProtocol || !['atmosphere', 'quiq'].includes(this.socketProtocol)) {
-      this.socketProtocol = 'atmosphere';
       log.warn(
         `Unsupported socket protocol "${wsInfo.protocol}" received. Defaulting to "atmosphere"`,
       );
+      this.socketProtocol = 'atmosphere';
     }
+    log.debug(`Using ${this.socketProtocol} protocol`);
 
     switch (this.socketProtocol) {
       case 'quiq':
@@ -246,7 +254,7 @@ class QuiqChatClient {
           .onConnectionLoss(this._handleConnectionLoss)
           .onConnectionEstablish(this._handleConnectionEstablish)
           .onMessage(this._handleWebsocketMessage)
-          .onFatalError(this._handleBurnItDown)
+          .onFatalError(this._handleFatalSocketError)
           .connect();
         break;
       case 'atmosphere':
@@ -256,7 +264,7 @@ class QuiqChatClient {
             onConnectionLoss: this._handleConnectionLoss,
             onConnectionEstablish: this._handleConnectionEstablish,
             onMessage: this._handleWebsocketMessage,
-            onBurn: this._handleBurnItDown,
+            onBurn: this._handleFatalSocketError,
           },
         });
         break;
@@ -264,17 +272,8 @@ class QuiqChatClient {
   };
 
   _disconnectSocket = () => {
-    switch (this.socketProtocol) {
-      case 'quiq':
-        QuiqSocket.disconnect();
-        break;
-      case 'atmosphere':
-        disconnectAtmosphere();
-        break;
-      default:
-        log.warn(`Unable to disconnect socket. Unknown protocol "${this.socketProtocol}"`);
-        break;
-    }
+    QuiqSocket.disconnect();
+    disconnectAtmosphere();
   };
 
   _handleNewSession = async (newTrackingId: string) => {
@@ -291,23 +290,27 @@ class QuiqChatClient {
       // Disconnect/reconnect websocket
       // (Connection establishment handler will refresh messages)
       this._disconnectSocket(); // Ensure we only have one websocket connection open
-      const wsInfo: {url: string} = await API.fetchWebsocketInfo();
+      const wsInfo: {url: string, protocol: string} = await API.fetchWebsocketInfo();
       this._connectSocket(wsInfo);
     }
 
     this.trackingId = newTrackingId;
   };
 
-  _handleWebsocketMessage = (message: AtmosphereMessage) => {
+  _handleWebsocketMessage = (message: ChatMessage | BurnItDownMessage) => {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
       switch (message.data.type) {
         case MessageTypes.TEXT:
           this._processNewMessagesAndEvents([message.data]);
+          storage.setQuiqUserTakenMeaningfulAction(true);
           break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
+          this._processNewMessagesAndEvents([], [message.data]);
+          break;
         case MessageTypes.REGISTER:
           this._processNewMessagesAndEvents([], [message.data]);
+          storage.setQuiqUserTakenMeaningfulAction(true);
           break;
         case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {
@@ -326,7 +329,9 @@ class QuiqChatClient {
     }
   };
 
-  _handleBurnItDown = () => {
+  _handleFatalSocketError = () => {
+    burnItDown();
+
     if (this.callbacks.onBurn) {
       this.callbacks.onBurn();
     }

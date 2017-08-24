@@ -55,7 +55,7 @@ export const addMessage = (text: string) => {
   });
 };
 
-export const fetchWebsocketInfo = (): Promise<{url: string}> =>
+export const fetchWebsocketInfo = (): Promise<{url: string, protocol: string}> =>
   quiqFetch(`${getUrlForContactPoint()}/socket-info`, undefined, {responseType: 'JSON'});
 
 // Use socket-info as a ping since the ping endpoint isn't publicly exposed

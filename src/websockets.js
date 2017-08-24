@@ -1,7 +1,7 @@
 // @flow
 import atmosphere from 'atmosphere.js';
 import {ping} from './apiCalls';
-import {isIE9, burnItDown} from './utils';
+import {isIE9} from './utils';
 import * as storage from './storage';
 import {version} from '../package.json';
 import {MAX_SOCKET_CONNECTION_ATTEMPTS} from './appConstants';
@@ -114,20 +114,6 @@ const onMessage = (res: AtmosphereResponse) => {
   } catch (e) {
     console.error('Error parsing Quiq websocket message'); // eslint-disable-line no-console
     return;
-  }
-
-  switch (message.messageType) {
-    case 'ChatMessage': {
-      const {data} = message;
-      // If we took a meaninful action in an undocked window, ensure we update the parent
-      if (data && data.type && (data.type === 'Register' || data.type === 'Text')) {
-        storage.setQuiqUserTakenMeaningfulAction(true);
-
-        if (data.type === 'Register' && callbacks.onRegistration) {
-          callbacks.onRegistration();
-        }
-      }
-    }
   }
 
   callbacks.onMessage && callbacks.onMessage(message);

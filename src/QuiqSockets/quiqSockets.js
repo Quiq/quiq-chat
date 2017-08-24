@@ -23,6 +23,7 @@ import StatusCodes from './StatusCodes';
 import logger from '../logging';
 import {clamp} from 'lodash';
 import {getAccessToken} from '../storage';
+import type {Interval, Timeout} from '../types';
 
 const log = logger('QuiqSocket');
 
@@ -38,7 +39,7 @@ class QuiqSocket {
 
   // Websocket options
   options: {[string]: any} = {
-    maxRetriesOnConnectionLoss: 2,
+    maxRetriesOnConnectionLoss: 10,
     backoffFunction: (attempt: number) => clamp((attempt ** 2 - 1) / 2 * 1000, 0, 30000),
     maxConnectionCount: 100,
     connectionAttemptTimeout: 10 * 1000,
@@ -49,21 +50,17 @@ class QuiqSocket {
   socket: ?WebSocket;
 
   // Retry and connection counting
-  retries: number = 1;
+  retries: number = 0;
   connectionCount: number = 0;
 
   // Timers and intervals
-  connectionTimeout;
-  retryTiemout;
-  heartbeatInterval;
+  connectionTimeout: ?Timeout;
+  retryTiemout: ?Timeout;
+  heartbeatInterval: ?Interval;
 
   waitingForOnlineToReconnect: boolean = false;
 
   constructor() {
-    if (!window.WebSocket) {
-      throw new Error('This browser does not support websockets');
-    }
-
     window.addEventListener('online', () => {
       log.info('QuiqSocket online event');
       if (this.waitingForOnlineToReconnect) {
@@ -78,7 +75,7 @@ class QuiqSocket {
         this.waitingForOnlineToReconnect = true;
         this._reset();
         if (this.connectionLossHandler) {
-          this.connectionLossHandler();
+          this.connectionLossHandler(0, 'Browser offline');
         }
       }
     });
@@ -143,14 +140,14 @@ class QuiqSocket {
    * @returns {QuiqSocket} This instance of QuiqSocket, to allow for chaining
    */
   connect = (): QuiqSocket => {
-    if (!this.url) {
-      throw new Error('QuiqSocket: A URL must be provided before connecting.');
+    if (!window.WebSocket) {
+      throw new Error('QuiqSockets: This browser does not support websockets');
     }
 
     if (this.connectionCount >= this.options.maxConnectionCount) {
       log.error('Maximum connection count exceeded. Aborting.');
       this._handleFatalError();
-      return;
+      return this;
     }
 
     log.info('Connecting socket...');
@@ -162,7 +159,12 @@ class QuiqSocket {
     const accessToken = getAccessToken();
     if (!accessToken) {
       log.error('QuiqSocket was unable to retrieve the access token from storage.');
-      throw new Error('QuiqSocket was unable to retrieve the access token from storage.');
+      return this;
+    }
+
+    if (!this.url) {
+      log.error('A URL must be provided before connecting. Aborting connection.');
+      return this;
     }
 
     try {
@@ -216,7 +218,7 @@ class QuiqSocket {
     }
 
     log.info(
-      `Initiating retry attempt ${this.retries} of ${this.options.maxRetriesOnConnectionLoss}`,
+      `Initiating retry attempt ${this.retries + 1} of ${this.options.maxRetriesOnConnectionLoss}`,
     );
 
     const delay = this.options.backoffFunction.call(this, this.retries);
@@ -238,31 +240,34 @@ class QuiqSocket {
   _reset = () => {
     // Close existing connection
     if (this.socket) {
-      log.info('Closing existing connection and removing event handlers.');
-
       // Remove event handlers -- we don't care about this socket anymore.
-      this.socket.onopen = null;
-      this.socket.onclose = null;
-      this.socket.onerror = null;
-      this.socket.onmessage = null;
+      this.socket.onopen = () => {};
+      this.socket.onclose = () => {};
+      this.socket.onerror = () => {};
+      this.socket.onmessage = () => {};
 
       this.socket.close(StatusCodes.closeNormal, 'Closing socket');
       this.socket = null;
+
+      log.info('Closed existing connection and removed event handlers.');
     }
+
     if (this.retryTiemout) {
-      log.info('Clearing retry delay timeout');
       clearTimeout(this.retryTiemout);
       this.retryTiemout = null;
+      log.info('Invalidated retry delay timeout');
     }
+
     if (this.connectionTimeout) {
-      log.info('Clearing connection open timeout');
       clearTimeout(this.connectionTimeout);
       this.connectionTimeout = null;
+      log.info('Invalidated connection open timeout');
     }
+
     if (this.heartbeatInterval) {
-      log.info('Clearing heartbeat interval');
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
+      log.info('Invalidated heartbeat interval');
     }
   };
 
@@ -278,10 +283,15 @@ class QuiqSocket {
     }
 
     try {
-      const parsedData = JSON.parse(e.data);
-      // Fire event handler
-      if (this.messageHandler) {
-        this.messageHandler(parsedData);
+      // Make sure data is a string
+      if (typeof e.data === 'string') {
+        const parsedData = JSON.parse(e.data);
+        // Fire event handler
+        if (this.messageHandler) {
+          this.messageHandler(parsedData);
+        }
+      } else {
+        log.error('Message data was not of string type');
       }
     } catch (e) {
       log.error('Unable to parse websocket message');
@@ -293,6 +303,11 @@ class QuiqSocket {
    * @private
    */
   _handleOpen = () => {
+    if (!this.socket || !this.socket.url) {
+      log.error('Open handler called, but socket or socket URL was undefined');
+      return;
+    }
+
     log.info(`Socket opened to ${this.socket.url}`);
 
     // Clear timeout
@@ -331,7 +346,7 @@ class QuiqSocket {
 
     // Fire callback
     if (this.connectionLossHandler) {
-      this.connectionLossHandler();
+      this.connectionLossHandler(e.code, e.reason);
     }
   };
 

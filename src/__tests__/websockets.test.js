@@ -1,11 +1,8 @@
 // @flow
 jest.mock('atmosphere.js');
-jest.mock('../utils');
 jest.mock('../storage.js');
 import * as Websockets from '../websockets';
-import * as Utils from '../utils';
 import atmosphere from 'atmosphere.js';
-import {setQuiqUserTakenMeaningfulAction} from '../storage';
 
 describe('Websockets', () => {
   const socketUrl = 'www.fakesite.com';
@@ -84,42 +81,6 @@ describe('Websockets', () => {
             responseBody: JSON.stringify(message),
           });
           expect(callbacks.onMessage).toBeCalledWith(message);
-        });
-
-        describe('ChatMessage', () => {
-          it('sets storage', () => {
-            message.messageType = 'ChatMessage';
-            message.data = {
-              type: 'Text',
-            };
-            buildRequest.onMessage({
-              responseBody: JSON.stringify(message),
-            });
-            expect(setQuiqUserTakenMeaningfulAction).toBeCalled();
-          });
-
-          it('calls onRegistration for register event', () => {
-            message.messageType = 'ChatMessage';
-            message.data = {
-              type: 'Register',
-            };
-            buildRequest.onMessage({
-              responseBody: JSON.stringify(message),
-            });
-            expect(setQuiqUserTakenMeaningfulAction).toBeCalled();
-            expect(callbacks.onRegistration).toBeCalled();
-          });
-        });
-
-        describe('burnItDown message', () => {
-          it('calls burnItDown', () => {
-            message.messageType = 'BurnItDown';
-            buildRequest.onMessage({
-              responseBody: JSON.stringify(message),
-            });
-            expect(Utils.burnItDown).toBeCalledWith(message.data);
-            expect(callbacks.onBurn).toBeCalled();
-          });
         });
       });
 

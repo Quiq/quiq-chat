@@ -3,6 +3,7 @@ jest.mock('../apiCalls');
 jest.mock('../websockets');
 jest.mock('../storage');
 jest.mock('store');
+jest.mock('../utils');
 
 import QuiqChatClient from '../QuiqChatClient';
 import * as ApiCalls from '../apiCalls';
@@ -11,6 +12,10 @@ import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'store';
 import {MINUTES_UNTIL_INACTIVE} from '../appConstants';
 import * as stubbornFetch from '../stubbornFetch';
+import * as Utils from '../utils';
+import log from 'loglevel';
+
+log.setLevel('debug');
 
 const initialConvo = {
   id: 'testConvo',
@@ -52,7 +57,7 @@ describe('QuiqChatClient', () => {
 
   beforeEach(() => {
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
-    API.fetchWebsocketInfo.mockReturnValue({url: 'https://websocket.test'});
+    API.fetchWebsocketInfo.mockReturnValue({url: 'https://websocket.test', protocol: 'atmosphere'});
     mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
     mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
 
@@ -354,24 +359,6 @@ describe('QuiqChatClient', () => {
     });
   });
 
-  describe('client gets burned', () => {
-    beforeEach(() => {
-      if (!QuiqChatClient) {
-        throw new Error('Client should be defined');
-      }
-
-      QuiqChatClient._handleWebsocketMessage({
-        messageType: 'ChatMessage',
-        tenantId: 'test',
-        data: {type: 'BurnItDown'},
-      });
-    });
-
-    it('calls onBurn', () => {
-      expect(onBurn).toBeCalled();
-    });
-  });
-
   describe('API wrappers', () => {
     afterEach(() => {
       set.mockClear();
@@ -571,6 +558,66 @@ describe('QuiqChatClient', () => {
         expect(setClientInactive).not.toBeCalled();
         jest.runAllTimers();
         expect(setClientInactive).toBeCalledWith(true);
+      });
+    });
+  });
+
+  describe('websocket message handling', () => {
+    describe('BurnItDown message', () => {
+      it('calls burnItDown', () => {
+        const message = {
+          messageType: 'BurnItDown',
+          data: {before: 0, code: 466, force: true},
+          tenantId: 'test',
+        };
+        client._handleWebsocketMessage(message);
+        expect(Utils.burnItDown).toBeCalledWith(message.data);
+      });
+
+      it('fires onBurn callbasck', () => {
+        expect(onBurn).toBeCalled();
+      });
+    });
+
+    describe('ChatMessage', () => {
+      describe('REGISTER', () => {
+        beforeEach(() => {
+          const message = {
+            messageType: 'ChatMessage',
+            tenantId: 'me!',
+            data: {
+              id: 'test',
+              timestamp: 123,
+              type: 'Register',
+            },
+          };
+          client._handleWebsocketMessage(message);
+        });
+
+        it('sets meaningful action flag in local storage', () => {
+          expect(storage.setQuiqUserTakenMeaningfulAction).toHaveBeenCalledWith(true);
+        });
+      });
+
+      describe('TEXT', () => {
+        beforeEach(() => {
+          const message = {
+            messageType: 'ChatMessage',
+            tenantId: 'me!',
+            data: {
+              authorType: 'Agent',
+              text: 'hello',
+              id: 'id3',
+              timestamp: 1234,
+              type: 'Text',
+            },
+          };
+          client._handleWebsocketMessage(message);
+        });
+
+        it('sets meaningful action flag in local storage', () => {
+          expect(storage.setQuiqUserTakenMeaningfulAction).toHaveBeenCalledWith(true);
+        });
       });
     });
   });

@@ -10,7 +10,7 @@ export type QuiqChatSettings = {
 export type EventType = 'Join' | 'Leave' | 'Register';
 export type AuthorType = 'Customer' | 'Agent';
 export type TextMessageType = 'Text';
-export type WebsocketMessageType = 'ChatMessage';
+export type WebsocketMessageType = 'ChatMessage' | 'BurnItDown';
 export type UserEventTypes = 'Join' | 'Leave';
 
 export type TextMessage = {
@@ -38,8 +38,10 @@ export type AgentTypingMessage = {
   typing: boolean,
 };
 
-export type BurnItDownMessage = {
-  type: 'BurnItDown',
+export type BurnItDownPayload = {
+  before?: number,
+  code: 466,
+  force?: boolean,
 };
 
 export type QuiqChatCallbacks = {
@@ -155,20 +157,24 @@ export type AtmosphereConnection = {
   },
 };
 
-export type AtmosphereMessage = {
+export type ChatMessage = {
   tenantId: string,
-  messageType: WebsocketMessageType,
-  data: Event | TextMessage | AgentTypingMessage | BurnItDownMessage,
+  messageType: 'ChatMessage',
+  data: Event | TextMessage | AgentTypingMessage,
+};
+
+export type BurnItDownMessage = {
+  tenantId: string,
+  messageType: 'BurnItDown',
+  data: BurnItDownPayload,
 };
 
 export type WebsocketCallbacks = {
   onConnectionLoss?: () => void,
   onConnectionEstablish?: () => ?Promise<void>,
-  onMessage?: (message: AtmosphereMessage) => void,
+  onMessage?: (message: ChatMessage | BurnItDownMessage) => void,
   onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => void,
-  onRegistration?: () => void,
   onClose?: () => void,
-  onBurn?: () => void,
 };
 
 export type BrowserNames =
@@ -312,3 +318,6 @@ export type ApiError = {
   message?: string,
   status?: number,
 };
+
+export type Timeout = number;
+export type Interval = number;
