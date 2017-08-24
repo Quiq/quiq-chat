@@ -3,8 +3,8 @@ import * as API from './apiCalls';
 import {setGlobals} from './globals';
 import {connectSocket, disconnectSocket} from './websockets';
 import type {AtmosphereMessage, TextMessage, ApiError, UserEventTypes, Event} from './types';
-import {MessageTypes, minutesUntilInactive} from './appConstants';
-import {registerCallbacks, onInit} from './stubbornFetch';
+import {MessageTypes, MINUTES_UNTIL_INACTIVE} from './appConstants';
+import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
 import {differenceBy, unionBy, last, partition} from 'lodash';
 import {sortByTimestamp} from './utils';
 import type {QuiqChatCallbacks} from 'types';
@@ -126,6 +126,7 @@ class QuiqChatClient {
 
     try {
       this.initialized = true;
+      setClientInactive(false);
 
       // Order Matters here.  Ensure we successfully complete this fetchConversation request before connecting to
       // the websocket below!
@@ -149,7 +150,7 @@ class QuiqChatClient {
       }
 
       // If start is successful, begin the client inactive timer
-      this._setTimeUntilInactive(minutesUntilInactive);
+      this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     } catch (err) {
       disconnectSocket();
 
@@ -187,7 +188,7 @@ class QuiqChatClient {
   };
 
   sendMessage = (text: string) => {
-    this._setTimeUntilInactive(minutesUntilInactive);
+    this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
     return API.addMessage(text);
@@ -198,7 +199,7 @@ class QuiqChatClient {
   };
 
   sendRegistration = (fields: {[string]: string}) => {
-    this._setTimeUntilInactive(minutesUntilInactive);
+    this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
     return API.sendRegistration(fields);
@@ -212,7 +213,6 @@ class QuiqChatClient {
   isPersistentStorageEnabled = () => storage.isPersistentStorageEnabled();
   isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
   hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
-  getClientInactiveTime = (): number => storage.getClientInactiveTime() || 0;
 
   getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
     if (!cache || !this.connected) {
@@ -355,22 +355,17 @@ class QuiqChatClient {
   };
 
   _setTimeUntilInactive = (minutes: number) => {
-    storage.setClientInactiveTime(minutes);
     clearTimeout(this.clientInactiveTimer);
     this.clientInactiveTimer = setTimeout(
       () => {
-        if (!storage.getClientInactiveTime()) {
-          // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
-          // eslint-disable-next-line
-          console.log('Quiq Chat: Client timeout due to inactivity. Closing websocket.');
-          this.stop();
-          if (storage.getQuiqChatContainerVisible()) {
-            this.leaveChat();
-          }
-          if (this.callbacks.onClientInactiveTimeout) {
-            this.callbacks.onClientInactiveTimeout();
-          }
+        // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
+        // eslint-disable-next-line
+        console.log('Quiq Chat: Client timeout due to inactivity. Closing websocket.');
+        this.stop();
+        if (this.callbacks.onClientInactiveTimeout) {
+          this.callbacks.onClientInactiveTimeout();
         }
+        setClientInactive(true);
       },
       minutes * 60 * 1000 + 1000, // add a second to avoid timing issues
     );

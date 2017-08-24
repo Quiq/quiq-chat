@@ -9,7 +9,8 @@ import * as ApiCalls from '../apiCalls';
 import * as storage from '../storage';
 import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'store';
-import {minutesUntilInactive} from '../appConstants';
+import {MINUTES_UNTIL_INACTIVE} from '../appConstants';
+import * as stubbornFetch from '../stubbornFetch';
 
 const initialConvo = {
   id: 'testConvo',
@@ -48,6 +49,7 @@ describe('QuiqChatClient', () => {
   const API = (ApiCalls: Object);
   let client: QuiqChatClient;
   const mockStore = (storage: any);
+  const setClientInactive = jest.spyOn(stubbornFetch, 'setClientInactive');
 
   beforeEach(() => {
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
@@ -93,6 +95,10 @@ describe('QuiqChatClient', () => {
     it('calls onConnectionStatusChange', () => {
       expect(onConnectionStatusChange).toBeCalledWith(true);
     });
+
+    it('calls setClientInactive with false', () => {
+      expect(setClientInactive).toBeCalledWith(false);
+    });
   });
 
   describe('start with "initialized" set to true', () => {
@@ -132,6 +138,10 @@ describe('QuiqChatClient', () => {
 
     it('does not call onConnectionStatusChange', () => {
       expect(onConnectionStatusChange).not.toBeCalled();
+    });
+
+    it('does not call setClientInactive', () => {
+      expect(setClientInactive).not.toBeCalled();
     });
   });
 
@@ -391,14 +401,15 @@ describe('QuiqChatClient', () => {
     describe('timeout logic when timer expires', () => {
       beforeEach(() => {
         jest.useFakeTimers();
+        jest.clearAllMocks();
         client.stop = jest.fn();
         client.leaveChat = jest.fn();
-        client._setTimeUntilInactive(minutesUntilInactive);
+        client._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
       });
 
-      it('times out after appConstants.minutesUntilInactive minutes', () => {
+      it('times out after appConstants.MINUTES_UNTIL_INACTIVE minutes', () => {
         expect(setTimeout.mock.calls.length).toBe(1);
-        expect(setTimeout.mock.calls[0][1]).toBe(minutesUntilInactive * 60 * 1000 + 1000);
+        expect(setTimeout.mock.calls[0][1]).toBe(MINUTES_UNTIL_INACTIVE * 60 * 1000 + 1000);
       });
 
       it('calls onClientInactiveTimeout callback', () => {
@@ -413,10 +424,16 @@ describe('QuiqChatClient', () => {
         expect(client.stop).toBeCalled();
       });
 
-      it('calls leaveChat', () => {
+      it('no longer calls leaveChat', () => {
         expect(client.leaveChat).not.toBeCalled();
         jest.runAllTimers();
-        expect(client.leaveChat).toBeCalled();
+        expect(client.leaveChat).not.toBeCalled();
+      });
+
+      it('calls setClientInactive with true', () => {
+        expect(setClientInactive).not.toBeCalled();
+        jest.runAllTimers();
+        expect(setClientInactive).toBeCalledWith(true);
       });
     });
   });
@@ -483,23 +500,6 @@ describe('QuiqChatClient', () => {
       });
     });
 
-    describe('getClientInactiveTime', () => {
-      beforeEach(() => {
-        if (!client) {
-          throw new Error('Client should be defined');
-        }
-      });
-
-      it('returns 0 when the client is inactive', () => {
-        expect(client.getClientInactiveTime()).toBe(0);
-      });
-
-      it('returns the value of the quiq-client-inactive-time if user is active', () => {
-        mockStore.getClientInactiveTime.mockReturnValueOnce(1000);
-        expect(client.getClientInactiveTime()).toBe(1000);
-      });
-    });
-
     describe('leaveChat', () => {
       beforeEach(() => {
         if (!client) {
@@ -538,10 +538,6 @@ describe('QuiqChatClient', () => {
       it('calls storage.setQuiqUserTakenMeaningfulAction', () => {
         expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
       });
-
-      it('calls storage.setClientInactiveTime', () => {
-        expect(mockStore.setClientInactiveTime).toBeCalledWith(minutesUntilInactive);
-      });
     });
 
     describe('updateMessagePreview', () => {
@@ -576,10 +572,6 @@ describe('QuiqChatClient', () => {
 
       it('calls storage.setQuiqUserTakenMeaningfulAction', () => {
         expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
-      });
-
-      it('calls storage.setClientInactiveTime', () => {
-        expect(mockStore.setClientInactiveTime).toBeCalledWith(minutesUntilInactive);
       });
     });
   });

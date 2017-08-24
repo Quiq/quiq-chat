@@ -15,6 +15,7 @@ const messages = {
   burnedFromServer: 'Received 466 response code from server. Blocking any further API Calls.',
   totalErrorsExceeded:
     'Client has exceeded maximum number of errors for a single session. Aborting session.',
+  clientInactive: 'The client has been inactive for 30 minutes.  Blocking any further API Calls.',
 };
 
 type FetchCallbacks = {
@@ -31,6 +32,11 @@ export const registerCallbacks = (cbs: FetchCallbacks = {}) => {
 let initialized = false;
 export const onInit = () => {
   initialized = true;
+};
+
+let clientInactive = false;
+export const setClientInactive = (isInactive: boolean) => {
+  clientInactive = isInactive;
 };
 
 let errorCount = 0;
@@ -62,6 +68,9 @@ export default (url: string, fetchRequest: RequestOptions) => {
     }, 30000);
 
     const request = () => {
+      if (clientInactive) {
+        return reject(new Error(messages.clientInactive));
+      }
       if (!bypassUrls.find(u => url.includes(u)) && !initialized) {
         return reject(new Error(messages.clientNotInitialized));
       }
