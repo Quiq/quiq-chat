@@ -22,6 +22,19 @@ export const keepAlive = () => {
   quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {method: 'POST'});
 };
 
+let keepAliveInterval: number;
+
+const startHeartbeat = () => {
+  clearInterval(keepAliveInterval);
+
+  keepAlive();
+  keepAliveInterval = setInterval(keepAlive, 60 * 1000);
+};
+
+const stopHeartbeat = () => {
+  clearInterval(keepAliveInterval);
+};
+
 export const joinChat = () => {
   quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST'});
 };
@@ -90,8 +103,7 @@ export const login = (host?: string) =>
         setTrackingId(res.tokenId);
 
         // Start calling the keepAlive endpoint
-        keepAlive();
-        setInterval(keepAlive, 60 * 1000);
+        startHeartbeat();
       }
       if (res.tokenId && _onNewSession) {
         _onNewSession(res.tokenId);
@@ -108,4 +120,4 @@ export const DEPRECATED_AUTH_USER = (host?: string) =>
 
 export const validateSession = () => quiqFetch(getSessionApiUrl());
 
-export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'});
+export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'}).then(stopHeartbeat);
