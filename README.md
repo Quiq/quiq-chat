@@ -17,36 +17,36 @@ yarn add quiq-chat
 
 ### Using `QuiqChatClient`
 
-The default export of `quiq-chat` is the `QuiqChatClient` class which will fetch information about the current webchat, initialize a websocket connection, and allow you to register callbacks so that you can keep your app's UI in sync with the webchat state.
+The default export of `quiq-chat` is the `QuiqChatClient` singleton class which will fetch information about the current webchat, initialize a websocket connection, and allow you to register callbacks so that you can keep your app's UI in sync with the webchat state.
 
-All the functions to register callbacks return the `QuiqChatClient` object so that you can chain them together. You also need to call `start()` to connect to Quiq Messaging. The `start` method returns a promise that resolves to the `QuiqChatClient`, so you can add a callback that will be executed after the connection is opened;
+All the functions to register callbacks return the `QuiqChatClient` object so that you can chain them together. You also need to call `start()` to connect to Quiq Messaging. You will need to call the `initialize(host, contactPoint)` function before calling start. The `start` method returns a promise that resolves to the `QuiqChatClient`, so you can add a callback that will be executed after the connection is opened;
 
 ```javascript
 import QuiqChatClient from 'quiq-chat';
 
-const client = new QuiqChatClient()
-  .onNewMessages(messages => {
+
+  QuiqChatClient.onNewMessages(messages => {
     // Update your app with the new array of messages
   })
-  .onAgentTyping(typing => {
+  QuiqChatClient.onAgentTyping(typing => {
     // Show or hide the typing indicator
   })
-  .onRegistration(() => {
+  QuiqChatClient.onRegistration(() => {
     // Hide form, or show main app
   })
-  .onConnectionStatusChange(connected => {
+  QuiqChatClient.onConnectionStatusChange(connected => {
     // Show the connection status of the app
   })
-  .onError(error => {
+  QuiqChatClient.onError(error => {
     // Show some error message
   })
-  .onRetryableError(error => {
+  QuiqChatClient.onRetryableError(error => {
     // Show some error message
   }).
-  .onErrorResolved(() => {
+  QuiqChatClient.onErrorResolved(() => {
     // Remove the error message
   })
-  .start()
+  QuiqChatClient.start()
   .then(client => {
     // Run some code after the webchat app is connected
   });
