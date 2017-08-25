@@ -30,7 +30,7 @@ class QuiqChatClient {
   initialized: boolean;
   clientInactiveTimer: number;
 
-  constructor(host: string, contactPoint: string) {
+  initialize = (host: string, contactPoint: string) => {
     this.host = host;
     this.contactPoint = contactPoint;
     this.callbacks = {};
@@ -62,7 +62,7 @@ class QuiqChatClient {
 
     // Register with apiCalls for new session events
     API.registerNewSessionCallback(this._handleNewSession);
-  }
+  };
 
   /** Fluent client builder functions: these all return the client object * */
 
@@ -372,4 +372,4 @@ class QuiqChatClient {
   };
 }
 
-export default QuiqChatClient;
+export default new QuiqChatClient();

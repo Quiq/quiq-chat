@@ -47,7 +47,6 @@ describe('QuiqChatClient', () => {
   const host = 'https://test.goquiq.fake';
   const contactPoint = 'test';
   const API = (ApiCalls: Object);
-  let client: QuiqChatClient;
   const mockStore = (storage: any);
   const setClientInactive = jest.spyOn(stubbornFetch, 'setClientInactive');
 
@@ -57,23 +56,23 @@ describe('QuiqChatClient', () => {
     mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
     mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
 
-    client = new QuiqChatClient(host, contactPoint)
-      .onNewMessages(onNewMessages)
-      .onAgentTyping(onAgentTyping)
-      .onError(onError)
-      .onErrorResolved(onErrorResolved)
-      .onConnectionStatusChange(onConnectionStatusChange)
-      .onRegistration(onRegistration)
-      .onNewSession(onNewSession)
-      .onBurn(onBurn)
-      .onClientInactiveTimeout(onClientInactiveTimeout);
+    QuiqChatClient.initialize(host, contactPoint);
+    QuiqChatClient.onNewMessages(onNewMessages);
+    QuiqChatClient.onAgentTyping(onAgentTyping);
+    QuiqChatClient.onError(onError);
+    QuiqChatClient.onErrorResolved(onErrorResolved);
+    QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
+    QuiqChatClient.onRegistration(onRegistration);
+    QuiqChatClient.onNewSession(onNewSession);
+    QuiqChatClient.onBurn(onBurn);
+    QuiqChatClient.onClientInactiveTimeout(onClientInactiveTimeout);
 
-    client.start();
+    QuiqChatClient.start();
   });
 
   describe('start', () => {
     it('sets initialized flag to "true"', () => {
-      expect(client.initialized).toBe(true);
+      expect(QuiqChatClient.initialized).toBe(true);
     });
 
     it('calls login', () => {
@@ -105,19 +104,19 @@ describe('QuiqChatClient', () => {
     beforeEach(() => {
       jest.clearAllMocks();
 
-      client = new QuiqChatClient(host, contactPoint)
-        .onNewMessages(onNewMessages)
-        .onAgentTyping(onAgentTyping)
-        .onError(onError)
-        .onErrorResolved(onErrorResolved)
-        .onConnectionStatusChange(onConnectionStatusChange)
-        .onRegistration(onRegistration)
-        .onNewSession(onNewSession)
-        .onBurn(onBurn);
+      QuiqChatClient.initialize(host, contactPoint);
+      QuiqChatClient.onNewMessages(onNewMessages);
+      QuiqChatClient.onAgentTyping(onAgentTyping);
+      QuiqChatClient.onError(onError);
+      QuiqChatClient.onErrorResolved(onErrorResolved);
+      QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
+      QuiqChatClient.onRegistration(onRegistration);
+      QuiqChatClient.onNewSession(onNewSession);
+      QuiqChatClient.onBurn(onBurn);
 
-      client.initialized = true;
+      QuiqChatClient.initialized = true;
 
-      client.start();
+      QuiqChatClient.start();
     });
 
     it('does not call login', () => {
@@ -151,15 +150,15 @@ describe('QuiqChatClient', () => {
 
       API.fetchWebsocketInfo.mockReturnValueOnce(Promise.reject({status: 405}));
 
-      client = new QuiqChatClient(host, contactPoint)
-        .onNewMessages(onNewMessages)
-        .onAgentTyping(onAgentTyping)
-        .onError(onError)
-        .onErrorResolved(onErrorResolved)
-        .onConnectionStatusChange(onConnectionStatusChange)
-        .onBurn(onBurn);
+      QuiqChatClient.initialize(host, contactPoint);
+      QuiqChatClient.onNewMessages(onNewMessages);
+      QuiqChatClient.onAgentTyping(onAgentTyping);
+      QuiqChatClient.onError(onError);
+      QuiqChatClient.onErrorResolved(onErrorResolved);
+      QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
+      QuiqChatClient.onBurn(onBurn);
 
-      client.start();
+      QuiqChatClient.start();
     });
 
     it('calls disconnectSocket', () => {
@@ -173,14 +172,14 @@ describe('QuiqChatClient', () => {
       // Return a retryable error once
       API.fetchWebsocketInfo.mockReturnValueOnce(Promise.reject({status: 404}));
 
-      new QuiqChatClient(host, contactPoint)
-        .onNewMessages(onNewMessages)
-        .onAgentTyping(onAgentTyping)
-        .onError(onError)
-        .onErrorResolved(onErrorResolved)
-        .onConnectionStatusChange(onConnectionStatusChange)
-        .onBurn(onBurn)
-        .start();
+      QuiqChatClient.initialize(host, contactPoint);
+      QuiqChatClient.onNewMessages(onNewMessages);
+      QuiqChatClient.onAgentTyping(onAgentTyping);
+      QuiqChatClient.onError(onError);
+      QuiqChatClient.onErrorResolved(onErrorResolved);
+      QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
+      QuiqChatClient.onBurn(onBurn);
+      QuiqChatClient.start();
     });
 
     it('calls disconnectSocket', () => {
@@ -194,11 +193,11 @@ describe('QuiqChatClient', () => {
 
   describe('stop', () => {
     beforeEach(() => {
-      if (!client) {
+      if (!QuiqChatClient) {
         throw new Error('Client should be defined');
       }
 
-      client.stop();
+      QuiqChatClient.stop();
     });
 
     it('disconnects the websocket', () => {
@@ -206,11 +205,11 @@ describe('QuiqChatClient', () => {
     });
 
     it('sets initialzed flag to false', () => {
-      expect(client.initialized).toBe(false);
+      expect(QuiqChatClient.initialized).toBe(false);
     });
 
     it('sets connected flag to false', () => {
-      expect(client.connected).toBe(false);
+      expect(QuiqChatClient.connected).toBe(false);
     });
   });
 
@@ -224,11 +223,11 @@ describe('QuiqChatClient', () => {
     };
 
     beforeEach(() => {
-      if (!client) {
+      if (!QuiqChatClient) {
         throw new Error('Client should be defined');
       }
 
-      client._handleWebsocketMessage({
+      QuiqChatClient._handleWebsocketMessage({
         messageType: 'ChatMessage',
         tenantId: 'test',
         data: newMessage,
@@ -243,77 +242,77 @@ describe('QuiqChatClient', () => {
   describe('handling new session', () => {
     describe('when no trackingId is defined, i.e., this is first session', () => {
       it('updates cached trackingId', () => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
 
-        client._handleNewSession(testTrackingId);
-        expect(client.trackingId).toBe(testTrackingId);
+        QuiqChatClient._handleNewSession(testTrackingId);
+        expect(QuiqChatClient.trackingId).toBe(testTrackingId);
       });
 
       it('does NOT fire new session callback', () => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
 
-        client._handleNewSession(testTrackingId);
-        expect(client.callbacks.onNewSession).not.toHaveBeenCalled();
+        QuiqChatClient._handleNewSession(testTrackingId);
+        expect(QuiqChatClient.callbacks.onNewSession).not.toHaveBeenCalled();
       });
     });
 
     describe('when trackingId has not changed, i.e. session was refreshed', () => {
       beforeEach(() => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
 
-        client.trackingId = testTrackingId;
+        QuiqChatClient.trackingId = testTrackingId;
       });
 
       it('updates cached trackingId', () => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
 
-        client._handleNewSession(testTrackingId);
-        expect(client.trackingId).toBe(testTrackingId);
+        QuiqChatClient._handleNewSession(testTrackingId);
+        expect(QuiqChatClient.trackingId).toBe(testTrackingId);
       });
 
       it('does NOT fire new session callback', () => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
 
-        client._handleNewSession(testTrackingId);
-        expect(client.callbacks.onNewSession).not.toHaveBeenCalled();
+        QuiqChatClient._handleNewSession(testTrackingId);
+        expect(QuiqChatClient.callbacks.onNewSession).not.toHaveBeenCalled();
       });
     });
 
     describe('when trackingId has changed, i.e. new conversation', () => {
       beforeEach(() => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
 
-        client.trackingId = 'oldId';
+        QuiqChatClient.trackingId = 'oldId';
       });
 
       it('updates cached trackingId', async () => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
 
-        await client._handleNewSession(testTrackingId);
-        expect(client.trackingId).toBe(testTrackingId);
+        await QuiqChatClient._handleNewSession(testTrackingId);
+        expect(QuiqChatClient.trackingId).toBe(testTrackingId);
       });
 
       it('does fire new session callback', () => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
 
-        client._handleNewSession(testTrackingId);
-        expect(client.callbacks.onNewSession).toHaveBeenCalled();
+        QuiqChatClient._handleNewSession(testTrackingId);
+        expect(QuiqChatClient.callbacks.onNewSession).toHaveBeenCalled();
       });
     });
   });
@@ -322,28 +321,28 @@ describe('QuiqChatClient', () => {
     const newEvent = {type: 'Register', id: 'reg1', timestamp: 3};
 
     it('updates userIsRegistered', () => {
-      if (!client) {
+      if (!QuiqChatClient) {
         throw new Error('Client should be defined');
       }
 
-      expect(client.isRegistered()).toBe(false);
-      client._handleWebsocketMessage({
+      expect(QuiqChatClient.isRegistered()).toBe(false);
+      QuiqChatClient._handleWebsocketMessage({
         messageType: 'ChatMessage',
         tenantId: 'test',
         data: newEvent,
       });
-      expect(client.isRegistered()).toBe(true);
+      expect(QuiqChatClient.isRegistered()).toBe(true);
       expect(onRegistration).toBeCalled();
     });
   });
 
   describe('getting typing indicator change', () => {
     beforeEach(() => {
-      if (!client) {
+      if (!QuiqChatClient) {
         throw new Error('Client should be defined');
       }
 
-      client._handleWebsocketMessage({
+      QuiqChatClient._handleWebsocketMessage({
         messageType: 'ChatMessage',
         tenantId: 'test',
         data: {type: 'AgentTyping', typing: true},
@@ -357,11 +356,11 @@ describe('QuiqChatClient', () => {
 
   describe('client gets burned', () => {
     beforeEach(() => {
-      if (!client) {
+      if (!QuiqChatClient) {
         throw new Error('Client should be defined');
       }
 
-      client._handleWebsocketMessage({
+      QuiqChatClient._handleWebsocketMessage({
         messageType: 'ChatMessage',
         tenantId: 'test',
         data: {type: 'BurnItDown'},
@@ -373,71 +372,6 @@ describe('QuiqChatClient', () => {
     });
   });
 
-  describe('client inactivity timeout', () => {
-    beforeEach(() => {
-      if (!client) {
-        throw new Error('Client should be defined');
-      }
-    });
-
-    afterEach(() => {
-      clearTimeout(client.clientInactiveTimer);
-    });
-
-    it('initializes with a timer set', () => {
-      expect(client.clientInactiveTimer).toBeDefined();
-    });
-
-    it('sets a timer when registration sent', () => {
-      client.sendRegistration({firstName: 'SpongeBob', lastName: 'SquarePants'});
-      expect(client.clientInactiveTimer).toBeDefined();
-    });
-
-    it('sets a timer when message sent', () => {
-      client.sendMessage('ahoy');
-      expect(client.clientInactiveTimer).toBeDefined();
-    });
-
-    describe('timeout logic when timer expires', () => {
-      beforeEach(() => {
-        jest.useFakeTimers();
-        jest.clearAllMocks();
-        client.stop = jest.fn();
-        client.leaveChat = jest.fn();
-        client._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
-      });
-
-      it('times out after appConstants.MINUTES_UNTIL_INACTIVE minutes', () => {
-        expect(setTimeout.mock.calls.length).toBe(1);
-        expect(setTimeout.mock.calls[0][1]).toBe(MINUTES_UNTIL_INACTIVE * 60 * 1000 + 1000);
-      });
-
-      it('calls onClientInactiveTimeout callback', () => {
-        expect(onClientInactiveTimeout).not.toBeCalled();
-        jest.runAllTimers();
-        expect(onClientInactiveTimeout).toBeCalled();
-      });
-
-      it('calls stop', () => {
-        expect(client.stop).not.toBeCalled();
-        jest.runAllTimers();
-        expect(client.stop).toBeCalled();
-      });
-
-      it('no longer calls leaveChat', () => {
-        expect(client.leaveChat).not.toBeCalled();
-        jest.runAllTimers();
-        expect(client.leaveChat).not.toBeCalled();
-      });
-
-      it('calls setClientInactive with true', () => {
-        expect(setClientInactive).not.toBeCalled();
-        jest.runAllTimers();
-        expect(setClientInactive).toBeCalledWith(true);
-      });
-    });
-  });
-
   describe('API wrappers', () => {
     afterEach(() => {
       set.mockClear();
@@ -445,11 +379,11 @@ describe('QuiqChatClient', () => {
 
     describe('joinChat', () => {
       beforeEach(() => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
 
-        client.joinChat();
+        QuiqChatClient.joinChat();
       });
 
       it('proxies call', () => {
@@ -463,50 +397,50 @@ describe('QuiqChatClient', () => {
 
     describe('isStorageEnabled', () => {
       it('returns the value of the quiq-chat-container-visible', () => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
 
         mockStore.isStorageEnabled.mockReturnValueOnce(false);
-        expect(client.isStorageEnabled()).toBe(false);
+        expect(QuiqChatClient.isStorageEnabled()).toBe(false);
       });
     });
 
     describe('isChatVisible', () => {
       it('returns the value of the quiq-chat-container-visible value value', () => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
 
         mockStore.getQuiqChatContainerVisible.mockReturnValueOnce(false);
-        expect(client.isChatVisible()).toBe(false);
+        expect(QuiqChatClient.isChatVisible()).toBe(false);
       });
     });
 
     describe('hasTakenMeaningfulAction', () => {
       beforeEach(() => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
       });
 
       it('returns the value of the quiq-user-taken-meaningful-action value value', () => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
 
         mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValueOnce(false);
-        expect(client.hasTakenMeaningfulAction()).toBe(false);
+        expect(QuiqChatClient.hasTakenMeaningfulAction()).toBe(false);
       });
     });
 
     describe('leaveChat', () => {
       beforeEach(() => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
 
-        client.leaveChat();
+        QuiqChatClient.leaveChat();
       });
 
       it('proxies call', () => {
@@ -520,11 +454,11 @@ describe('QuiqChatClient', () => {
 
     describe('sendMessage', () => {
       beforeEach(() => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
 
-        client.sendMessage('text');
+        QuiqChatClient.sendMessage('text');
       });
 
       it('proxies call', () => {
@@ -542,11 +476,11 @@ describe('QuiqChatClient', () => {
 
     describe('updateMessagePreview', () => {
       it('proxies call', () => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
 
-        client.updateMessagePreview('text', true);
+        QuiqChatClient.updateMessagePreview('text', true);
         expect(API.updateMessagePreview).toBeCalledWith('text', true);
       });
     });
@@ -555,11 +489,11 @@ describe('QuiqChatClient', () => {
       const data = {firstName: 'SpongeBob', lastName: 'SquarePants'};
 
       beforeEach(() => {
-        if (!client) {
+        if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
 
-        client.sendRegistration(data);
+        QuiqChatClient.sendRegistration(data);
       });
 
       it('proxies call', () => {
@@ -572,6 +506,71 @@ describe('QuiqChatClient', () => {
 
       it('calls storage.setQuiqUserTakenMeaningfulAction', () => {
         expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
+      });
+    });
+  });
+
+  describe('client inactivity timeout', () => {
+    beforeEach(() => {
+      if (!QuiqChatClient) {
+        throw new Error('Client should be defined');
+      }
+    });
+
+    afterEach(() => {
+      clearTimeout(QuiqChatClient.clientInactiveTimer);
+    });
+
+    it('initializes with a timer set', () => {
+      expect(QuiqChatClient.clientInactiveTimer).toBeDefined();
+    });
+
+    it('sets a timer when registration sent', () => {
+      QuiqChatClient.sendRegistration({firstName: 'SpongeBob', lastName: 'SquarePants'});
+      expect(QuiqChatClient.clientInactiveTimer).toBeDefined();
+    });
+
+    it('sets a timer when message sent', () => {
+      QuiqChatClient.sendMessage('ahoy');
+      expect(QuiqChatClient.clientInactiveTimer).toBeDefined();
+    });
+
+    describe('timeout logic when timer expires', () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+        jest.clearAllMocks();
+        QuiqChatClient.stop = jest.fn();
+        QuiqChatClient.leaveChat = jest.fn();
+        QuiqChatClient._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
+      });
+
+      it('times out after appConstants.MINUTES_UNTIL_INACTIVE minutes', () => {
+        expect(setTimeout.mock.calls.length).toBe(1);
+        expect(setTimeout.mock.calls[0][1]).toBe(MINUTES_UNTIL_INACTIVE * 60 * 1000 + 1000);
+      });
+
+      it('calls onClientInactiveTimeout callback', () => {
+        expect(onClientInactiveTimeout).not.toBeCalled();
+        jest.runAllTimers();
+        expect(onClientInactiveTimeout).toBeCalled();
+      });
+
+      it('calls stop', () => {
+        expect(QuiqChatClient.stop).not.toBeCalled();
+        jest.runAllTimers();
+        expect(QuiqChatClient.stop).toBeCalled();
+      });
+
+      it('no longer calls leaveChat', () => {
+        expect(QuiqChatClient.leaveChat).not.toBeCalled();
+        jest.runAllTimers();
+        expect(QuiqChatClient.leaveChat).not.toBeCalled();
+      });
+
+      it('calls setClientInactive with true', () => {
+        expect(setClientInactive).not.toBeCalled();
+        jest.runAllTimers();
+        expect(setClientInactive).toBeCalledWith(true);
       });
     });
   });
