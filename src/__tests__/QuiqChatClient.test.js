@@ -57,7 +57,6 @@ describe('QuiqChatClient', () => {
     mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
 
     QuiqChatClient.initialize(host, contactPoint);
-    host, contactPoint;
     QuiqChatClient.onNewMessages(onNewMessages);
     QuiqChatClient.onAgentTyping(onAgentTyping);
     QuiqChatClient.onError(onError);
