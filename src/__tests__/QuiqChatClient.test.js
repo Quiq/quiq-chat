@@ -570,7 +570,7 @@ describe('QuiqChatClient', () => {
           data: {before: 0, code: 466, force: true},
           tenantId: 'test',
         };
-        client._handleWebsocketMessage(message);
+        QuiqChatClient._handleWebsocketMessage(message);
         expect(Utils.burnItDown).toBeCalledWith(message.data);
       });
 
@@ -591,7 +591,7 @@ describe('QuiqChatClient', () => {
               type: 'Register',
             },
           };
-          client._handleWebsocketMessage(message);
+          QuiqChatClient._handleWebsocketMessage(message);
         });
 
         it('sets meaningful action flag in local storage', () => {
@@ -612,7 +612,7 @@ describe('QuiqChatClient', () => {
               type: 'Text',
             },
           };
-          client._handleWebsocketMessage(message);
+          QuiqChatClient._handleWebsocketMessage(message);
         });
 
         it('sets meaningful action flag in local storage', () => {
