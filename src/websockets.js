@@ -62,8 +62,8 @@ const buildRequest = (socketUrl: string) => {
 export const connectSocket = (builder: AtmosphereConnectionBuilder) => {
   // Check that maximum retries not exceeded; increment connection count
   if (connectionCount >= MAX_SOCKET_CONNECTION_ATTEMPTS) {
-    if (callbacks.onConnectionLoss) {
-      callbacks.onConnectionLoss();
+    if (callbacks.onFatalError) {
+      callbacks.onFatalError();
     }
 
     throw new Error('Maximum socket connection attempts exceeded.');

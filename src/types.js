@@ -175,6 +175,7 @@ export type WebsocketCallbacks = {
   onMessage?: (message: ChatMessage | BurnItDownMessage) => void,
   onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => void,
   onClose?: () => void,
+  onFatalError?: () => void,
 };
 
 export type BrowserNames =
