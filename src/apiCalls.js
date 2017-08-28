@@ -94,6 +94,7 @@ export const login = (host?: string) =>
     getGenerateUrl(host),
     {
       method: 'POST',
+      credentials: 'include',
     },
     {
       responseType: 'JSON',
