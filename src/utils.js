@@ -1,7 +1,8 @@
 // @flow
 import {UAParser} from 'ua-parser-js';
-import {unsubscribe} from './index';
 import {setBurned} from './globals';
+import QuiqSocket from './QuiqSockets/quiqSockets';
+import {disconnectSocket} from './websockets';
 import qs from 'qs';
 import logger from './logging';
 import type {BrowserNames, BurnItDownResponse} from 'types';
@@ -33,7 +34,12 @@ export const burnItDown = (message?: BurnItDownResponse) => {
   setTimeout(() => {
     log.error('Webchat has been burned down.');
     setBurned();
-    unsubscribe();
+
+    // Disconnect quiqSocket
+    QuiqSocket.disconnect();
+
+    // Disconnect atmosphere
+    disconnectSocket();
   }, timeToBurnItDown);
 };
 

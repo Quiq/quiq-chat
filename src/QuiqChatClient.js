@@ -264,7 +264,6 @@ class QuiqChatClient {
             onConnectionLoss: this._handleConnectionLoss,
             onConnectionEstablish: this._handleConnectionEstablish,
             onMessage: this._handleWebsocketMessage,
-            onBurn: this._handleFatalSocketError,
           },
         });
         break;

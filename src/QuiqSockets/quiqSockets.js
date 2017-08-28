@@ -23,6 +23,7 @@ import StatusCodes from './StatusCodes';
 import logger from '../logging';
 import {clamp} from 'lodash';
 import {getAccessToken} from '../storage';
+import {getBurned} from '../globals';
 import type {Interval, Timeout} from '../types';
 
 const log = logger('QuiqSocket');
@@ -39,11 +40,11 @@ class QuiqSocket {
 
   // Websocket options
   options: {[string]: any} = {
-    maxRetriesOnConnectionLoss: 10,
-    backoffFunction: (attempt: number) => clamp((attempt ** 2 - 1) / 2 * 1000, 0, 30000),
-    maxConnectionCount: 100,
-    connectionAttemptTimeout: 10 * 1000,
-    heartbeatFrequency: 50 * 1000,
+    maxRetriesOnConnectionLoss: 100, // Number of times to attempt reconnecting on a single connection
+    backoffFunction: (attempt: number) => clamp((attempt ** 2 - 1) / 2 * 1000, 0, 30000), // Function of the form attempt => delay used for delaying retry attempts
+    maxConnectionCount: 100, // the maximum number of times connect() will be called, either externally or in doing retries, for the entire session.
+    connectionAttemptTimeout: 10 * 1000, // The timeout for WebSocket.onopen to be called for a connection attempt.
+    heartbeatFrequency: 50 * 1000, // Frequency to send ping across websocket
   };
 
   // Internal WebSocket instance
@@ -61,6 +62,8 @@ class QuiqSocket {
   waitingForOnlineToReconnect: boolean = false;
 
   constructor() {
+    // NOTE: We use 'waitingForOnlineToReconnect' as a flag for whether to attempt reconnecting after an 'online' event.
+    // In other words, QuiqSocket must have recorded an 'offline' event prior to the 'online' event if it's going to reconnect.
     window.addEventListener('online', () => {
       log.info('QuiqSocket online event');
       if (this.waitingForOnlineToReconnect) {
@@ -78,6 +81,15 @@ class QuiqSocket {
           this.connectionLossHandler(0, 'Browser offline');
         }
       }
+    });
+
+    // Unload listener - the browser implementation should send close frame automatically, but you can never be too sure...
+    window.addEventListener('unload', () => {
+      log.info('QuiqSocket unload event');
+      if (this.socket) {
+        this._reset();
+      }
+      return null;
     });
   }
 
@@ -140,6 +152,12 @@ class QuiqSocket {
    * @returns {QuiqSocket} This instance of QuiqSocket, to allow for chaining
    */
   connect = (): QuiqSocket => {
+    // Check burn status
+    if (getBurned()) {
+      log.error('Client in bad state. Aborting websocket connection.');
+      return this;
+    }
+
     if (!window.WebSocket) {
       throw new Error('QuiqSockets: This browser does not support websockets');
     }
@@ -162,11 +180,13 @@ class QuiqSocket {
       return this;
     }
 
+    // Check that we have a URL
     if (!this.url) {
       log.error('A URL must be provided before connecting. Aborting connection.');
       return this;
     }
 
+    // Connect socket.
     try {
       this.socket = new WebSocket(this.url, accessToken);
     } catch (e) {
@@ -174,14 +194,16 @@ class QuiqSocket {
       throw new Error('Cannot construct WebSocket.');
     }
 
+    // Register internal event handlers with WebSocket instance.
     this.socket.onopen = this._handleOpen;
     this.socket.onclose = this._handleClose;
     this.socket.onerror = this._handleSocketError;
     this.socket.onmessage = this._handleMessage;
 
+    // Increment "global" connection count
     this.connectionCount++;
 
-    // Set tiemout to trigger reconnect
+    // Set tiemout to trigger reconnect if _onOpen isn't called quiqly enough
     this.connectionTimeout = setTimeout(() => {
       log.debug('Connection attempt timed out.');
       this._retryConnection();
@@ -195,7 +217,9 @@ class QuiqSocket {
    * @returns {QuiqSocket} This instance of QuiqSocket, to allow for chaining
    */
   disconnect = (): QuiqSocket => {
-    log.info('Closing socket intentionally');
+    if (this.socket) {
+      log.info('Closing socket intentionally');
+    }
 
     this._reset();
 
@@ -234,7 +258,9 @@ class QuiqSocket {
   };
 
   /**
-   * Resets all connection-specific state including the WebSocket instance itself and all timers. Removes all event handlers for WebSocket. Does **not** reset retry count. (This is done in the onOpen handler.)
+   * Resets all connection-specific state including the WebSocket instance itself and all timers.
+   * Removes all event handlers for WebSocket. Does **not** reset retry count. (This is done in the onOpen handler.)
+   * This method is idempotent...use it liberally to ensure multiple socket connections are not created.
    * @private
    */
   _reset = () => {
@@ -246,6 +272,7 @@ class QuiqSocket {
       this.socket.onerror = () => {};
       this.socket.onmessage = () => {};
 
+      // NOTE: Tests have shown that the below is an effective way to close the socket even when called while the readyState is CONNECTING
       this.socket.close(StatusCodes.closeNormal, 'Closing socket');
       this.socket = null;
 
@@ -337,17 +364,19 @@ class QuiqSocket {
     const dirtyOrClean = e.wasClean ? 'CLEANLY' : 'DIRTILY';
     log.info(`Socket ${dirtyOrClean} closed unexpectedly with code ${e.code}: ${e.reason}.`);
 
+    // TODO: handle code 1015 (TCP 1.1 not supported)
+    // TODO: Investigate other status codes to handle specifically
+
     // Reset state
     this._reset();
-
-    // Initiate retry procedure
-
-    this._retryConnection();
 
     // Fire callback
     if (this.connectionLossHandler) {
       this.connectionLossHandler(e.code, e.reason);
     }
+
+    // Initiate retry procedure
+    this._retryConnection();
   };
 
   /**
@@ -377,6 +406,10 @@ class QuiqSocket {
    * @private
    */
   _startHeartbeat = () => {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+    }
+
     this.heartbeatInterval = setInterval(() => {
       if (!this.socket) {
         log.warn('Trying to send heartbeat, but no socket connection exists.');
