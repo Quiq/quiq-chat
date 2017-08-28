@@ -11,6 +11,9 @@ import {
 import quiqFetch from './quiqFetch';
 import {setAccessToken, setTrackingId} from './storage';
 import type {Conversation} from 'types';
+import logger from './logging';
+
+const log = logger('apiCalls');
 
 let _onNewSession: (newTrackingId: string) => any;
 
@@ -103,6 +106,8 @@ export const login = (host?: string) =>
       if (res.accessToken) {
         setAccessToken(res.accessToken);
         setTrackingId(res.tokenId);
+
+        log.debug(`Login successful. trackingId: ${res.tokenId}`);
 
         // Start calling the keepAlive endpoint
         // TODO: Check this back in when we're ready
