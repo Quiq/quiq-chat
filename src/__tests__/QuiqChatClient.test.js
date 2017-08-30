@@ -58,6 +58,7 @@ describe('QuiqChatClient', () => {
   beforeEach(() => {
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
     API.fetchWebsocketInfo.mockReturnValue({url: 'https://websocket.test', protocol: 'atmosphere'});
+    API.leaveChat.mockReturnValue(Promise.resolve());
     mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
     mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
 
@@ -527,7 +528,7 @@ describe('QuiqChatClient', () => {
         jest.useFakeTimers();
         jest.clearAllMocks();
         QuiqChatClient.stop = jest.fn();
-        QuiqChatClient.leaveChat = jest.fn();
+        QuiqChatClient.leaveChat = jest.spyOn(QuiqChatClient, 'leaveChat');
         QuiqChatClient._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
       });
 
@@ -536,22 +537,22 @@ describe('QuiqChatClient', () => {
         expect(setTimeout.mock.calls[0][1]).toBe(MINUTES_UNTIL_INACTIVE * 60 * 1000 + 1000);
       });
 
-      it('calls onClientInactiveTimeout callback', () => {
+      it('calls leaveChat', () => {
+        expect(QuiqChatClient.leaveChat).not.toBeCalled();
+        jest.runAllTimers();
+        expect(QuiqChatClient.leaveChat).toBeCalled();
+      });
+
+      it('calls onClientInactiveTimeout callback', async () => {
         expect(onClientInactiveTimeout).not.toBeCalled();
         jest.runAllTimers();
-        expect(onClientInactiveTimeout).toBeCalled();
+        await expect(onClientInactiveTimeout).toBeCalled();
       });
 
       it('calls stop', () => {
         expect(QuiqChatClient.stop).not.toBeCalled();
         jest.runAllTimers();
         expect(QuiqChatClient.stop).toBeCalled();
-      });
-
-      it('no longer calls leaveChat', () => {
-        expect(QuiqChatClient.leaveChat).not.toBeCalled();
-        jest.runAllTimers();
-        expect(QuiqChatClient.leaveChat).not.toBeCalled();
       });
 
       it('calls setClientInactive with true', () => {
