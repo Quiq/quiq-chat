@@ -22,8 +22,10 @@
 import StatusCodes from './StatusCodes';
 import logger from '../logging';
 import {clamp} from 'lodash';
-import {getAccessToken} from '../storage';
+import {getAccessToken, getTrackingId} from '../storage';
 import {getBurned} from '../globals';
+import {formatQueryParams} from '../utils';
+import {version} from '../../package.json';
 import type {Interval, Timeout} from '../types';
 
 const log = logger('QuiqSocket');
@@ -188,7 +190,11 @@ class QuiqSocket {
 
     // Connect socket.
     try {
-      this.socket = new WebSocket(this.url, accessToken);
+      const parsedUrl = formatQueryParams(this.url, {
+        trackingId: getTrackingId() || 'noAssociatedTrackingId',
+        quiqVersion: version,
+      });
+      this.socket = new WebSocket(parsedUrl, accessToken);
     } catch (e) {
       log.error(`Unable to construct WebSocket: ${e}`);
       throw new Error('Cannot construct WebSocket.');

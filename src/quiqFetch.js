@@ -72,7 +72,7 @@ const quiqFetch = (
 
       return res;
     })
-    .catch(err => err);
+    .catch(err => Promise.reject(err));
 };
 
 export default quiqFetch;

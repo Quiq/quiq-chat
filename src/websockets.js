@@ -1,7 +1,8 @@
 // @flow
 import atmosphere from 'atmosphere.js';
 import {ping} from './apiCalls';
-import {isIE9} from './utils';
+import {isIE9, formatQueryParams} from './utils';
+import {getBurned} from './globals';
 import * as storage from './storage';
 import {version} from '../package.json';
 import {MAX_SOCKET_CONNECTION_ATTEMPTS} from './appConstants';
@@ -35,8 +36,13 @@ const buildRequest = (socketUrl: string) => {
     headers['X-Quiq-Access-Token'] = storage.getAccessToken();
   }
 
+  const parsedUrl = formatQueryParams(socketUrl, {
+    trackingId: storage.getTrackingId() || 'noAssociatedTrackingId',
+    quiqVersion: version,
+  });
+
   return {
-    url: `https://${socketUrl}`,
+    url: `https://${parsedUrl}`,
     enableXDR: true,
     headers,
     contentType: 'application/json',
@@ -60,6 +66,9 @@ const buildRequest = (socketUrl: string) => {
 };
 
 export const connectSocket = (builder: AtmosphereConnectionBuilder) => {
+  // Abort if we've been burned
+  if (getBurned()) return;
+
   // Check that maximum retries not exceeded; increment connection count
   if (connectionCount >= MAX_SOCKET_CONNECTION_ATTEMPTS) {
     if (callbacks.onFatalError) {
