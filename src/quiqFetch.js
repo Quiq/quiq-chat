@@ -5,6 +5,9 @@ import {isStorageEnabled, getTrackingId} from './storage';
 import {merge} from 'lodash';
 import {formatQueryParams} from './utils';
 import {version} from '../package.json';
+import logger from './logging';
+
+const log = logger('QuiqFetch');
 
 const quiqFetch = (
   url: string,
@@ -63,15 +66,21 @@ const quiqFetch = (
 
   request.method = request.method || 'GET';
   return stubbornFetch(parsedUrl, request)
-    .then((res: Promise<Response> | Response): any => {
-      if (options.responseType === 'JSON' && res && res.json) {
-        return ((res: any): Response).json().then(result => result).catch(err => err);
-      } else if (options.responseType === 'NONE') {
-        return;
-      }
+    .then(
+      (res: Promise<Response> | Response): any => {
+        if (options.responseType === 'JSON' && res && res.json) {
+          return ((res: any): Response).json().then(result => result).catch(err => err);
+        } else if (options.responseType === 'NONE') {
+          return;
+        }
 
-      return res;
-    })
+        return res;
+      },
+      (err: Error) => {
+        log.warn(err.message);
+        return Promise.reject(err);
+      },
+    )
     .catch(err => Promise.reject(err));
 };
 
