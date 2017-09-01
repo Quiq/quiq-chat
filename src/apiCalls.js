@@ -22,7 +22,7 @@ export const registerNewSessionCallback = (callback: (newTrackingId: string) => 
 };
 
 export const keepAlive = () => {
-  quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {method: 'POST'});
+  return quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {method: 'POST'});
 };
 
 let keepAliveInterval: number;
@@ -41,15 +41,15 @@ const stopHeartbeat = () => {
 };
 
 export const joinChat = () => {
-  quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST'});
+  return quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST'});
 };
 
 export const leaveChat = () => {
-  quiqFetch(`${getUrlForContactPoint()}/leave`, {method: 'POST'});
+  return quiqFetch(`${getUrlForContactPoint()}/leave`, {method: 'POST'});
 };
 
 export const addMessage = (text: string) => {
-  quiqFetch(`${getUrlForContactPoint()}/send-message`, {
+  return quiqFetch(`${getUrlForContactPoint()}/send-message`, {
     method: 'POST',
     body: JSON.stringify({text}),
   });
@@ -65,7 +65,7 @@ export const fetchConversation = (): Promise<Conversation> =>
   quiqFetch(getUrlForContactPoint(), undefined, {responseType: 'JSON'});
 
 export const updateMessagePreview = (text: string, typing: boolean) => {
-  quiqFetch(`${getUrlForContactPoint()}/typing`, {
+  return quiqFetch(`${getUrlForContactPoint()}/typing`, {
     method: 'POST',
     body: JSON.stringify({text, typing}),
   });
