@@ -527,8 +527,15 @@ describe('QuiqChatClient', () => {
         jest.useFakeTimers();
         jest.clearAllMocks();
         QuiqChatClient.stop = jest.fn();
-        QuiqChatClient.leaveChat = jest.fn();
+        QuiqChatClient.leaveChat = jest.fn().mockReturnValue(Promise.resolve());
         QuiqChatClient._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
+
+        expect(QuiqChatClient.leaveChat).not.toBeCalled();
+        expect(onClientInactiveTimeout).not.toBeCalled();
+        expect(QuiqChatClient.stop).not.toBeCalled();
+        expect(setClientInactive).not.toBeCalled();
+
+        jest.runAllTimers();
       });
 
       it('times out after appConstants.MINUTES_UNTIL_INACTIVE minutes', () => {
@@ -536,27 +543,19 @@ describe('QuiqChatClient', () => {
         expect(setTimeout.mock.calls[0][1]).toBe(MINUTES_UNTIL_INACTIVE * 60 * 1000 + 1000);
       });
 
+      it('calls leaveChat', () => {
+        expect(QuiqChatClient.leaveChat).toBeCalled();
+      });
+
       it('calls onClientInactiveTimeout callback', () => {
-        expect(onClientInactiveTimeout).not.toBeCalled();
-        jest.runAllTimers();
         expect(onClientInactiveTimeout).toBeCalled();
       });
 
       it('calls stop', () => {
-        expect(QuiqChatClient.stop).not.toBeCalled();
-        jest.runAllTimers();
         expect(QuiqChatClient.stop).toBeCalled();
       });
 
-      it('no longer calls leaveChat', () => {
-        expect(QuiqChatClient.leaveChat).not.toBeCalled();
-        jest.runAllTimers();
-        expect(QuiqChatClient.leaveChat).not.toBeCalled();
-      });
-
       it('calls setClientInactive with true', () => {
-        expect(setClientInactive).not.toBeCalled();
-        jest.runAllTimers();
         expect(setClientInactive).toBeCalledWith(true);
       });
     });
