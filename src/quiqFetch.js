@@ -25,7 +25,7 @@ const quiqFetch = (
   },
 ) => {
   if (!isStorageEnabled()) {
-    return Promise.reject('Store is not enabled, aborting call');
+    return Promise.reject('Storage is not enabled, aborting call');
   }
 
   if (options.checkRequiredSettings) checkRequiredSettings();

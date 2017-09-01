@@ -188,15 +188,8 @@ Method accepts a single parameter, a JavaScript object with values of type `Stri
 `key` is limited to 80 characters and must be unique; `value` is limited to 1000 characters.
 
 #### isStorageEnabled = () => boolean
-Utility function to tell the client if quiq-chat has the capability to set its required data.
-Note this will return true if quiq-chat is able to set its required data in any way,
-whether persistent or not. This means the session may not persist through page flips.  
-If this is false, quiq-chat will block all API calls.
-
-#### isPersistentStorageEnabled = () => boolean
 Utility function to tell the client if quiq-chat has the capability to set its required data in a
-persistent way. If this returns true, it means its safe to assume session data will
-persist through page flips.
+persistent way. If this returns false, quiq-chat will cease to function, and will block all requests.
 
 #### hasTakenMeaningfulAction() => boolean
 Returns whether the end-user has performed a meaningful action, such as

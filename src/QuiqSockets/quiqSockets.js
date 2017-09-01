@@ -22,7 +22,7 @@
 import StatusCodes from './StatusCodes';
 import logger from '../logging';
 import {clamp} from 'lodash';
-import {getAccessToken, getTrackingId} from '../storage';
+import {getAccessToken, getTrackingId, isStorageEnabled} from '../storage';
 import {getBurned} from '../globals';
 import {formatQueryParams} from '../utils';
 import {version} from '../../package.json';
@@ -95,9 +95,9 @@ class QuiqSocket {
     });
   }
 
-  /********************************
+  /** ******************************
    * Public Methods
-   *******************************/
+   ****************************** */
 
   /**
    * Sets the socket endpoint to connect to. Must be called prior to calling connect()
@@ -162,6 +162,12 @@ class QuiqSocket {
 
     if (!window.WebSocket) {
       throw new Error('QuiqSockets: This browser does not support websockets');
+    }
+
+    if (!isStorageEnabled()) {
+      log.error('Storage not enabled. Aborting execution');
+      this._handleFatalError();
+      return this;
     }
 
     if (this.connectionCount >= this.options.maxConnectionCount) {
@@ -232,9 +238,9 @@ class QuiqSocket {
     return this;
   };
 
-  /********************************
+  /** ******************************
    * Private Members
-   *******************************/
+   ****************************** */
 
   /**
    * Initiates reconnection attempt. Delays attempt based on `options.backoffFunction`.
@@ -326,7 +332,7 @@ class QuiqSocket {
       } else {
         log.error('Message data was not of string type');
       }
-    } catch (e) {
+    } catch (ex) {
       log.error('Unable to parse websocket message');
     }
   };

@@ -1,7 +1,7 @@
 // @flow
 import atmosphere from 'atmosphere.js';
 import {ping} from './apiCalls';
-import {isIE9, formatQueryParams} from './utils';
+import {formatQueryParams} from './utils';
 import {getBurned} from './globals';
 import * as storage from './storage';
 import {version} from '../package.json';
@@ -16,16 +16,9 @@ import type {
 
 let connection: AtmosphereConnection;
 let callbacks: WebsocketCallbacks;
-let ie9Ping: number;
 let connectionCount: number = 0;
 
 const buildRequest = (socketUrl: string) => {
-  // TODO: Add a way to specify transport
-  let transport = 'websocket';
-  if (isIE9()) {
-    transport = 'jsonp';
-  }
-
   const headers = {
     'X-Quiq-Line': '2',
     'X-Quiq-Client-Id': 'Quiq-Chat-Client',
@@ -47,7 +40,7 @@ const buildRequest = (socketUrl: string) => {
     headers,
     contentType: 'application/json',
     logLevel: 'error',
-    transport,
+    transport: 'websocket',
     fallbackTransport: 'long-polling',
     trackMessageLength: true,
     maxReconnectOnClose: 100,
@@ -69,6 +62,14 @@ export const connectSocket = (builder: AtmosphereConnectionBuilder) => {
   // Abort if we've been burned
   if (getBurned()) return;
 
+  if (!storage.isStorageEnabled()) {
+    if (callbacks.onFatalError) {
+      callbacks.onFatalError();
+    }
+
+    throw new Error('Storage not enabled. Aborting execution');
+  }
+
   // Check that maximum retries not exceeded; increment connection count
   if (connectionCount >= MAX_SOCKET_CONNECTION_ATTEMPTS) {
     if (callbacks.onFatalError) {
@@ -81,11 +82,6 @@ export const connectSocket = (builder: AtmosphereConnectionBuilder) => {
   const {socketUrl, callbacks: websocketCallbacks} = builder;
 
   callbacks = websocketCallbacks;
-
-  if (isIE9() && !ie9Ping) {
-    // JSONP seems to be a bit unreliable, but we can prod it by periodically pinging the server...
-    ie9Ping = setInterval(ping, 2000);
-  }
 
   connection = {...atmosphere.subscribe(buildRequest(socketUrl))};
 };

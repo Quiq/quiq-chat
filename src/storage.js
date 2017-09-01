@@ -1,7 +1,6 @@
 // @flow
 import store from 'store/dist/store.modern.min';
 import expirePlugin from 'store/plugins/expire';
-import {get as getCookie, set as setCookie, remove as removeCookie} from 'js-cookie';
 
 store.addPlugin(expirePlugin);
 
@@ -29,30 +28,23 @@ export const getQuiqUserTakenMeaningfulAction = () =>
   store.get('quiq-user-taken-meaningful-action') === true;
 export const getAccessToken = () => store.get('X-Quiq-Access-Token');
 export const getTrackingId = () => store.get('quiq-tracking-id');
-export const isStorageEnabled = () => store.enabled;
 
-let persistentStorageEnabled;
-export const isPersistentStorageEnabled = () => {
-  if (typeof persistentStorageEnabled !== 'undefined') return persistentStorageEnabled;
+let storageEnabled;
+export const isStorageEnabled = () => {
+  if (typeof storageEnabled !== 'undefined') return storageEnabled;
 
-  const cookiesEnabled = () => {
-    setCookie('quiq-storage-test', 'true', 1);
-    const areCookiesEnabled = getCookie('quiq-storage-test') === 'true';
-    removeCookie('quiq-storage-test');
-    return areCookiesEnabled;
-  };
-
-  const localStorageEnabled = () => {
-    try {
-      localStorage.setItem('quiq-storage-test', 'enabled?');
-      localStorage.removeItem('quiq-storage-test');
-    } catch (e) {
-      return false;
+  const storageKey = 'quiq-storage-test';
+  const storageVal = 'enabled?';
+  try {
+    localStorage.setItem(storageKey, storageVal);
+    if (localStorage.getItem(storageKey) !== storageVal) {
+      storageEnabled = false;
     }
+    localStorage.removeItem(storageKey);
+    storageEnabled = true;
+  } catch (e) {
+    storageEnabled = false;
+  }
 
-    return true;
-  };
-
-  persistentStorageEnabled = cookiesEnabled() || localStorageEnabled();
-  return persistentStorageEnabled;
+  return storageEnabled;
 };

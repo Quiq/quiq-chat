@@ -52,5 +52,13 @@ describe('Utils', () => {
       jest.runTimersToTime(1); // 1ms run since we call setTimeout with 0ms.
       expect(Globals.getBurned()).toBe(true);
     });
+
+    it('calls onBurn callback if registered', () => {
+      const burnCallback = jest.fn();
+      Utils.registerOnBurnCallback(burnCallback);
+      Utils.burnItDown(burnObject);
+      jest.runTimersToTime(1); // 1ms run since we call setTimeout with 0ms.
+      expect(burnCallback).toBeCalled();
+    });
   });
 });
