@@ -19,29 +19,35 @@ export const formatQueryParams = (url: string, params: Object): string => {
 };
 
 const parser = new UAParser();
-const getBrowserName = (): BrowserNames => parser.getResult().browser.name;
-const getMajor = (): number => parseInt(parser.getResult().browser.major, 10);
-
-export const isIE9 = () => getBrowserName() === 'IE' && getMajor() <= 9;
-
-export const burnItDown = (message?: BurnItDownResponse) => {
-  let timeToBurnItDown =
-    message && !message.force && message.before ? message.before - new Date().getTime() : 0;
-  if (timeToBurnItDown < 0) {
-    timeToBurnItDown = 0;
-  }
-
-  setTimeout(() => {
-    log.error('Webchat has been burned down.');
-    setBurned();
-
-    // Disconnect quiqSocket
-    QuiqSocket.disconnect();
-
-    // Disconnect atmosphere
-    disconnectSocket();
-  }, timeToBurnItDown);
-};
+export const getBrowserName = (): BrowserNames => parser.getResult().browser.name;
+export const getMajor = (): number => parseInt(parser.getResult().browser.major, 10);
 
 export const sortByTimestamp = (arr: Array<Object>): Array<Object> =>
   arr.slice().sort((a, b) => a.timestamp - b.timestamp);
+
+let _onBurn: () => void;
+export const registerOnBurnCallback = (onBurn: () => void) => {
+  _onBurn = onBurn;
+};
+export const burnItDown = (message?: BurnItDownResponse) => {
+  try {
+    let timeToBurnItDown =
+      message && !message.force && message.before ? message.before - new Date().getTime() : 0;
+    if (timeToBurnItDown < 0) {
+      timeToBurnItDown = 0;
+    }
+
+    setTimeout(() => {
+      setBurned();
+      QuiqSocket.disconnect();
+      disconnectSocket();
+
+      if (_onBurn) _onBurn();
+      log.error('Webchat has been burned down.');
+    }, timeToBurnItDown);
+  } catch (e) {
+    // Just in case something goes wrong while burning...
+    // as a last ditch effort ensure we at least set burned status.
+    setBurned();
+  }
+};

@@ -13,7 +13,6 @@ describe('Websockets', () => {
     onTransportFailure: jest.fn(),
     onRegistration: jest.fn(),
     onClose: jest.fn(),
-    onBurn: jest.fn(),
   };
 
   describe('connectSocket', () => {

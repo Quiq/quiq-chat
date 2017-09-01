@@ -17,7 +17,7 @@ import type {
   Event,
 } from './types';
 import {differenceBy, unionBy, last, partition} from 'lodash';
-import {sortByTimestamp, burnItDown} from './utils';
+import {sortByTimestamp, burnItDown, registerOnBurnCallback} from './utils';
 import type {QuiqChatCallbacks} from 'types';
 import * as storage from './storage';
 import logger from './logging';
@@ -111,8 +111,7 @@ class QuiqChatClient {
   };
 
   onBurn = (callback: () => void): QuiqChatClient => {
-    this.callbacks.onBurn = callback;
-    registerCallbacks({onBurn: callback});
+    registerOnBurnCallback(callback);
     return this;
   };
 
@@ -211,7 +210,6 @@ class QuiqChatClient {
   };
 
   isStorageEnabled = () => storage.isStorageEnabled();
-  isPersistentStorageEnabled = () => storage.isPersistentStorageEnabled();
   isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
   hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
 
@@ -321,20 +319,12 @@ class QuiqChatClient {
     }
 
     if (message.messageType === MessageTypes.BURN_IT_DOWN) {
-      // Handle BurnItDown message
       burnItDown(message.data);
-      if (this.callbacks.onBurn) {
-        this.callbacks.onBurn();
-      }
     }
   };
 
   _handleFatalSocketError = () => {
     burnItDown();
-
-    if (this.callbacks.onBurn) {
-      this.callbacks.onBurn();
-    }
   };
 
   _handleConnectionLoss = () => {

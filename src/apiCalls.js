@@ -1,5 +1,5 @@
 // @flow
-import {formatQueryParams} from './utils';
+import {formatQueryParams, burnItDown} from './utils';
 import {
   getUrlForContactPoint,
   getPublicApiUrl,
@@ -9,7 +9,7 @@ import {
   GET_DEPRECATED_AUTH_URL,
 } from './globals';
 import quiqFetch from './quiqFetch';
-import {setAccessToken, setTrackingId} from './storage';
+import {setAccessToken, getAccessToken, setTrackingId, getTrackingId} from './storage';
 import type {Conversation} from 'types';
 import logger from './logging';
 
@@ -101,22 +101,24 @@ export const login = (host?: string) =>
     {
       responseType: 'JSON',
     },
-  ).then(res => {
-    if (res) {
-      if (res.accessToken) {
-        setAccessToken(res.accessToken);
-        setTrackingId(res.tokenId);
+  ).then((res: {accessToken: string, tokenId: string}) => {
+    setAccessToken(res.accessToken);
+    setTrackingId(res.tokenId);
 
-        log.debug(`Login successful. trackingId: ${res.tokenId}`);
-
-        // Start calling the keepAlive endpoint
-        // TODO: Check this back in when we're ready
-        // startHeartbeat();
-      }
-      if (res.tokenId && _onNewSession) {
-        _onNewSession(res.tokenId);
-      }
+    if (getAccessToken() !== res.accessToken || getTrackingId() !== res.tokenId) {
+      burnItDown();
+      return Promise.reject();
     }
+
+    // Start calling the keepAlive endpoint
+    // TODO: Check this back in when we're ready
+    // startHeartbeat();
+
+    if (_onNewSession) {
+      _onNewSession(res.tokenId);
+    }
+
+    log.debug(`Login successful. trackingId: ${res.tokenId}`);
   });
 
 export const DEPRECATED_AUTH_USER = (host?: string) =>
@@ -125,8 +127,6 @@ export const DEPRECATED_AUTH_USER = (host?: string) =>
     {method: 'POST', credentials: 'include'},
     {responseType: 'JSON'},
   );
-
-export const validateSession = () => quiqFetch(getSessionApiUrl());
 
 export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'});
 // TODO: Check this back in with the heartbeat stuff

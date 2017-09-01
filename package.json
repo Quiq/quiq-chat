@@ -1,6 +1,6 @@
 {
   "name": "quiq-chat",
-  "version": "1.11.6",
+  "version": "1.12.0",
   "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
@@ -21,21 +21,17 @@
     ]
   },
   "jest": {
-    "modulePaths": [
-      "src",
-      "node_modules"
-    ],
-    "rootDir": "src"
+    "modulePaths": ["src", "node_modules"],
+    "rootDir": "src",
+    "setupFiles": ["../jest.setup.js"],
+    "notify": true
   },
-  "keywords": [
-    "quiq"
-  ],
+  "keywords": ["quiq"],
   "author": "nate.norberg@goquiq.com",
   "license": "MIT",
   "dependencies": {
     "atmosphere.js": "https://github.com/Quiq/atmosphere-js/tarball/cf35c913143cf2c391b6bcb694ae8a47794a1b88",
     "isomorphic-fetch": "2.2.1",
-    "js-cookie": "2.1.4",
     "lodash": "4.17.4",
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",

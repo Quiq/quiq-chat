@@ -38,7 +38,6 @@ const initialConvo = {
 };
 
 const testTrackingId = 'dsafdsafaweufh';
-
 describe('QuiqChatClient', () => {
   const onNewMessages = jest.fn();
   const onAgentTyping = jest.fn();
@@ -382,17 +381,6 @@ describe('QuiqChatClient', () => {
       });
     });
 
-    describe('isStorageEnabled', () => {
-      it('returns the value of the quiq-chat-container-visible', () => {
-        if (!QuiqChatClient) {
-          throw new Error('Client undefined');
-        }
-
-        mockStore.isStorageEnabled.mockReturnValueOnce(false);
-        expect(QuiqChatClient.isStorageEnabled()).toBe(false);
-      });
-    });
-
     describe('isChatVisible', () => {
       it('returns the value of the quiq-chat-container-visible value value', () => {
         if (!QuiqChatClient) {
@@ -572,10 +560,6 @@ describe('QuiqChatClient', () => {
         };
         QuiqChatClient._handleWebsocketMessage(message);
         expect(Utils.burnItDown).toBeCalledWith(message.data);
-      });
-
-      it('fires onBurn callbasck', () => {
-        expect(onBurn).toBeCalled();
       });
     });
 

@@ -1,6 +1,6 @@
 // @flow
 import fetch from 'isomorphic-fetch';
-import {login, validateSession} from './apiCalls';
+import {login} from './apiCalls';
 import {clamp, merge} from 'lodash';
 import {burnItDown} from './utils';
 import {getBurned, getSessionApiUrl, getGenerateUrl} from './globals';
@@ -19,7 +19,6 @@ const messages = {
 };
 
 type FetchCallbacks = {
-  onBurn?: () => void,
   onError?: (error: ?ApiError) => void,
   onRetryableError?: (error: ?ApiError) => void,
   onErrorResolved?: () => void,
@@ -57,7 +56,6 @@ export default (url: string, fetchRequest: RequestOptions) => {
   const burnIt = () => {
     window.clearTimeout(timerId);
     burnItDown();
-    if (callbacks.onBurn) callbacks.onBurn();
   };
 
   return new Promise((resolve, reject) => {
@@ -106,7 +104,7 @@ export default (url: string, fetchRequest: RequestOptions) => {
 
               if (callbacks.onRetryableError) callbacks.onRetryableError();
               errorCount++;
-              return login().then(validateSession).then(request);
+              return login().then(request);
             }
 
             // Retry

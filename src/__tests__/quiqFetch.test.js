@@ -3,12 +3,12 @@ jest.mock('../stubbornFetch');
 jest.mock('../utils');
 jest.mock('../globals');
 jest.mock('../../package.json');
+jest.mock('../storage');
 import fetch from '../stubbornFetch';
 import quiqFetch from '../quiqFetch';
 
 describe('quiqFetch', () => {
   const mockFetch = (fetch: any);
-
   beforeEach(() => {
     mockFetch.mockReturnValue({then: () => ({catch: jest.fn()})});
   });
