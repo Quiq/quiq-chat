@@ -25,7 +25,6 @@ import {clamp} from 'lodash';
 import {getAccessToken, getTrackingId, isStorageEnabled} from '../storage';
 import {getBurned} from '../globals';
 import {formatQueryParams} from '../utils';
-// $FlowIssue - it can't find package.json
 import {version} from '../../package.json';
 import type {Interval, Timeout} from '../types';
 

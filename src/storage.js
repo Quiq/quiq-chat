@@ -2,7 +2,25 @@
 import store from 'store/dist/store.modern.min';
 import expirePlugin from 'store/plugins/expire';
 
+// Store.js plugin to store timestamps whenever a key is modified
+// NOTE: Do not add 'const' before this function, it must not be lexically bound to work with store.js
+function modifiedTimestampPlugin() {
+  const namespace = 'modified_timestamp_mixin';
+  const modifiedTimestampStore = this.createStore(
+    this.storage,
+    null,
+    this._namespacePrefix + namespace,
+  );
+  return {
+    set: (superFunc, key) => {
+      modifiedTimestampStore.set(key, Date.now());
+      return superFunc();
+    },
+  };
+}
+
 store.addPlugin(expirePlugin);
+store.addPlugin(modifiedTimestampPlugin);
 
 const expireInDays = (numberOfDays: number) =>
   new Date().getTime() + numberOfDays * 1000 * 60 * 60 * 24;
