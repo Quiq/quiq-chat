@@ -52,7 +52,7 @@
     "eslint-plugin-import": "2.2.0",
     "eslint-plugin-jsx-a11y": "4.0.0",
     "eslint-plugin-react": "6.9.0",
-    "flow-bin": "^0.47.0",
+    "flow-bin": "0.54.1",
     "husky": "^0.13.4",
     "jest": "21.0.2",
     "jsdom": "^11.0.0",

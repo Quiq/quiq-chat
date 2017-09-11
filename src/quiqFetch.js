@@ -23,7 +23,7 @@ const quiqFetch = (
     responseType: 'NONE',
     checkRequiredSettings: true,
   },
-) => {
+): Promise<*> => {
   if (!isStorageEnabled()) {
     return Promise.reject('Storage is not enabled, aborting call');
   }
