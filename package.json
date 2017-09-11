@@ -15,10 +15,7 @@
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "src/**/*.js": [
-      "prettier --single-quote --trailing-comma all --parser flow --no-bracket-spacing --print-width 100 --write",
-      "git add"
-    ]
+    "src/**/*.js": ["prettier --write", "git add"]
   },
   "jest": {
     "modulePaths": ["src", "node_modules"],
@@ -61,7 +58,7 @@
     "jsdom": "^11.0.0",
     "lint-staged": "^3.6.0",
     "nodemon": "^1.11.0",
-    "prettier": "^1.5.2",
+    "prettier": "1.6.1",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-flow": "^1.1.1",

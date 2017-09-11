@@ -69,7 +69,10 @@ const quiqFetch = (
     .then(
       (res: Promise<Response> | Response): any => {
         if (options.responseType === 'JSON' && res && res.json) {
-          return ((res: any): Response).json().then(result => result).catch(err => err);
+          return ((res: any): Response)
+            .json()
+            .then(result => result)
+            .catch(err => err);
         } else if (options.responseType === 'NONE') {
           return;
         }
