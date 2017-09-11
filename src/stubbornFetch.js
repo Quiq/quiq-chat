@@ -40,7 +40,7 @@ export const setClientInactive = (isInactive: boolean) => {
 
 let errorCount = 0;
 const bypassUrls = ['/generate', '/agents-available', '/chat'];
-export default (url: string, fetchRequest: RequestOptions) => {
+export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
   let retryCount = 0;
   let timedOut = false;
   let timerId;

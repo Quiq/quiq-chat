@@ -23,7 +23,7 @@ const quiqFetch = (
     responseType: 'NONE',
     checkRequiredSettings: true,
   },
-) => {
+): Promise<*> => {
   if (!isStorageEnabled()) {
     return Promise.reject('Storage is not enabled, aborting call');
   }
@@ -69,7 +69,10 @@ const quiqFetch = (
     .then(
       (res: Promise<Response> | Response): any => {
         if (options.responseType === 'JSON' && res && res.json) {
-          return ((res: any): Response).json().then(result => result).catch(err => err);
+          return ((res: any): Response)
+            .json()
+            .then(result => result)
+            .catch(err => err);
         } else if (options.responseType === 'NONE') {
           return;
         }
