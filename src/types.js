@@ -4,7 +4,6 @@ export type QuiqChatSettings = {
   HOST: string,
   CONTACT_POINT: string,
   BURNED?: boolean,
-  ACTIVE?: boolean,
 };
 
 export type EventType = 'Join' | 'Leave' | 'Register';

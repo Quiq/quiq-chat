@@ -6,7 +6,6 @@ import {
   getContactPoint,
   getSessionApiUrl,
   getGenerateUrl,
-  GET_DEPRECATED_AUTH_URL,
 } from './globals';
 import quiqFetch from './quiqFetch';
 import {setAccessToken, getAccessToken, setTrackingId, getTrackingId} from './storage';
@@ -112,13 +111,6 @@ export const login = (host?: string) =>
 
     log.debug(`Login successful. trackingId: ${res.tokenId}`);
   });
-
-export const DEPRECATED_AUTH_USER = (host?: string) =>
-  quiqFetch(
-    GET_DEPRECATED_AUTH_URL(host),
-    {method: 'POST', credentials: 'include'},
-    {responseType: 'JSON'},
-  );
 
 export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'});
 // TODO: Check this back in with the heartbeat stuff

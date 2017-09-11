@@ -32,8 +32,6 @@ export const checkRequiredSettings = () => {
   }
 };
 
-export const isActive = () => !!(quiqChatSettings && quiqChatSettings.ACTIVE);
-
 export const getHost = () => quiqChatSettings.HOST;
 
 export const getContactPoint = () => quiqChatSettings.CONTACT_POINT;
@@ -49,6 +47,3 @@ export const getTokenApiUrl = (host?: string) => `${host || quiqChatSettings.HOS
 
 export const getGenerateUrl = (host?: string) =>
   `${getTokenApiUrl(host || quiqChatSettings.HOST)}/generate`;
-
-export const GET_DEPRECATED_AUTH_URL = (host?: string) =>
-  `${getSessionApiUrl(host || quiqChatSettings.HOST)}/generate`;
