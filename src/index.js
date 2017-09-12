@@ -195,7 +195,7 @@ class QuiqChatClient {
     this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
-    const result = API.sendRegistration(fields);
+    const result = await API.sendRegistration(fields);
 
     if (this.callbacks.onRegistration) {
       this.callbacks.onRegistration();
