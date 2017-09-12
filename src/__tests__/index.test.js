@@ -535,25 +535,6 @@ describe('QuiqChatClient', () => {
     });
 
     describe('ChatMessage', () => {
-      describe('REGISTER', () => {
-        beforeEach(() => {
-          const message = {
-            messageType: 'ChatMessage',
-            tenantId: 'me!',
-            data: {
-              id: 'test',
-              timestamp: 123,
-              type: 'Register',
-            },
-          };
-          QuiqChatClient._handleWebsocketMessage(message);
-        });
-
-        it('sets meaningful action flag in local storage', () => {
-          expect(storage.setQuiqUserTakenMeaningfulAction).toHaveBeenCalledWith(true);
-        });
-      });
-
       describe('TEXT', () => {
         beforeEach(() => {
           const message = {
