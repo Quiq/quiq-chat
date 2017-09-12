@@ -126,6 +126,12 @@ Sends a message to Quiq Messaging that the end user has opened the chat window
 #### leaveChat() => void
 Sends a message to Quiq Messaging that the end user has closed the chat window
 
+#### getLastUserEvent(cache: boolean = true) => Promise<[UserEvent](#UserEvent) | null>
+Retrieve the last UserEvent performed by the end user. If no such event has been made, null is returned. If `cache` is set to true, a hit to the API is not made, and only the last event currently in memory is returned.
+
+#### isRegistered() => boolean
+Returns whether the end user has triggered a registration event.  This happens when the `sendRegistration` API is called, and the server has confirmed the registration was valid.
+
 ## Data types
 
 ### TextMessage
