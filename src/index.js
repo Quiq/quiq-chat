@@ -141,14 +141,6 @@ class QuiqChatClient {
       if (this.callbacks.onNewMessages && this.textMessages.length)
         this.callbacks.onNewMessages(this.textMessages);
 
-      this._disconnectSocket(); // Ensure we only have one websocket connection open
-      const wsInfo: {url: string, protocol: string} = await API.fetchWebsocketInfo();
-      this._connectSocket(wsInfo);
-
-      if (this.callbacks.onConnectionStatusChange) {
-        this.callbacks.onConnectionStatusChange(true);
-      }
-
       // If start is successful, begin the client inactive timer
       this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     } catch (err) {
@@ -187,7 +179,11 @@ class QuiqChatClient {
     return API.leaveChat();
   };
 
-  sendMessage = (text: string) => {
+  sendMessage = async (text: string) => {
+    if (!this.connected) {
+      await this._establishWebSocketConnection();
+    }
+
     this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
@@ -198,11 +194,17 @@ class QuiqChatClient {
     return API.updateMessagePreview(text, typing);
   };
 
-  sendRegistration = (fields: {[string]: string}) => {
+  sendRegistration = async (fields: {[string]: string}) => {
     this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
-    return API.sendRegistration(fields);
+    const result = API.sendRegistration(fields);
+
+    if (this.callbacks.onRegistration) {
+      this.callbacks.onRegistration();
+    }
+
+    return result;
   };
 
   checkForAgents = () => {
@@ -230,6 +232,12 @@ class QuiqChatClient {
   };
 
   /** Private Members * */
+  _establishWebSocketConnection = async () => {
+    this._disconnectSocket(); // Ensure we only have one websocket connection open
+    const wsInfo: {url: string, protocol: string} = await API.fetchWebsocketInfo();
+    this._connectSocket(wsInfo);
+  };
+
   _connectSocket = (wsInfo: {url: string, protocol: string}) => {
     this.socketProtocol = wsInfo.protocol;
 
@@ -283,9 +291,7 @@ class QuiqChatClient {
 
       // Disconnect/reconnect websocket
       // (Connection establishment handler will refresh messages)
-      this._disconnectSocket(); // Ensure we only have one websocket connection open
-      const wsInfo: {url: string, protocol: string} = await API.fetchWebsocketInfo();
-      this._connectSocket(wsInfo);
+      await this._establishWebSocketConnection();
     }
 
     this.trackingId = newTrackingId;
