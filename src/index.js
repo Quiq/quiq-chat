@@ -126,7 +126,7 @@ class QuiqChatClient {
 
       const {messages, events} = await getConversation();
       // Process initial messages, but do not send callback. We'll send all messages in callback next.
-      this._processNewMessagesAndEvents(messages, events, false);
+      this._processNewMessages(messages, events, false);
 
       // Send all messages in initial newMessages callback
       if (this.callbacks.onNewMessages && this.textMessages.length) {
@@ -157,7 +157,7 @@ class QuiqChatClient {
   getMessages = async (cache: boolean = true): Promise<Array<TextMessage>> => {
     if (!cache || !this.connected) {
       const {messages, events} = await getConversation();
-      this._processNewMessagesAndEvents(messages, events);
+      this._processNewMessages(messages, events);
     }
 
     return this.textMessages;
@@ -281,15 +281,15 @@ class QuiqChatClient {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
       switch (message.data.type) {
         case MessageTypes.TEXT:
-          this._processNewMessagesAndEvents([message.data]);
+          this._processNewMessages([message.data]);
           storage.setQuiqUserTakenMeaningfulAction(true);
           break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
-          this._processNewMessagesAndEvents([], [message.data]);
+          this._processNewMessages([], [message.data]);
           break;
         case MessageTypes.REGISTER:
-          this._processNewMessagesAndEvents([], [message.data]);
+          this._processNewMessages([], [message.data]);
           storage.setQuiqUserTakenMeaningfulAction(true);
           break;
         case MessageTypes.AGENT_TYPING:
@@ -320,7 +320,7 @@ class QuiqChatClient {
   _handleConnectionEstablish = async () => {
     const {messages, events} = await getConversation();
 
-    this._processNewMessagesAndEvents(messages, events);
+    this._processNewMessages(messages, events);
 
     this.connected = true;
 
@@ -329,7 +329,7 @@ class QuiqChatClient {
     }
   };
 
-  _processNewMessagesAndEvents = (
+  _processNewMessages = (
     messages: Array<TextMessage>,
     events: Array<Event> = [],
     sendNewMessageCallback: boolean = true,
