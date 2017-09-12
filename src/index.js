@@ -129,8 +129,13 @@ class QuiqChatClient {
       this._processNewMessagesAndEvents(messages, events, false);
 
       // Send all messages in initial newMessages callback
-      if (this.callbacks.onNewMessages && this.textMessages.length)
+      if (this.callbacks.onNewMessages && this.textMessages.length) {
         this.callbacks.onNewMessages(this.textMessages);
+      }
+
+      if (this.textMessages.length > 0) {
+        await this._establishWebSocketConnection();
+      }
 
       // If start is successful, begin the client inactive timer
       this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);

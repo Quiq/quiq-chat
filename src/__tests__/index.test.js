@@ -88,11 +88,11 @@ describe('QuiqChatClient', () => {
     });
 
     it('tries to disconnect the websocket before making a new connection', () => {
-      expect(disconnectSocket).not.toBeCalled();
+      expect(disconnectSocket).toBeCalled();
     });
 
     it('connects the websocket', () => {
-      expect(connectSocket).not.toBeCalled();
+      expect(connectSocket).toBeCalled();
     });
 
     it('calls onConnectionStatusChange', () => {
@@ -597,7 +597,7 @@ describe('QuiqChatClient', () => {
     });
 
     it('calls disconnectSocket', () => {
-      expect(disconnectSocket).not.toBeCalled();
+      expect(disconnectSocket).toBeCalled();
       expect(onError).not.toBeCalledWith({status: 405});
     });
   });
@@ -618,11 +618,11 @@ describe('QuiqChatClient', () => {
     });
 
     it('calls disconnectSocket', () => {
-      expect(disconnectSocket).not.toBeCalled();
+      expect(disconnectSocket).toBeCalled();
     });
 
     it('calls onError', () => {
-      expect(onError).not.toBeCalledWith({status: 404});
+      expect(onError).toBeCalledWith({status: 404});
     });
   });
 });
