@@ -178,17 +178,18 @@ class QuiqChatClient {
   };
 
   sendMessage = async (text: string) => {
-    console.log('sendMessage');
+    const oldTrackingId = this.trackingId;
     if (!this.connected) {
       await this._establishWebSocketConnection();
     }
 
-    this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
-    storage.setQuiqChatContainerVisible(true);
-    storage.setQuiqUserTakenMeaningfulAction(true);
+    if (oldTrackingId === this.trackingId) {
+      this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
+      storage.setQuiqChatContainerVisible(true);
+      storage.setQuiqUserTakenMeaningfulAction(true);
 
-    console.log('addMessage');
-    return API.addMessage(text);
+      return API.addMessage(text);
+    }
   };
 
   updateMessagePreview = (text: string, typing: boolean) => {
