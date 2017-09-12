@@ -96,7 +96,7 @@ describe('QuiqChatClient', () => {
     });
 
     it('calls onConnectionStatusChange', () => {
-      expect(onConnectionStatusChange).not.toBeCalledWith(true);
+      expect(onConnectionStatusChange).not.toBeCalled();
     });
 
     it('calls setClientInactive with false', () => {
