@@ -33,7 +33,6 @@ class QuiqChatClient {
   events: Array<Event>;
   connected: boolean;
   socketProtocol: ?string;
-  userIsRegistered: boolean;
   trackingId: ?string;
   initialized: boolean;
   clientInactiveTimer: number;
@@ -44,7 +43,6 @@ class QuiqChatClient {
     this.callbacks = {};
     this.textMessages = [];
     this.events = [];
-    this.userIsRegistered = false;
     this.connected = false;
     this.trackingId = null;
     this.initialized = false;
@@ -173,7 +171,6 @@ class QuiqChatClient {
   };
 
   sendMessage = async (text: string) => {
-    console.log('sendMessage');
     if (!this.connected) {
       await this._establishWebSocketConnection();
     }
@@ -182,7 +179,6 @@ class QuiqChatClient {
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
 
-    console.log('addMessage');
     return API.addMessage(text);
   };
 
@@ -210,10 +206,6 @@ class QuiqChatClient {
   isStorageEnabled = () => storage.isStorageEnabled();
   isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
   hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
-
-  isRegistered = (): boolean => {
-    return this.userIsRegistered;
-  };
 
   /** Private Members * */
   _establishWebSocketConnection = async () => {
@@ -267,7 +259,6 @@ class QuiqChatClient {
       // Clear message and events caches (tracking ID is different now, so we essentially have a new Conversation)
       this.textMessages = [];
       this.events = [];
-      this.userIsRegistered = false;
 
       if (this.callbacks.onNewSession) {
         this.callbacks.onNewSession();
@@ -339,7 +330,6 @@ class QuiqChatClient {
     sendNewMessageCallback: boolean = true,
   ): void => {
     const newMessages: Array<TextMessage> = differenceBy(messages, this.textMessages, 'id');
-    const newEvents: Array<Event> = differenceBy(events, this.events, 'id');
 
     // Apparently, it's possible (though not common) to receive duplicate messages in transcript response.
     // We need to take union of new and current messages to account for this
@@ -350,18 +340,6 @@ class QuiqChatClient {
 
       if (this.callbacks.onNewMessages && sendNewMessageCallback) {
         this.callbacks.onNewMessages(this.textMessages);
-      }
-    }
-
-    // If we found new events, sort them, update cached events, and check if a new registration event was received. Fire callback if so.
-    if (newEvents.length) {
-      this.events = sortByTimestamp(unionBy(this.events, newEvents, 'id'));
-
-      if (newEvents.find(e => e.type === MessageTypes.REGISTER)) {
-        if (this.callbacks.onRegistration) {
-          this.callbacks.onRegistration();
-        }
-        this.userIsRegistered = true;
       }
     }
   };

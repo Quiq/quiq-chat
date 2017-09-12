@@ -293,25 +293,6 @@ describe('QuiqChatClient', () => {
     });
   });
 
-  describe('getting new Register event', () => {
-    const newEvent = {type: 'Register', id: 'reg1', timestamp: 3};
-
-    it('updates userIsRegistered', () => {
-      if (!QuiqChatClient) {
-        throw new Error('Client should be defined');
-      }
-
-      expect(QuiqChatClient.isRegistered()).toBe(false);
-      QuiqChatClient._handleWebsocketMessage({
-        messageType: 'ChatMessage',
-        tenantId: 'test',
-        data: newEvent,
-      });
-      expect(QuiqChatClient.isRegistered()).toBe(true);
-      expect(onRegistration).toBeCalled();
-    });
-  });
-
   describe('getting typing indicator change', () => {
     beforeEach(() => {
       if (!QuiqChatClient) {
