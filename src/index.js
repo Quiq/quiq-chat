@@ -8,15 +8,8 @@ import {
 import QuiqSocket from './QuiqSockets/quiqSockets';
 import {MessageTypes, MINUTES_UNTIL_INACTIVE} from './appConstants';
 import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
-import type {
-  ChatMessage,
-  BurnItDownMessage,
-  TextMessage,
-  ApiError,
-  UserEventTypes,
-  Event,
-} from './types';
-import {differenceBy, unionBy, last, partition} from 'lodash';
+import type {ChatMessage, BurnItDownMessage, TextMessage, ApiError, Event} from './types';
+import {differenceBy, unionBy, partition} from 'lodash';
 import {sortByTimestamp, burnItDown, registerOnBurnCallback} from './utils';
 import type {QuiqChatCallbacks} from 'types';
 import * as storage from './storage';
@@ -180,6 +173,7 @@ class QuiqChatClient {
   };
 
   sendMessage = async (text: string) => {
+    console.log('sendMessage');
     if (!this.connected) {
       await this._establishWebSocketConnection();
     }
@@ -187,6 +181,8 @@ class QuiqChatClient {
     this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
+
+    console.log('addMessage');
     return API.addMessage(text);
   };
 
@@ -214,18 +210,6 @@ class QuiqChatClient {
   isStorageEnabled = () => storage.isStorageEnabled();
   isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
   hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
-
-  getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
-    if (!cache || !this.connected) {
-      const {messages, events} = await getConversation();
-      this._processNewMessagesAndEvents(messages, events);
-    }
-
-    const lastStatusMessage = last(
-      this.events.filter(m => m.type === MessageTypes.JOIN || m.type === MessageTypes.LEAVE),
-    );
-    return lastStatusMessage ? lastStatusMessage.type : null;
-  };
 
   isRegistered = (): boolean => {
     return this.userIsRegistered;
