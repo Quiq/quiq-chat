@@ -273,7 +273,7 @@ describe('QuiqChatClient', () => {
         QuiqChatClient.trackingId = 'oldId';
       });
 
-      it('updates cached trackingId on trackingid changew', async () => {
+      it('updates cached trackingId on trackingid change', async () => {
         if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
