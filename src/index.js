@@ -30,6 +30,7 @@ class QuiqChatClient {
   contactPoint: string;
   callbacks: QuiqChatCallbacks;
   textMessages: Array<TextMessage>;
+  events: Array<Event>;
   connected: boolean;
   socketProtocol: ?string;
   trackingId: ?string;
@@ -41,6 +42,7 @@ class QuiqChatClient {
     this.contactPoint = contactPoint;
     this.callbacks = {};
     this.textMessages = [];
+    this.events = [];
     this.connected = false;
     this.trackingId = null;
     this.initialized = false;
@@ -122,9 +124,9 @@ class QuiqChatClient {
       await API.login();
       onInit();
 
-      const {messages} = await getConversation();
+      const {messages, events} = await getConversation();
       // Process initial messages, but do not send callback. We'll send all messages in callback next.
-      this._processNewMessages(messages, false);
+      this._processNewMessages(messages, events, false);
 
       // Send all messages in initial newMessages callback
       if (this.callbacks.onNewMessages && this.textMessages.length) {
@@ -154,8 +156,8 @@ class QuiqChatClient {
 
   getMessages = async (cache: boolean = true): Promise<Array<TextMessage>> => {
     if (!cache || !this.connected) {
-      const {messages} = await getConversation();
-      this._processNewMessages(messages);
+      const {messages, events} = await getConversation();
+      this._processNewMessages(messages, events);
     }
 
     return this.textMessages;
@@ -261,6 +263,7 @@ class QuiqChatClient {
     if (this.trackingId && newTrackingId !== this.trackingId) {
       // Clear message and events caches (tracking ID is different now, so we essentially have a new Conversation)
       this.textMessages = [];
+      this.events = [];
 
       if (this.callbacks.onNewSession) {
         this.callbacks.onNewSession();
@@ -279,6 +282,14 @@ class QuiqChatClient {
       switch (message.data.type) {
         case MessageTypes.TEXT:
           this._processNewMessages([message.data]);
+          storage.setQuiqUserTakenMeaningfulAction(true);
+          break;
+        case MessageTypes.JOIN:
+        case MessageTypes.LEAVE:
+          this._processNewMessages([], [message.data]);
+          break;
+        case MessageTypes.REGISTER:
+          this._processNewMessages([], [message.data]);
           storage.setQuiqUserTakenMeaningfulAction(true);
           break;
         case MessageTypes.AGENT_TYPING:
@@ -307,9 +318,9 @@ class QuiqChatClient {
   };
 
   _handleConnectionEstablish = async () => {
-    const {messages} = await getConversation();
+    const {messages, events} = await getConversation();
 
-    this._processNewMessages(messages);
+    this._processNewMessages(messages, events);
 
     this.connected = true;
 
@@ -320,6 +331,7 @@ class QuiqChatClient {
 
   _processNewMessages = (
     messages: Array<TextMessage>,
+    events: Array<Event> = [],
     sendNewMessageCallback: boolean = true,
   ): void => {
     const newMessages: Array<TextMessage> = differenceBy(messages, this.textMessages, 'id');
