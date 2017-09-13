@@ -22,9 +22,9 @@
       "src",
       "node_modules"
     ],
-    "rootDir": "src",
+    "rootDir": ".",
     "setupFiles": [
-      "../jest.setup.js"
+      "./jest.setup.js"
     ],
     "notify": true
   },
@@ -70,6 +70,7 @@
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-flow": "^1.1.1",
+    "rollup-plugin-includepaths": "^0.2.2",
     "rollup-plugin-json": "^2.3.0"
   }
 }

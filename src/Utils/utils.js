@@ -1,11 +1,11 @@
 // @flow
 import {UAParser} from 'ua-parser-js';
-import {setBurned} from '../globals';
-import QuiqSocket from '../QuiqSockets/quiqSockets';
-import {disconnectSocket} from '../websockets';
+import {setBurned} from 'globals';
+import QuiqSocket from 'QuiqSockets/quiqSockets';
+import {disconnectSocket} from 'websockets';
 import qs from 'qs';
-import logger from '../logging';
-import type {BrowserNames, BurnItDownResponse} from '../types';
+import logger from 'logging';
+import type {BrowserNames, BurnItDownResponse} from 'types';
 
 const log = logger('Utils');
 

@@ -20,13 +20,13 @@
  */
 
 import StatusCodes from './StatusCodes';
-import logger from '../logging';
+import logger from 'logging';
 import {clamp} from 'lodash';
-import {getAccessToken, getTrackingId, isStorageEnabled} from '../storage';
-import {getBurned} from '../globals';
-import {formatQueryParams} from '../Utils/utils';
+import {getAccessToken, getTrackingId, isStorageEnabled} from 'storage';
+import {getBurned} from 'globals';
+import {formatQueryParams} from 'Utils/utils';
 import {version} from '../../package.json';
-import type {Interval, Timeout} from '../types';
+import type {Interval, Timeout} from 'types';
 
 const log = logger('QuiqSocket');
 
