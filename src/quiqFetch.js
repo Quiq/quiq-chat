@@ -1,13 +1,13 @@
 // @flow
-import stubbornFetch from "./stubbornFetch";
-import { checkRequiredSettings } from "./globals";
-import { isStorageEnabled, getTrackingId } from "./storage";
-import { merge } from "lodash";
-import { formatQueryParams } from "./Utils/utils";
-import { version } from "../package.json";
-import logger from "./logging";
+import stubbornFetch from './stubbornFetch';
+import {checkRequiredSettings} from './globals';
+import {isStorageEnabled, getTrackingId} from './storage';
+import {merge} from 'lodash';
+import {formatQueryParams} from './Utils/utils';
+import {version} from '../package.json';
+import logger from './logging';
 
-const log = logger("QuiqFetch");
+const log = logger('QuiqFetch');
 
 const quiqFetch = (
   url: string,
@@ -16,16 +16,16 @@ const quiqFetch = (
     requestType?: string,
     responseType?: string,
     checkRequiredSettings?: boolean,
-    cached?: boolean
+    cached?: boolean,
   } = {
     cached: false,
-    requestType: "JSON",
-    responseType: "NONE",
-    checkRequiredSettings: true
-  }
+    requestType: 'JSON',
+    responseType: 'NONE',
+    checkRequiredSettings: true,
+  },
 ): Promise<*> => {
   if (!isStorageEnabled()) {
-    return Promise.reject("Storage is not enabled, aborting call");
+    return Promise.reject('Storage is not enabled, aborting call');
   }
 
   if (options.checkRequiredSettings) checkRequiredSettings();
@@ -34,8 +34,8 @@ const quiqFetch = (
   const parsedUrl = options.cached
     ? url
     : formatQueryParams(url, {
-        trackingId: getTrackingId() || "noAssociatedTrackingId",
-        quiqVersion: version
+        trackingId: getTrackingId() || 'noAssociatedTrackingId',
+        quiqVersion: version,
       });
 
   let request: RequestOptions = {
@@ -43,19 +43,19 @@ const quiqFetch = (
     // If anyone were to use quiq-chat directly without webchat, it would be on a non-goquiq.com domain.
     // It also allows us to test our webchat as if it were cors enabled, even though we do not use
     // cors capabilities.
-    mode: "cors",
+    mode: 'cors',
     headers: {
-      "X-Quiq-Line": "2",
-      "X-Quiq-Client-Id": "Quiq-Chat-Client",
-      "X-Quiq-Client-Version": version
-    }
+      'X-Quiq-Line': '2',
+      'X-Quiq-Client-Id': 'Quiq-Chat-Client',
+      'X-Quiq-Client-Version': version,
+    },
   };
 
   let headers = {};
-  if (options.requestType === "JSON" && request.headers) {
+  if (options.requestType === 'JSON' && request.headers) {
     headers = {
-      Accept: "application/json",
-      "Content-Type": "application/json"
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
     };
   }
 
@@ -64,10 +64,10 @@ const quiqFetch = (
     request = merge(request, overrides);
   }
 
-  request.method = request.method || "GET";
+  request.method = request.method || 'GET';
   return stubbornFetch(parsedUrl, request)
     .then((res: Promise<Response> | Response): any => {
-      if (options.responseType === "JSON" && res && res.json) {
+      if (options.responseType === 'JSON' && res && res.json) {
         return ((res: any): Response)
           .json()
           .then(result => result)
@@ -75,15 +75,13 @@ const quiqFetch = (
             console.warn(`Couldn't parse API response from ${parsedUrl}`);
             return err;
           });
-      } else if (options.responseType === "NONE") {
-        console.warn(`Received response type of NONE from ${parsedUrl}`);
+      } else if (options.responseType === 'NONE') {
         return;
       }
 
       return res;
     })
     .catch(err => {
-      log.warn(`API request failure: ${err.message}`);
       return Promise.reject(err);
     });
 };

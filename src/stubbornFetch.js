@@ -5,7 +5,10 @@ import {clamp, merge} from 'lodash';
 import {burnItDown} from './Utils/utils';
 import {getBurned, getSessionApiUrl, getGenerateUrl} from './globals';
 import {getAccessToken} from './storage';
+import logger from 'logging';
 import type {ApiError, IsomorphicFetchNetworkError} from 'types';
+
+const log = logger('StubbornFetch');
 
 const messages = {
   maxTriesExceeded: 'API call exceeded maximum time of 30 seconds',
@@ -67,9 +70,11 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
 
     const request = () => {
       if (clientInactive) {
+        log.info('Request blocked because client is inactive');
         return reject(new Error(messages.clientInactive));
       }
       if (!bypassUrls.find(u => url.includes(u)) && !initialized) {
+        log.warn('Request block because client is not yet initialized');
         return reject(new Error(messages.clientNotInitialized));
       }
       if (getBurned()) {
@@ -98,6 +103,7 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
             if (response.status === 401) {
               // If we get a 401 during the handshake, things went south.  Get us out of here, Chewy!
               if (url === getGenerateUrl() || url === getSessionApiUrl()) {
+                log.error('Received 401 during handshake, burning');
                 burnIt();
                 return reject(new Error(response));
               }
