@@ -1,39 +1,47 @@
 // @flow
-import * as API from './apiCalls';
-import {setGlobals} from './globals';
+import * as API from "./apiCalls";
+import { setGlobals } from "./globals";
 import {
   connectSocket as connectAtmosphere,
-  disconnectSocket as disconnectAtmosphere,
-} from './websockets';
-import QuiqSocket from './QuiqSockets/quiqSockets';
-import {MessageTypes, MINUTES_UNTIL_INACTIVE} from './appConstants';
-import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
+  disconnectSocket as disconnectAtmosphere
+} from "./websockets";
+import QuiqSocket from "./QuiqSockets/quiqSockets";
+import { MessageTypes, MINUTES_UNTIL_INACTIVE } from "./appConstants";
+import { registerCallbacks, onInit, setClientInactive } from "./stubbornFetch";
 import type {
   ChatMessage,
   BurnItDownMessage,
   TextMessage,
   ApiError,
   UserEventTypes,
-  Event,
-} from './types';
-import {differenceBy, unionBy, last, partition} from 'lodash';
-import {sortByTimestamp, burnItDown, registerOnBurnCallback} from './Utils/utils';
-import type {QuiqChatCallbacks} from 'types';
-import * as storage from './storage';
-import logger from './logging';
-import * as Senty from './sentry';
-import Raven from 'raven-js';
+  Event
+} from "./types";
+import { differenceBy, unionBy, last, partition } from "lodash";
+import {
+  sortByTimestamp,
+  burnItDown,
+  registerOnBurnCallback
+} from "./Utils/utils";
+import type { QuiqChatCallbacks } from "types";
+import * as storage from "./storage";
+import logger from "./logging";
+import * as Senty from "./sentry";
 
 Senty.init();
 
-const log = logger('QuiqChatClient');
+const log = logger("QuiqChatClient");
 
-const getConversation = async (): Promise<{events: Array<Event>, messages: Array<TextMessage>}> => {
+const getConversation = async (): Promise<{
+  events: Array<Event>,
+  messages: Array<TextMessage>
+}> => {
   const conversation = await API.fetchConversation();
-  const partitionedConversation = partition(conversation.messages, {type: MessageTypes.TEXT});
+  const partitionedConversation = partition(conversation.messages, {
+    type: MessageTypes.TEXT
+  });
   const messages = partitionedConversation[0];
   const events = partitionedConversation[1];
-  return {messages, events};
+  return { messages, events };
 };
 
 class QuiqChatClient {
@@ -62,7 +70,7 @@ class QuiqChatClient {
 
     setGlobals({
       HOST: this.host,
-      CONTACT_POINT: this.contactPoint,
+      CONTACT_POINT: this.contactPoint
     });
 
     // Register with apiCalls for new session events
@@ -71,7 +79,9 @@ class QuiqChatClient {
 
   /** Fluent client builder functions: these all return the client object * */
 
-  onNewMessages = (callback: (messages: Array<TextMessage>) => void): QuiqChatClient => {
+  onNewMessages = (
+    callback: (messages: Array<TextMessage>) => void
+  ): QuiqChatClient => {
     this.callbacks.onNewMessages = callback;
     return this;
   };
@@ -83,7 +93,7 @@ class QuiqChatClient {
 
   onError = (callback: (error: ?ApiError) => void): QuiqChatClient => {
     this.callbacks.onError = callback;
-    registerCallbacks({onError: callback});
+    registerCallbacks({ onError: callback });
     return this;
   };
 
@@ -94,17 +104,19 @@ class QuiqChatClient {
 
   onRetryableError = (callback: (error: ?ApiError) => void): QuiqChatClient => {
     this.callbacks.onRetryableError = callback;
-    registerCallbacks({onRetryableError: callback});
+    registerCallbacks({ onRetryableError: callback });
     return this;
   };
 
   onErrorResolved = (callback: () => void): QuiqChatClient => {
     this.callbacks.onErrorResolved = callback;
-    registerCallbacks({onErrorResolved: callback});
+    registerCallbacks({ onErrorResolved: callback });
     return this;
   };
 
-  onConnectionStatusChange = (callback: (connected: boolean) => void): QuiqChatClient => {
+  onConnectionStatusChange = (
+    callback: (connected: boolean) => void
+  ): QuiqChatClient => {
     this.callbacks.onConnectionStatusChange = callback;
     return this;
   };
@@ -137,7 +149,7 @@ class QuiqChatClient {
       await API.login();
       onInit();
 
-      const {messages, events} = await getConversation();
+      const { messages, events } = await getConversation();
       // Process initial messages, but do not send callback. We'll send all messages in callback next.
       this._processNewMessagesAndEvents(messages, events, false);
 
@@ -146,7 +158,10 @@ class QuiqChatClient {
         this.callbacks.onNewMessages(this.textMessages);
 
       this._disconnectSocket(); // Ensure we only have one websocket connection open
-      const wsInfo: {url: string, protocol: string} = await API.fetchWebsocketInfo();
+      const wsInfo: {
+        url: string,
+        protocol: string
+      } = await API.fetchWebsocketInfo();
       this._connectSocket(wsInfo);
 
       if (this.callbacks.onConnectionStatusChange) {
@@ -156,7 +171,7 @@ class QuiqChatClient {
       // If start is successful, begin the client inactive timer
       this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     } catch (err) {
-      log.error(`Could not start QuiqChatClient: ${err}`);
+      log.error(`Could not start QuiqChatClient: ${err.message}`);
       this._disconnectSocket();
 
       if (this.callbacks.onError) {
@@ -173,7 +188,7 @@ class QuiqChatClient {
 
   getMessages = async (cache: boolean = true): Promise<Array<TextMessage>> => {
     if (!cache || !this.connected) {
-      const {messages, events} = await getConversation();
+      const { messages, events } = await getConversation();
       this._processNewMessagesAndEvents(messages, events);
     }
 
@@ -203,7 +218,7 @@ class QuiqChatClient {
     return API.updateMessagePreview(text, typing);
   };
 
-  sendRegistration = (fields: {[string]: string}) => {
+  sendRegistration = (fields: { [string]: string }) => {
     this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserTakenMeaningfulAction(true);
@@ -216,16 +231,21 @@ class QuiqChatClient {
 
   isStorageEnabled = () => storage.isStorageEnabled();
   isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
-  hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
+  hasTakenMeaningfulAction = (): boolean =>
+    storage.getQuiqUserTakenMeaningfulAction();
 
-  getLastUserEvent = async (cache: boolean = true): Promise<UserEventTypes | null> => {
+  getLastUserEvent = async (
+    cache: boolean = true
+  ): Promise<UserEventTypes | null> => {
     if (!cache || !this.connected) {
-      const {messages, events} = await getConversation();
+      const { messages, events } = await getConversation();
       this._processNewMessagesAndEvents(messages, events);
     }
 
     const lastStatusMessage = last(
-      this.events.filter(m => m.type === MessageTypes.JOIN || m.type === MessageTypes.LEAVE),
+      this.events.filter(
+        m => m.type === MessageTypes.JOIN || m.type === MessageTypes.LEAVE
+      )
     );
     return lastStatusMessage ? lastStatusMessage.type : null;
   };
@@ -235,21 +255,24 @@ class QuiqChatClient {
   };
 
   /** Private Members * */
-  _connectSocket = (wsInfo: {url: string, protocol: string}) => {
+  _connectSocket = (wsInfo: { url: string, protocol: string }) => {
     this.socketProtocol = wsInfo.protocol;
 
     // If we didn't get protocol, or it was an unsupported value, default to 'atmosphere'
-    if (!this.socketProtocol || !['atmosphere', 'quiq'].includes(this.socketProtocol)) {
+    if (
+      !this.socketProtocol ||
+      !["atmosphere", "quiq"].includes(this.socketProtocol)
+    ) {
       log.warn(
-        `Unsupported socket protocol "${wsInfo.protocol}" received. Defaulting to "atmosphere"`,
+        `Unsupported socket protocol "${wsInfo.protocol}" received. Defaulting to "atmosphere"`
       );
-      this.socketProtocol = 'atmosphere';
+      this.socketProtocol = "atmosphere";
     }
 
     log.info(`Using ${this.socketProtocol} protocol`);
 
     switch (this.socketProtocol) {
-      case 'quiq':
+      case "quiq":
         QuiqSocket.withURL(`wss://${wsInfo.url}`)
           .onConnectionLoss(this._handleConnectionLoss)
           .onConnectionEstablish(this._handleConnectionEstablish)
@@ -257,15 +280,15 @@ class QuiqChatClient {
           .onFatalError(this._handleFatalSocketError)
           .connect();
         break;
-      case 'atmosphere':
+      case "atmosphere":
         connectAtmosphere({
           socketUrl: wsInfo.url,
           callbacks: {
             onConnectionLoss: this._handleConnectionLoss,
             onConnectionEstablish: this._handleConnectionEstablish,
             onMessage: this._handleWebsocketMessage,
-            onFatalError: this._handleFatalSocketError,
-          },
+            onFatalError: this._handleFatalSocketError
+          }
         });
         break;
     }
@@ -290,7 +313,10 @@ class QuiqChatClient {
       // Disconnect/reconnect websocket
       // (Connection establishment handler will refresh messages)
       this._disconnectSocket(); // Ensure we only have one websocket connection open
-      const wsInfo: {url: string, protocol: string} = await API.fetchWebsocketInfo();
+      const wsInfo: {
+        url: string,
+        protocol: string
+      } = await API.fetchWebsocketInfo();
       this._connectSocket(wsInfo);
     }
 
@@ -338,7 +364,7 @@ class QuiqChatClient {
   };
 
   _handleConnectionEstablish = async () => {
-    const {messages, events} = await getConversation();
+    const { messages, events } = await getConversation();
 
     this._processNewMessagesAndEvents(messages, events);
 
@@ -352,17 +378,23 @@ class QuiqChatClient {
   _processNewMessagesAndEvents = (
     messages: Array<TextMessage>,
     events: Array<Event> = [],
-    sendNewMessageCallback: boolean = true,
+    sendNewMessageCallback: boolean = true
   ): void => {
-    const newMessages: Array<TextMessage> = differenceBy(messages, this.textMessages, 'id');
-    const newEvents: Array<Event> = differenceBy(events, this.events, 'id');
+    const newMessages: Array<TextMessage> = differenceBy(
+      messages,
+      this.textMessages,
+      "id"
+    );
+    const newEvents: Array<Event> = differenceBy(events, this.events, "id");
 
     // Apparently, it's possible (though not common) to receive duplicate messages in transcript response.
     // We need to take union of new and current messages to account for this
 
     // If we found new messages, sort them, update cached textMessages, and send callback
     if (newMessages.length) {
-      this.textMessages = sortByTimestamp(unionBy(this.textMessages, newMessages, 'id'));
+      this.textMessages = sortByTimestamp(
+        unionBy(this.textMessages, newMessages, "id")
+      );
 
       if (this.callbacks.onNewMessages && sendNewMessageCallback) {
         this.callbacks.onNewMessages(this.textMessages);
@@ -371,7 +403,7 @@ class QuiqChatClient {
 
     // If we found new events, sort them, update cached events, and check if a new registration event was received. Fire callback if so.
     if (newEvents.length) {
-      this.events = sortByTimestamp(unionBy(this.events, newEvents, 'id'));
+      this.events = sortByTimestamp(unionBy(this.events, newEvents, "id"));
 
       if (newEvents.find(e => e.type === MessageTypes.REGISTER)) {
         if (this.callbacks.onRegistration) {
@@ -387,7 +419,7 @@ class QuiqChatClient {
     this.clientInactiveTimer = setTimeout(
       async () => {
         // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
-        log.info('Client timeout due to inactivity. Closing websocket.');
+        log.info("Client timeout due to inactivity. Closing websocket.");
         await this.leaveChat();
         this.stop();
         if (this.callbacks.onClientInactiveTimeout) {
@@ -395,7 +427,7 @@ class QuiqChatClient {
         }
         setClientInactive(true);
       },
-      minutes * 60 * 1000 + 1000, // add a second to avoid timing issues
+      minutes * 60 * 1000 + 1000 // add a second to avoid timing issues
     );
   };
 }
