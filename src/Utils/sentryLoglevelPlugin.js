@@ -1,6 +1,8 @@
 // @flow
 
 import Raven from 'raven-js';
+import {getTenantFromHostname} from 'Utils/utils';
+import {getHost} from 'globals';
 
 const sentryPlugin = {
   apply: (log: Object) => {
@@ -11,7 +13,11 @@ const sentryPlugin = {
         // Sentry needs 'warning' instead of 'warn'
         const level = methodName === 'warn' ? 'warning' : methodName;
         if (methodName === 'error' || methodName === 'warn')
-          Raven.captureMessage(message, {level, logger: loggerName});
+          Raven.captureMessage(message, {
+            level,
+            logger: loggerName,
+            tags: {tenant: getTenantFromHostname(getHost())},
+          });
         else if (methodName === 'info')
           Raven.captureBreadcrumb({message, level, category: loggerName});
         rawMethod(message);

@@ -4,6 +4,7 @@ jest.mock('../websockets');
 jest.mock('../storage');
 jest.mock('store');
 jest.mock('../Utils/utils');
+jest.mock('../logging');
 
 import QuiqChatClient from '../index';
 import * as ApiCalls from '../apiCalls';

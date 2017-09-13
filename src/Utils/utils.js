@@ -55,3 +55,8 @@ export const burnItDown = (message?: BurnItDownResponse) => {
 
 export const inLocalDevelopment = () =>
   !!window.location.hostname.match(/.*\.(centricient|quiq)\.dev/g);
+
+export const getTenantFromHostname = (host: string): string => {
+  const parts = host.split('.');
+  return parts[0].replace('https://', '').replace('http://', '');
+};

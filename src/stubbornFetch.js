@@ -65,22 +65,25 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
     timerId = window.setTimeout(() => {
       timedOut = true;
       if (callbacks.onError) callbacks.onError();
+      log.info(`Aborting fetch to ${url}, timed out.`);
       return reject(new Error(messages.maxTriesExceeded));
     }, 30000);
 
     const request = () => {
       if (clientInactive) {
-        log.info('Request blocked because client is inactive');
+        log.info(`Request to ${url} blocked because client is inactive`);
         return reject(new Error(messages.clientInactive));
       }
       if (!bypassUrls.find(u => url.includes(u)) && !initialized) {
-        log.warn('Request block because client is not yet initialized');
+        log.warn(`Request to ${url} blocked because client is not yet initialized`);
         return reject(new Error(messages.clientNotInitialized));
       }
       if (getBurned()) {
+        log.info(`Aborting request to ${url} because client is burned.`);
         return reject(new Error(messages.burned));
       }
       if (errorCount > 100) {
+        log.error('Max error count exceeded. Burning client.');
         burnIt();
         return reject(new Error(messages.totalErrorsExceeded));
       }
@@ -95,6 +98,7 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
             if (getBurned()) return reject(new Error(messages.burnedInResponse));
 
             if (response.status === 466) {
+              log.info('466 received. Burning client');
               burnIt();
               return reject(new Error(messages.burnedFromServer));
             }

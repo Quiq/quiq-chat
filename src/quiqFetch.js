@@ -72,7 +72,7 @@ const quiqFetch = (
           .json()
           .then(result => result)
           .catch(err => {
-            console.warn(`Couldn't parse API response from ${parsedUrl}`);
+            log.warn(`Couldn't parse API response from ${parsedUrl}`);
             return err;
           });
       } else if (options.responseType === 'NONE') {

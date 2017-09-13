@@ -333,7 +333,11 @@ class QuiqSocket {
         log.error('Message data was not of string type');
       }
     } catch (ex) {
-      log.error('Unable to parse websocket message');
+      log.error(
+        `Unable to parse websocket message "${typeof e.data === 'string'
+          ? e.data
+          : '.'}", Error: ${ex.message}`,
+      );
     }
   };
 
