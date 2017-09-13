@@ -17,10 +17,14 @@ import type {
   Event,
 } from './types';
 import {differenceBy, unionBy, last, partition} from 'lodash';
-import {sortByTimestamp, burnItDown, registerOnBurnCallback} from './utils';
+import {sortByTimestamp, burnItDown, registerOnBurnCallback} from './Utils/utils';
 import type {QuiqChatCallbacks} from 'types';
 import * as storage from './storage';
 import logger from './logging';
+import * as Senty from './sentry';
+import Raven from 'raven-js';
+
+Senty.init();
 
 const log = logger('QuiqChatClient');
 
@@ -152,6 +156,7 @@ class QuiqChatClient {
       // If start is successful, begin the client inactive timer
       this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     } catch (err) {
+      log.error(`Could not start QuiqChatClient: ${err}`);
       this._disconnectSocket();
 
       if (this.callbacks.onError) {
@@ -240,7 +245,8 @@ class QuiqChatClient {
       );
       this.socketProtocol = 'atmosphere';
     }
-    log.debug(`Using ${this.socketProtocol} protocol`);
+
+    log.info(`Using ${this.socketProtocol} protocol`);
 
     switch (this.socketProtocol) {
       case 'quiq':
@@ -381,7 +387,7 @@ class QuiqChatClient {
     this.clientInactiveTimer = setTimeout(
       async () => {
         // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
-        log.warn('Quiq Chat: Client timeout due to inactivity. Closing websocket.');
+        log.info('Client timeout due to inactivity. Closing websocket.');
         await this.leaveChat();
         this.stop();
         if (this.callbacks.onClientInactiveTimeout) {

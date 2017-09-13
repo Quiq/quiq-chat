@@ -3,7 +3,7 @@ import stubbornFetch from './stubbornFetch';
 import {checkRequiredSettings} from './globals';
 import {isStorageEnabled, getTrackingId} from './storage';
 import {merge} from 'lodash';
-import {formatQueryParams} from './utils';
+import {formatQueryParams} from './Utils/utils';
 import {version} from '../package.json';
 import logger from './logging';
 
@@ -72,19 +72,21 @@ const quiqFetch = (
           return ((res: any): Response)
             .json()
             .then(result => result)
-            .catch(err => err);
+            .catch(err => {
+              console.warn(`Couldn\'t parse API response from ${parsedUrl}`);
+              return err;
+            });
         } else if (options.responseType === 'NONE') {
+          console.warn(`Received response type of NONE from ${parsedUrl}`);
           return;
         }
 
-        return res;
-      },
-      (err: Error) => {
-        log.warn(err.message);
-        return Promise.reject(err);
-      },
-    )
-    .catch(err => Promise.reject(err));
+      return res;
+    })
+    .catch(err => {
+      log.warn(`API request failure: ${err.message}`);
+      return Promise.reject(err);
+    });
 };
 
 export default quiqFetch;

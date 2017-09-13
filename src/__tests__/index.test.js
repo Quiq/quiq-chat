@@ -3,7 +3,7 @@ jest.mock('../apiCalls');
 jest.mock('../websockets');
 jest.mock('../storage');
 jest.mock('store');
-jest.mock('../utils');
+jest.mock('../Utils/Utils');
 
 import QuiqChatClient from '../index';
 import * as ApiCalls from '../apiCalls';
@@ -12,7 +12,7 @@ import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'store';
 import {MINUTES_UNTIL_INACTIVE} from '../appConstants';
 import * as stubbornFetch from '../stubbornFetch';
-import * as Utils from '../utils';
+import * as Utils from '../Utils/utils';
 import log from 'loglevel';
 
 log.setLevel('debug');

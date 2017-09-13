@@ -18,12 +18,19 @@
     "src/**/*.js": ["prettier --write", "git add"]
   },
   "jest": {
-    "modulePaths": ["src", "node_modules"],
+    "modulePaths": [
+      "src",
+      "node_modules"
+    ],
     "rootDir": "src",
-    "setupFiles": ["../jest.setup.js"],
+    "setupFiles": [
+      "../jest.setup.js"
+    ],
     "notify": true
   },
-  "keywords": ["quiq"],
+  "keywords": [
+    "quiq"
+  ],
   "author": "nate.norberg@goquiq.com",
   "license": "MIT",
   "dependencies": {
@@ -33,6 +40,7 @@
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",
     "qs": "6.5.0",
+    "raven-js": "^3.17.0",
     "store": "2.0.12",
     "ua-parser-js": "0.7.12"
   },

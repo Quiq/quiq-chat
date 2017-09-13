@@ -24,7 +24,7 @@ import logger from '../logging';
 import {clamp} from 'lodash';
 import {getAccessToken, getTrackingId, isStorageEnabled} from '../storage';
 import {getBurned} from '../globals';
-import {formatQueryParams} from '../utils';
+import {formatQueryParams} from '../Utils/utils';
 import {version} from '../../package.json';
 import type {Interval, Timeout} from '../types';
 
@@ -217,7 +217,7 @@ class QuiqSocket {
 
     // Set tiemout to trigger reconnect if _onOpen isn't called quiqly enough
     this.connectionTimeout = setTimeout(() => {
-      log.debug('Connection attempt timed out.');
+      log.warn('Connection attempt timed out.');
       this._retryConnection();
     }, this.options.connectionAttemptTimeout);
 
@@ -424,7 +424,7 @@ class QuiqSocket {
 
     this.heartbeatInterval = setInterval(() => {
       if (!this.socket) {
-        log.warn('Trying to send heartbeat, but no socket connection exists.');
+        log.error('Trying to send heartbeat, but no socket connection exists.');
         return;
       }
       this.socket.send('X');

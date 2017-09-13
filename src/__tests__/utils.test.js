@@ -1,6 +1,6 @@
 // @flow
 jest.mock('../globals');
-import * as Utils from '../utils';
+import * as Utils from '../Utils/utils';
 import * as Globals from '../globals';
 import type {BurnItDownResponse} from 'types';
 

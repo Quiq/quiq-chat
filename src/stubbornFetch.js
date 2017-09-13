@@ -2,7 +2,7 @@
 import fetch from 'isomorphic-fetch';
 import {login} from './apiCalls';
 import {clamp, merge} from 'lodash';
-import {burnItDown} from './utils';
+import {burnItDown} from './Utils/utils';
 import {getBurned, getSessionApiUrl, getGenerateUrl} from './globals';
 import {getAccessToken} from './storage';
 import type {ApiError, IsomorphicFetchNetworkError} from 'types';
@@ -87,7 +87,7 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
       delayIfNeeded().then(() =>
         fetch(url, req).then(
           (response: Response) => {
-            if (getBurned()) return reject(messages.burnedInResponse);
+            if (getBurned()) return reject(new Error(messages.burnedInResponse));
 
             if (response.status === 466) {
               burnIt();
@@ -99,7 +99,7 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
               // If we get a 401 during the handshake, things went south.  Get us out of here, Chewy!
               if (url === getGenerateUrl() || url === getSessionApiUrl()) {
                 burnIt();
-                return reject(response);
+                return reject(new Error(response));
               }
 
               if (callbacks.onRetryableError) callbacks.onRetryableError();
