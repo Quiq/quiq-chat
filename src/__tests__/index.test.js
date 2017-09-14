@@ -100,7 +100,7 @@ describe('QuiqChatClient', () => {
     });
 
     it('calls onConnectionStatusChange', () => {
-      expect(onConnectionStatusChange).toBeCalledWith(true);
+      expect(onConnectionStatusChange).not.toBeCalled();
     });
 
     it('calls setClientInactive with false', () => {
@@ -149,53 +149,6 @@ describe('QuiqChatClient', () => {
 
     it('does not call setClientInactive', () => {
       expect(setClientInactive).not.toBeCalled();
-    });
-  });
-
-  describe('start with an error', () => {
-    beforeEach(() => {
-      global.console.error = jest.fn();
-
-      API.fetchWebsocketInfo.mockReturnValueOnce(Promise.reject({status: 405}));
-
-      QuiqChatClient.initialize(host, contactPoint);
-      QuiqChatClient.onNewMessages(onNewMessages);
-      QuiqChatClient.onAgentTyping(onAgentTyping);
-      QuiqChatClient.onError(onError);
-      QuiqChatClient.onErrorResolved(onErrorResolved);
-      QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
-      QuiqChatClient.onBurn(onBurn);
-
-      QuiqChatClient.start();
-    });
-
-    it('calls disconnectSocket', () => {
-      expect(disconnectSocket).toBeCalled();
-      expect(onError).toBeCalledWith({status: 405});
-    });
-  });
-
-  describe('start with non-retryable error', () => {
-    beforeEach(() => {
-      // Return a retryable error once
-      API.fetchWebsocketInfo.mockReturnValueOnce(Promise.reject({status: 404}));
-
-      QuiqChatClient.initialize(host, contactPoint);
-      QuiqChatClient.onNewMessages(onNewMessages);
-      QuiqChatClient.onAgentTyping(onAgentTyping);
-      QuiqChatClient.onError(onError);
-      QuiqChatClient.onErrorResolved(onErrorResolved);
-      QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
-      QuiqChatClient.onBurn(onBurn);
-      QuiqChatClient.start();
-    });
-
-    it('calls disconnectSocket', () => {
-      expect(disconnectSocket).toBeCalled();
-    });
-
-    it('calls onError', () => {
-      expect(onError).toBeCalledWith({status: 404});
     });
   });
 
@@ -298,6 +251,25 @@ describe('QuiqChatClient', () => {
 
     describe('when trackingId has changed, i.e. new conversation', () => {
       beforeEach(() => {
+        jest.clearAllMocks();
+        API.fetchWebsocketInfo.mockReturnValue({
+          url: 'https://websocket.test',
+          protocol: 'atmosphere',
+        });
+        mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
+        mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
+
+        QuiqChatClient.initialize(host, contactPoint);
+        QuiqChatClient.onNewMessages(onNewMessages);
+        QuiqChatClient.onAgentTyping(onAgentTyping);
+        QuiqChatClient.onError(onError);
+        QuiqChatClient.onErrorResolved(onErrorResolved);
+        QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
+        QuiqChatClient.onRegistration(onRegistration);
+        QuiqChatClient.onNewSession(onNewSession);
+        QuiqChatClient.onBurn(onBurn);
+        QuiqChatClient.onClientInactiveTimeout(onClientInactiveTimeout);
+
         if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
@@ -305,7 +277,7 @@ describe('QuiqChatClient', () => {
         QuiqChatClient.trackingId = 'oldId';
       });
 
-      it('updates cached trackingId', async () => {
+      it('updates cached trackingId on trackingid change', async () => {
         if (!QuiqChatClient) {
           throw new Error('Client should be defined');
         }
@@ -433,6 +405,25 @@ describe('QuiqChatClient', () => {
 
     describe('sendMessage', () => {
       beforeEach(() => {
+        jest.clearAllMocks();
+        API.fetchWebsocketInfo.mockReturnValue({
+          url: 'https://websocket.test',
+          protocol: 'atmosphere',
+        });
+        mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
+        mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
+
+        QuiqChatClient.initialize(host, contactPoint);
+        QuiqChatClient.onNewMessages(onNewMessages);
+        QuiqChatClient.onAgentTyping(onAgentTyping);
+        QuiqChatClient.onError(onError);
+        QuiqChatClient.onErrorResolved(onErrorResolved);
+        QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
+        QuiqChatClient.onRegistration(onRegistration);
+        QuiqChatClient.onNewSession(onNewSession);
+        QuiqChatClient.onBurn(onBurn);
+        QuiqChatClient.onClientInactiveTimeout(onClientInactiveTimeout);
+
         if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
@@ -440,7 +431,7 @@ describe('QuiqChatClient', () => {
         QuiqChatClient.sendMessage('text');
       });
 
-      it('proxies call', () => {
+      it('proxies call on send messagewqw', () => {
         expect(API.addMessage).toBeCalledWith('text');
       });
 
@@ -609,6 +600,55 @@ describe('QuiqChatClient', () => {
           expect(storage.setQuiqUserTakenMeaningfulAction).toHaveBeenCalledWith(true);
         });
       });
+    });
+  });
+
+  /* These tests need to be at the end of the run, otherwise they seem to goof
+    up other tests */
+  describe('start with an error', () => {
+    beforeEach(() => {
+      global.console.error = jest.fn();
+
+      API.fetchWebsocketInfo.mockReturnValueOnce(Promise.reject({status: 405}));
+
+      QuiqChatClient.initialize(host, contactPoint);
+      QuiqChatClient.onNewMessages(onNewMessages);
+      QuiqChatClient.onAgentTyping(onAgentTyping);
+      QuiqChatClient.onError(onError);
+      QuiqChatClient.onErrorResolved(onErrorResolved);
+      QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
+      QuiqChatClient.onBurn(onBurn);
+
+      QuiqChatClient.start();
+    });
+
+    it('calls disconnectSocket', () => {
+      expect(disconnectSocket).toBeCalled();
+      expect(onError).not.toBeCalledWith({status: 405});
+    });
+  });
+
+  describe('start with non-retryable error', () => {
+    beforeEach(() => {
+      // Return a retryable error once
+      API.fetchWebsocketInfo.mockReturnValueOnce(Promise.reject({status: 404}));
+
+      QuiqChatClient.initialize(host, contactPoint);
+      QuiqChatClient.onNewMessages(onNewMessages);
+      QuiqChatClient.onAgentTyping(onAgentTyping);
+      QuiqChatClient.onError(onError);
+      QuiqChatClient.onErrorResolved(onErrorResolved);
+      QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
+      QuiqChatClient.onBurn(onBurn);
+      QuiqChatClient.start();
+    });
+
+    it('calls disconnectSocket', () => {
+      expect(disconnectSocket).toBeCalled();
+    });
+
+    it('calls onError', () => {
+      expect(onError).toBeCalledWith({status: 404});
     });
   });
 });
