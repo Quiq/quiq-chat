@@ -1,18 +1,24 @@
 // @flow
-jest.mock('../globals');
+jest.mock('globals');
 import * as Utils from '../utils';
-import * as Globals from '../globals';
+import * as Globals from 'globals';
 import type {BurnItDownResponse} from 'types';
 
 describe('Utils', () => {
   describe('formatQueryParams', function() {
     it('adds params with ? and & syntax', function() {
       expect(Utils.formatQueryParams('/url', {a: 'one', b: 'two'})).toBe('/url?a=one&b=two');
-      expect(Utils.formatQueryParams('/url?alreadyParamed=true', {a: 'one', b: 'two'})).toBe(
-        '/url?alreadyParamed=true&a=one&b=two',
-      );
       expect(
-        Utils.formatQueryParams('/url?alreadyParamed=true&extraParam=crazy', {a: 'one', b: 'two'}),
+        Utils.formatQueryParams('/url?alreadyParamed=true', {
+          a: 'one',
+          b: 'two',
+        }),
+      ).toBe('/url?alreadyParamed=true&a=one&b=two');
+      expect(
+        Utils.formatQueryParams('/url?alreadyParamed=true&extraParam=crazy', {
+          a: 'one',
+          b: 'two',
+        }),
       ).toBe('/url?alreadyParamed=true&extraParam=crazy&a=one&b=two');
     });
   });

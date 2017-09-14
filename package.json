@@ -1,6 +1,6 @@
 {
   "name": "quiq-chat",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
@@ -18,12 +18,19 @@
     "src/**/*.js": ["prettier --write", "git add"]
   },
   "jest": {
-    "modulePaths": ["src", "node_modules"],
-    "rootDir": "src",
-    "setupFiles": ["../jest.setup.js"],
+    "modulePaths": [
+      "src",
+      "node_modules"
+    ],
+    "rootDir": ".",
+    "setupFiles": [
+      "./jest.setup.js"
+    ],
     "notify": true
   },
-  "keywords": ["quiq"],
+  "keywords": [
+    "quiq"
+  ],
   "author": "nate.norberg@goquiq.com",
   "license": "MIT",
   "dependencies": {
@@ -33,6 +40,7 @@
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",
     "qs": "6.5.0",
+    "raven-js": "3.17.0",
     "store": "2.0.12",
     "ua-parser-js": "0.7.12"
   },
@@ -62,6 +70,7 @@
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-flow": "^1.1.1",
+    "rollup-plugin-includepaths": "^0.2.2",
     "rollup-plugin-json": "^2.3.0"
   }
 }

@@ -1,10 +1,10 @@
 // @flow
 import {UAParser} from 'ua-parser-js';
-import {setBurned} from './globals';
-import QuiqSocket from './QuiqSockets/quiqSockets';
-import {disconnectSocket} from './websockets';
+import {setBurned} from 'globals';
+import QuiqSocket from 'QuiqSockets/quiqSockets';
+import {disconnectSocket} from 'websockets';
 import qs from 'qs';
-import logger from './logging';
+import logger from 'logging';
 import type {BrowserNames, BurnItDownResponse} from 'types';
 
 const log = logger('Utils');
@@ -49,5 +49,14 @@ export const burnItDown = (message?: BurnItDownResponse) => {
     // Just in case something goes wrong while burning...
     // as a last ditch effort ensure we at least set burned status.
     setBurned();
+    log.error(`Error encountered while burning it down: ${e.message}`);
   }
+};
+
+export const inLocalDevelopment = () =>
+  !!window.location.hostname.match(/.*\.(centricient|quiq)\.dev/g);
+
+export const getTenantFromHostname = (host: string): string => {
+  const parts = host.split('.');
+  return parts[0].replace('https://', '').replace('http://', '');
 };

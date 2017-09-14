@@ -3,7 +3,7 @@ import stubbornFetch from './stubbornFetch';
 import {checkRequiredSettings} from './globals';
 import {isStorageEnabled, getTrackingId} from './storage';
 import {merge} from 'lodash';
-import {formatQueryParams} from './utils';
+import {formatQueryParams} from './Utils/utils';
 import {version} from '../package.json';
 import logger from './logging';
 
@@ -66,25 +66,24 @@ const quiqFetch = (
 
   request.method = request.method || 'GET';
   return stubbornFetch(parsedUrl, request)
-    .then(
-      (res: Promise<Response> | Response): any => {
-        if (options.responseType === 'JSON' && res && res.json) {
-          return ((res: any): Response)
-            .json()
-            .then(result => result)
-            .catch(err => err);
-        } else if (options.responseType === 'NONE') {
-          return;
-        }
+    .then((res: Promise<Response> | Response): any => {
+      if (options.responseType === 'JSON' && res && res.json) {
+        return ((res: any): Response)
+          .json()
+          .then(result => result)
+          .catch(err => {
+            log.warn(`Couldn't parse API response from ${parsedUrl}`);
+            return err;
+          });
+      } else if (options.responseType === 'NONE') {
+        return;
+      }
 
-        return res;
-      },
-      (err: Error) => {
-        log.warn(err.message);
-        return Promise.reject(err);
-      },
-    )
-    .catch(err => Promise.reject(err));
+      return res;
+    })
+    .catch(err => {
+      return Promise.reject(err);
+    });
 };
 
 export default quiqFetch;

@@ -1,5 +1,5 @@
 // @flow
-import {formatQueryParams, burnItDown} from './utils';
+import {formatQueryParams, burnItDown} from './Utils/utils';
 import {
   getUrlForContactPoint,
   getPublicApiUrl,
@@ -11,6 +11,7 @@ import quiqFetch from './quiqFetch';
 import {setAccessToken, getAccessToken, setTrackingId, getTrackingId} from './storage';
 import type {Conversation} from 'types';
 import logger from './logging';
+import Raven from 'raven-js';
 
 const log = logger('apiCalls');
 
@@ -108,6 +109,12 @@ export const login = (host?: string) =>
     if (_onNewSession) {
       _onNewSession(res.tokenId);
     }
+
+    // Tell sentry about the new trackingId
+    // This will let us track logs by trackingId
+    Raven.setUserContext({
+      id: res.tokenId,
+    });
 
     log.debug(`Login successful. trackingId: ${res.tokenId}`);
   });

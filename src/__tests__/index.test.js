@@ -3,7 +3,8 @@ jest.mock('../apiCalls');
 jest.mock('../websockets');
 jest.mock('../storage');
 jest.mock('store');
-jest.mock('../utils');
+jest.mock('../Utils/utils');
+jest.mock('../logging');
 
 import QuiqChatClient from '../index';
 import * as ApiCalls from '../apiCalls';
@@ -12,7 +13,7 @@ import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'store';
 import {MINUTES_UNTIL_INACTIVE} from '../appConstants';
 import * as stubbornFetch from '../stubbornFetch';
-import * as Utils from '../utils';
+import * as Utils from '../Utils/utils';
 import log from 'loglevel';
 
 log.setLevel('debug');
@@ -56,7 +57,10 @@ describe('QuiqChatClient', () => {
 
   beforeEach(() => {
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
-    API.fetchWebsocketInfo.mockReturnValue({url: 'https://websocket.test', protocol: 'atmosphere'});
+    API.fetchWebsocketInfo.mockReturnValue({
+      url: 'https://websocket.test',
+      protocol: 'atmosphere',
+    });
     mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
     mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
 
@@ -492,7 +496,10 @@ describe('QuiqChatClient', () => {
     });
 
     it('sets a timer when registration sent', () => {
-      QuiqChatClient.sendRegistration({firstName: 'SpongeBob', lastName: 'SquarePants'});
+      QuiqChatClient.sendRegistration({
+        firstName: 'SpongeBob',
+        lastName: 'SquarePants',
+      });
       expect(QuiqChatClient.clientInactiveTimer).toBeDefined();
     });
 

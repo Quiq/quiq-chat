@@ -10,16 +10,24 @@ import {MessageTypes, MINUTES_UNTIL_INACTIVE} from './appConstants';
 import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
 import type {ChatMessage, BurnItDownMessage, TextMessage, ApiError, Event} from './types';
 import {differenceBy, unionBy, partition} from 'lodash';
-import {sortByTimestamp, burnItDown, registerOnBurnCallback} from './utils';
+import {sortByTimestamp, burnItDown, registerOnBurnCallback} from './Utils/utils';
 import type {QuiqChatCallbacks} from 'types';
 import * as storage from './storage';
 import logger from './logging';
+import * as Senty from './sentry';
+
+Senty.init();
 
 const log = logger('QuiqChatClient');
 
-const getConversation = async (): Promise<{events: Array<Event>, messages: Array<TextMessage>}> => {
+const getConversation = async (): Promise<{
+  events: Array<Event>,
+  messages: Array<TextMessage>,
+}> => {
   const conversation = await API.fetchConversation();
-  const partitionedConversation = partition(conversation.messages, {type: MessageTypes.TEXT});
+  const partitionedConversation = partition(conversation.messages, {
+    type: MessageTypes.TEXT,
+  });
   const messages = partitionedConversation[0];
   const events = partitionedConversation[1];
   return {messages, events};
@@ -142,6 +150,7 @@ class QuiqChatClient {
       // If start is successful, begin the client inactive timer
       this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     } catch (err) {
+      log.error(`Could not start QuiqChatClient: ${err.message}`);
       this._disconnectSocket();
 
       if (this.callbacks.onError) {
@@ -238,7 +247,8 @@ class QuiqChatClient {
       );
       this.socketProtocol = 'atmosphere';
     }
-    log.debug(`Using ${this.socketProtocol} protocol`);
+
+    log.info(`Using ${this.socketProtocol} protocol`);
 
     switch (this.socketProtocol) {
       case 'quiq':
@@ -377,7 +387,7 @@ class QuiqChatClient {
     this.clientInactiveTimer = setTimeout(
       async () => {
         // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
-        log.warn('Quiq Chat: Client timeout due to inactivity. Closing websocket.');
+        log.info('Client timeout due to inactivity. Closing websocket.');
         await this.leaveChat();
         this.stop();
         if (this.callbacks.onClientInactiveTimeout) {

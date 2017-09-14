@@ -20,13 +20,13 @@
  */
 
 import StatusCodes from './StatusCodes';
-import logger from '../logging';
+import logger from 'logging';
 import {clamp} from 'lodash';
-import {getAccessToken, getTrackingId, isStorageEnabled} from '../storage';
-import {getBurned} from '../globals';
-import {formatQueryParams} from '../utils';
+import {getAccessToken, getTrackingId, isStorageEnabled} from 'storage';
+import {getBurned} from 'globals';
+import {formatQueryParams} from 'Utils/utils';
 import {version} from '../../package.json';
-import type {Interval, Timeout} from '../types';
+import type {Interval, Timeout} from 'types';
 
 const log = logger('QuiqSocket');
 
@@ -217,7 +217,7 @@ class QuiqSocket {
 
     // Set tiemout to trigger reconnect if _onOpen isn't called quiqly enough
     this.connectionTimeout = setTimeout(() => {
-      log.debug('Connection attempt timed out.');
+      log.warn('Connection attempt timed out.');
       this._retryConnection();
     }, this.options.connectionAttemptTimeout);
 
@@ -333,7 +333,11 @@ class QuiqSocket {
         log.error('Message data was not of string type');
       }
     } catch (ex) {
-      log.error('Unable to parse websocket message');
+      log.error(
+        `Unable to parse websocket message "${typeof e.data === 'string'
+          ? e.data
+          : '.'}", Error: ${ex.message}`,
+      );
     }
   };
 
@@ -424,7 +428,7 @@ class QuiqSocket {
 
     this.heartbeatInterval = setInterval(() => {
       if (!this.socket) {
-        log.warn('Trying to send heartbeat, but no socket connection exists.');
+        log.error('Trying to send heartbeat, but no socket connection exists.');
         return;
       }
       this.socket.send('X');

@@ -2,10 +2,13 @@
 import fetch from 'isomorphic-fetch';
 import {login} from './apiCalls';
 import {clamp, merge} from 'lodash';
-import {burnItDown} from './utils';
+import {burnItDown} from './Utils/utils';
 import {getBurned, getSessionApiUrl, getGenerateUrl} from './globals';
 import {getAccessToken} from './storage';
+import logger from 'logging';
 import type {ApiError, IsomorphicFetchNetworkError} from 'types';
+
+const log = logger('StubbornFetch');
 
 const messages = {
   maxTriesExceeded: 'API call exceeded maximum time of 30 seconds',
@@ -62,20 +65,25 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
     timerId = window.setTimeout(() => {
       timedOut = true;
       if (callbacks.onError) callbacks.onError();
+      log.info(`Aborting fetch to ${url}, timed out.`);
       return reject(new Error(messages.maxTriesExceeded));
     }, 30000);
 
     const request = () => {
       if (clientInactive) {
+        log.info(`Request to ${url} blocked because client is inactive`);
         return reject(new Error(messages.clientInactive));
       }
       if (!bypassUrls.find(u => url.includes(u)) && !initialized) {
+        log.warn(`Request to ${url} blocked because client is not yet initialized`);
         return reject(new Error(messages.clientNotInitialized));
       }
       if (getBurned()) {
+        log.info(`Aborting request to ${url} because client is burned.`);
         return reject(new Error(messages.burned));
       }
       if (errorCount > 100) {
+        log.error('Max error count exceeded. Burning client.');
         burnIt();
         return reject(new Error(messages.totalErrorsExceeded));
       }
@@ -87,9 +95,10 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
       delayIfNeeded().then(() =>
         fetch(url, req).then(
           (response: Response) => {
-            if (getBurned()) return reject(messages.burnedInResponse);
+            if (getBurned()) return reject(new Error(messages.burnedInResponse));
 
             if (response.status === 466) {
+              log.info('466 received. Burning client');
               burnIt();
               return reject(new Error(messages.burnedFromServer));
             }
@@ -98,8 +107,9 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
             if (response.status === 401) {
               // If we get a 401 during the handshake, things went south.  Get us out of here, Chewy!
               if (url === getGenerateUrl() || url === getSessionApiUrl()) {
+                log.error('Received 401 during handshake, burning');
                 burnIt();
-                return reject(response);
+                return reject(new Error(response));
               }
 
               if (callbacks.onRetryableError) callbacks.onRetryableError();

@@ -1,11 +1,12 @@
 // @flow
 import atmosphere from 'atmosphere.js';
 import {ping} from './apiCalls';
-import {formatQueryParams} from './utils';
+import {formatQueryParams} from './Utils/utils';
 import {getBurned} from './globals';
 import * as storage from './storage';
 import {version} from '../package.json';
 import {MAX_SOCKET_CONNECTION_ATTEMPTS} from './appConstants';
+import logger from './logging';
 import type {
   AtmosphereRequest,
   AtmosphereResponse,
@@ -17,6 +18,8 @@ import type {
 let connection: AtmosphereConnection;
 let callbacks: WebsocketCallbacks;
 let connectionCount: number = 0;
+
+const log = logger('AtmosphereWrapper');
 
 const buildRequest = (socketUrl: string) => {
   const headers = {
@@ -117,7 +120,7 @@ const onMessage = (res: AtmosphereResponse) => {
   try {
     message = atmosphere.util.parseJSON(res.responseBody);
   } catch (e) {
-    console.error('Error parsing Quiq websocket message'); // eslint-disable-line no-console
+    log.error('Error parsing Quiq websocket message'); // eslint-disable-line no-console
     return;
   }
 

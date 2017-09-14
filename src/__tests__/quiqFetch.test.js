@@ -1,6 +1,6 @@
 // @flow
 jest.mock('../stubbornFetch');
-jest.mock('../utils');
+jest.mock('../Utils/utils');
 jest.mock('../globals');
 jest.mock('../../package.json');
 jest.mock('../storage');
