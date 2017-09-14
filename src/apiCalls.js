@@ -23,21 +23,6 @@ export const registerNewSessionCallback = (callback: (newTrackingId: string) => 
 
 export const keepAlive = () => quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {method: 'POST'});
 
-let keepAliveInterval: number;
-
-// eslint-disable-next-line no-unused-vars
-const startHeartbeat = () => {
-  clearInterval(keepAliveInterval);
-
-  keepAlive();
-  keepAliveInterval = setInterval(keepAlive, 60 * 1000);
-};
-
-// eslint-disable-next-line no-unused-vars
-const stopHeartbeat = () => {
-  clearInterval(keepAliveInterval);
-};
-
 export const joinChat = () => quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST'});
 
 export const leaveChat = () => quiqFetch(`${getUrlForContactPoint()}/leave`, {method: 'POST'});
@@ -102,10 +87,6 @@ export const login = (host?: string) =>
       return Promise.reject();
     }
 
-    // Start calling the keepAlive endpoint
-    // TODO: Check this back in when we're ready
-    // startHeartbeat();
-
     if (_onNewSession) {
       _onNewSession(res.tokenId);
     }
@@ -120,5 +101,3 @@ export const login = (host?: string) =>
   });
 
 export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'});
-// TODO: Check this back in with the heartbeat stuff
-// .then(stopHeartbeat);

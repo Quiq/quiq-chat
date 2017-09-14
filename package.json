@@ -1,13 +1,15 @@
 {
   "name": "quiq-chat",
-  "version": "1.15.0",
-  "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
+  "version": "1.15.1",
+  "description":
+    "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
     "start": "./node_modules/.bin/nodemon --watch src -e js,sass --exec npm run build",
     "lint": "node ./node_modules/eslint/bin/eslint.js src/",
-    "test": "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
+    "test":
+      "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
     "flow": "flow",
     "jest": "jest --watch --env=jsdom",
     "build": "rollup -c",
@@ -18,23 +20,17 @@
     "src/**/*.js": ["prettier --write", "git add"]
   },
   "jest": {
-    "modulePaths": [
-      "src",
-      "node_modules"
-    ],
+    "modulePaths": ["src", "node_modules"],
     "rootDir": ".",
-    "setupFiles": [
-      "./jest.setup.js"
-    ],
+    "setupFiles": ["./jest.setup.js"],
     "notify": true
   },
-  "keywords": [
-    "quiq"
-  ],
+  "keywords": ["quiq"],
   "author": "nate.norberg@goquiq.com",
   "license": "MIT",
   "dependencies": {
-    "atmosphere.js": "https://github.com/Quiq/atmosphere-js/tarball/cf35c913143cf2c391b6bcb694ae8a47794a1b88",
+    "atmosphere.js":
+      "https://github.com/Quiq/atmosphere-js/tarball/cf35c913143cf2c391b6bcb694ae8a47794a1b88",
     "isomorphic-fetch": "2.2.1",
     "lodash": "4.17.4",
     "loglevel": "1.4.1",
