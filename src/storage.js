@@ -32,7 +32,7 @@ export const setQuiqChatContainerVisible = (visible: boolean) => {
   store.set('quiq-chat-container-visible', visible, expireInDays(1));
 };
 export const setQuiqUserTakenMeaningfulAction = (visible: boolean) => {
-  store.set('quiq-user-taken-meaningful-action', visible, expireInDays(1));
+  store.set('quiq-user-taken-meaningful-action', visible, expireInMinutes(30));
 };
 export const setAccessToken = (token: string) => {
   store.set('X-Quiq-Access-Token', token, expireInDays(365));
