@@ -237,20 +237,18 @@ class QuiqChatClient {
   };
 
   _hasUserJoinedConversation = (): boolean => {
-    if (!this.events || !this.events.length === 0) {
+    if (!this.events) {
       return false;
     }
 
-    for (let i = this.events.length - 1; i >= 0; i--) {
-      if (this.events[i].type === MessageTypes.JOIN) {
-        return true;
-      }
-      if (this.events[i].type === MessageTypes.LEAVE) {
-        return false;
-      }
-    }
+    const joinOrLeaveEvents = this.events.filter(e =>
+      [MessageTypes.JOIN, MessageTypes.LEAVE].includes(e.type),
+    );
 
-    return false;
+    return (
+      joinOrLeaveEvents.length > 0 &&
+      joinOrLeaveEvents[joinOrLeaveEvents.length - 1].type === MessageTypes.JOIN
+    );
   };
 
   /** Private Members * */
