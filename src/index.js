@@ -9,7 +9,7 @@ import QuiqSocket from './QuiqSockets/quiqSockets';
 import {MessageTypes, MINUTES_UNTIL_INACTIVE} from './appConstants';
 import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
 import type {ChatMessage, BurnItDownMessage, TextMessage, ApiError, Event} from './types';
-import {differenceBy, unionBy, partition} from 'lodash';
+import {differenceBy, unionBy, partition, throttle} from 'lodash';
 import {sortByTimestamp, burnItDown, registerOnBurnCallback} from './Utils/utils';
 import type {QuiqChatCallbacks} from 'types';
 import * as storage from './storage';
@@ -224,10 +224,7 @@ class QuiqChatClient {
     return result;
   };
 
-  checkForAgents = () => {
-    return API.checkForAgents();
-  };
-
+  checkForAgents = throttle(API.checkForAgents, 10000, {trailing: false});
   isStorageEnabled = () => storage.isStorageEnabled();
   isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
   hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
