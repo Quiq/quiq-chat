@@ -1,7 +1,8 @@
 // @flow
 import fetch from 'isomorphic-fetch';
 import {login} from './apiCalls';
-import {clamp, merge} from 'lodash';
+import clamp from 'lodash/clamp';
+import merge from 'lodash/merge';
 import {burnItDown} from './Utils/utils';
 import {getBurned, getSessionApiUrl, getGenerateUrl} from './globals';
 import {getAccessToken} from './storage';

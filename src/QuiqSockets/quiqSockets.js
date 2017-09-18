@@ -21,7 +21,7 @@
 
 import StatusCodes from './StatusCodes';
 import logger from 'logging';
-import {clamp} from 'lodash';
+import clamp from 'lodash/clamp';
 import {getAccessToken, getTrackingId, isStorageEnabled} from 'storage';
 import {getBurned} from 'globals';
 import {formatQueryParams} from 'Utils/utils';

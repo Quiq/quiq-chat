@@ -2,7 +2,7 @@
 import stubbornFetch from './stubbornFetch';
 import {checkRequiredSettings} from './globals';
 import {isStorageEnabled, getTrackingId} from './storage';
-import {merge} from 'lodash';
+import merge from 'lodash/merge';
 import {formatQueryParams} from './Utils/utils';
 import {version} from '../package.json';
 import logger from './logging';
