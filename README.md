@@ -115,7 +115,7 @@ Method accepts a single parameter, a JavaScript object with values of type `Stri
 `key` is limited to 80 characters and must be unique; `value` is limited to 1000 characters.
 
 #### checkForAgents() => Promise<{available: boolean}>
-Fetches whether or not there are agents available for the contact point the webchat is connected to
+Fetches whether or not there are agents available for the contact point the webchat is connected to.  The value of this call is cached for 10 seconds.
 
 #### updateMessagePreview(text:string, typing:boolean) => void
 Sends a message to Quiq Messaging that the end user is typing and what they've typed in the message field
