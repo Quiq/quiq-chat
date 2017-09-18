@@ -143,7 +143,7 @@ class QuiqChatClient {
         this.callbacks.onNewMessages(this.textMessages);
       }
 
-      if (this.textMessages.length > 0) {
+      if (storage.getQuiqUserTakenMeaningfulAction() && this.textMessages.length > 0) {
         await this._establishWebSocketConnection();
       }
 
@@ -175,10 +175,16 @@ class QuiqChatClient {
   };
 
   /** API wrappers: these return Promises around the API response * */
+  joinChat = async () => {
+    await this.getMessages();
 
-  joinChat = () => {
-    storage.setQuiqChatContainerVisible(true);
-    return API.joinChat();
+    // These events are going to be managed entirely by the server in the near future.
+    // For now, we have this logic in place to prevent multiple join events from showing
+    // up on page turns.
+    if (!this._hasUserJoinedConversation()) {
+      storage.setQuiqChatContainerVisible(true);
+      return API.joinChat();
+    }
   };
 
   leaveChat = () => {
@@ -228,6 +234,21 @@ class QuiqChatClient {
 
   isRegistered = (): boolean => {
     return this.userIsRegistered;
+  };
+
+  _hasUserJoinedConversation = (): boolean => {
+    if (!this.events) {
+      return false;
+    }
+
+    const joinOrLeaveEvents = this.events.filter(e =>
+      [MessageTypes.JOIN, MessageTypes.LEAVE].includes(e.type),
+    );
+
+    return (
+      joinOrLeaveEvents.length > 0 &&
+      joinOrLeaveEvents[joinOrLeaveEvents.length - 1].type === MessageTypes.JOIN
+    );
   };
 
   /** Private Members * */
