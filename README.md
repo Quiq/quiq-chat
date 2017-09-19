@@ -52,13 +52,13 @@ All the functions to register callbacks return the `QuiqChatClient` object so th
 ## Documentation
 
 ### Supported Browsers
-QuiqChat works with any browser that supports Local Storage, standard AJAX CORS requests. The standard implementation of the Chat client supports a subset of these browsers, and we recommend any custom implementations support the same browsers.  The `isSupportedBrowser` utility function can be used to determine if the end-user is using a browser supported by Quiq.  For simplicity, we don't specify version restrictions for Chrome, Firefox, Safari, Edge, and mobile devices since they are evergreen browsers (meaning they self-update). The following browsers are officially supported.
-  * Chrome
-  * Firefox
-  * Safari
+QuiqChat works with any browser that supports Local Storage, standard AJAX CORS requests. The standard implementation of the Chat client supports a subset of these browsers, and we recommend any custom implementations support the same browsers.  The `isSupportedBrowser` utility function can be used to determine if the end-user is using a browser supported by Quiq. The following browsers with versions greater than or equal to the following are supported.
+  * Chrome 43
+  * Firefox 48.0
+  * Safari 6.1
   * Internet Explorer 10
   * Internet Explorer 11
-  * Microsoft Edge
+  * Microsoft Edge 14
   * Mobile devices
 
 ### QuiqChatClient
