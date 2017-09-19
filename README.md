@@ -51,6 +51,16 @@ All the functions to register callbacks return the `QuiqChatClient` object so th
 
 ## Documentation
 
+### Supported Browsers
+QuiqChat works with any browser that supports Local Storage, standard AJAX CORS requests. The standard implementation of the Chat client supports a subset of these browsers, and we recommend any custom implementations support the same browsers.  The `isSupportedBrowser` utility function can be used to determine if the end-user is using a browser supported by Quiq.  For simplicity, we don't specify version restrictions for Chrome, Firefox, Safari, Edge, and mobile devices since they are evergreen browsers (meaning they self-update). The following browsers are officially supported.
+  * Chrome
+  * Firefox
+  * Safari
+  * Internet Explorer 10
+  * Internet Explorer 11
+  * Microsoft Edge
+  * Mobile devices
+
 ### QuiqChatClient
 
 #### onNewMessages(messages: Array<[TextMessage](#TextMessage)>) => [QuiqChatClient](#quiqchatclient)
@@ -99,6 +109,9 @@ Disconnects the websocket from Quiq
 #### isStorageEnabled() => boolean
 Utility function to tell the client if quiq-chat has the capability to set its required data in a
 persistent way. If this returns false, quiq-chat will cease to function, and will block all requests.
+
+#### isSupportedBrowser() => boolean
+Utility function to return if the end-user is using a browser supported by Quiq.
 
 #### hasTakenMeaningfulAction() => boolean
 Returns whether the end-user has performed a meaningful action, such as

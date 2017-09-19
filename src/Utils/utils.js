@@ -21,6 +21,19 @@ export const formatQueryParams = (url: string, params: Object): string => {
 const parser = new UAParser();
 export const getBrowserName = (): BrowserNames => parser.getResult().browser.name;
 export const getMajor = (): number => parseInt(parser.getResult().browser.major, 10);
+export const isMobile = (): boolean => !!parser.getDevice().type;
+
+export const isSupportedBrowser = () => {
+  const name = getBrowserName();
+  if (isMobile()) return true;
+  if (name === 'Chrome') return true;
+  if (name === 'Firefox') return true;
+  if (name === 'Safari') return true;
+  if (name === 'Edge') return true;
+  if (name === 'IE' && getMajor() >= 10) return true;
+
+  return false;
+};
 
 export const sortByTimestamp = (arr: Array<Object>): Array<Object> =>
   arr.slice().sort((a, b) => a.timestamp - b.timestamp);

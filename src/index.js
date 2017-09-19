@@ -13,7 +13,12 @@ import differenceBy from 'lodash/differenceBy';
 import unionBy from 'lodash/unionBy';
 import partition from 'lodash/partition';
 import throttle from 'lodash/throttle';
-import {sortByTimestamp, burnItDown, registerOnBurnCallback} from './Utils/utils';
+import {
+  sortByTimestamp,
+  burnItDown,
+  registerOnBurnCallback,
+  isSupportedBrowser as supportedBrowser,
+} from './Utils/utils';
 import type {QuiqChatCallbacks} from 'types';
 import * as storage from './storage';
 import logger from './logging';
@@ -22,7 +27,6 @@ import * as Senty from './sentry';
 Senty.init();
 
 const log = logger('QuiqChatClient');
-
 const getConversation = async (): Promise<{
   events: Array<Event>,
   messages: Array<TextMessage>,
@@ -229,6 +233,7 @@ class QuiqChatClient {
 
   checkForAgents = throttle(API.checkForAgents, 10000, {trailing: false});
   isStorageEnabled = () => storage.isStorageEnabled();
+  isSupportedBrowser = () => supportedBrowser();
   isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
   hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
 
