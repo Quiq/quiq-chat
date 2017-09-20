@@ -143,23 +143,23 @@ class QuiqChatClient {
       await API.login();
       onInit();
 
-      if (storage.getQuiqUserIsSubscribed()) {
-        const conversation = await getConversation();
+      const conversation = await getConversation();
 
-        if (conversation.isSubscribed) {
-          // Process initial messages, but do not send callback. We'll send all messages in callback next.
-          this._processConversationResult(conversation, false);
+      console.log('conversation %O', conversation);
 
-          // Send all messages in initial newMessages callback
-          if (this.callbacks.onNewMessages && this.textMessages.length) {
-            this.callbacks.onNewMessages(this.textMessages);
-          }
+      // Process initial messages, but do not send callback. We'll send all messages in callback next.
+      this._processConversationResult(conversation, false);
 
-          await this._establishWebSocketConnection();
-        } else {
-          storage.setQuiqUserIsSubscribed(false);
-        }
+      // Send all messages in initial newMessages callback
+      if (this.callbacks.onNewMessages && this.textMessages.length) {
+        this.callbacks.onNewMessages(this.textMessages);
       }
+
+      storage.setQuiqUserIsSubscribed(conversation.isSubscribed);
+      if (conversation.isSubscribed) {
+        await this._establishWebSocketConnection();
+      }
+
       // If start is successful, begin the client inactive timer
       this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     } catch (err) {
@@ -214,7 +214,6 @@ class QuiqChatClient {
     if (oldTrackingId === this.trackingId) {
       this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
       storage.setQuiqChatContainerVisible(true);
-      storage.setQuiqUserTakenMeaningfulAction(true);
       storage.setQuiqUserIsSubscribed(true);
 
       return API.addMessage(text);
@@ -228,7 +227,6 @@ class QuiqChatClient {
   sendRegistration = async (fields: {[string]: string}) => {
     this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
-    storage.setQuiqUserTakenMeaningfulAction(true);
     const result = await API.sendRegistration(fields);
 
     if (this.callbacks.onRegistration) {
@@ -340,7 +338,6 @@ class QuiqChatClient {
             isRegistered: true,
             isSubscribed: true,
           });
-          storage.setQuiqUserTakenMeaningfulAction(true);
           break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
@@ -358,7 +355,6 @@ class QuiqChatClient {
             isRegistered: true,
             isSubscribed: true,
           });
-          storage.setQuiqUserTakenMeaningfulAction(true);
           break;
         case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {

@@ -443,7 +443,7 @@ describe('QuiqChatClient', () => {
       });
 
       it('calls storage.setQuiqUserTakenMeaningfulAction', () => {
-        expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
+        expect(mockStore.setQuiqUserIsSubscribed).toBeCalledWith(true);
       });
     });
 
@@ -475,10 +475,6 @@ describe('QuiqChatClient', () => {
 
       it('calls storage.setQuiqChatContainerVisible', () => {
         expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(true);
-      });
-
-      it('calls storage.setQuiqUserTakenMeaningfulAction', () => {
-        expect(mockStore.setQuiqUserTakenMeaningfulAction).toBeCalledWith(true);
       });
     });
   });
@@ -579,28 +575,7 @@ describe('QuiqChatClient', () => {
         });
 
         it('sets meaningful action flag in local storage', () => {
-          expect(storage.setQuiqUserTakenMeaningfulAction).toHaveBeenCalledWith(true);
-        });
-      });
-
-      describe('TEXT', () => {
-        beforeEach(() => {
-          const message = {
-            messageType: 'ChatMessage',
-            tenantId: 'me!',
-            data: {
-              authorType: 'Agent',
-              text: 'hello',
-              id: 'id3',
-              timestamp: 1234,
-              type: 'Text',
-            },
-          };
-          QuiqChatClient._handleWebsocketMessage(message);
-        });
-
-        it('sets meaningful action flag in local storage', () => {
-          expect(storage.setQuiqUserTakenMeaningfulAction).toHaveBeenCalledWith(true);
+          expect(storage.setQuiqUserIsSubscribed).toHaveBeenCalledWith(true);
         });
       });
     });

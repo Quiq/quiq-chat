@@ -31,9 +31,6 @@ const expireInMinutes = (numberOfMinutes: number) =>
 export const setQuiqChatContainerVisible = (visible: boolean) => {
   store.set('quiq-chat-container-visible', visible, expireInDays(1));
 };
-export const setQuiqUserTakenMeaningfulAction = (visible: boolean) => {
-  store.set('quiq-user-taken-meaningful-action', visible, expireInMinutes(30));
-};
 export const setQuiqUserIsSubscribed = (visible: boolean) => {
   store.set('quiq-user-subscribed', visible, expireInDays(365));
 };
