@@ -145,8 +145,6 @@ class QuiqChatClient {
 
       const conversation = await getConversation();
 
-      console.log('conversation %O', conversation);
-
       // Process initial messages, but do not send callback. We'll send all messages in callback next.
       this._processConversationResult(conversation, false);
 
@@ -368,18 +366,13 @@ class QuiqChatClient {
       burnItDown(message.data);
     }
 
-    if (message.messageType === MessageTypes.UNSUBSCRIBED) {
+    if (message.messageType === MessageTypes.UNSUBSCRIBE) {
       this._unsusbscribeFromChat();
     }
   };
 
-  _unsusbscribeFromChat = async () => {
-    await this.leaveChat();
+  _unsusbscribeFromChat = () => {
     this.stop();
-    if (this.callbacks.onClientInactiveTimeout) {
-      this.callbacks.onClientInactiveTimeout();
-    }
-    setClientInactive(true);
   };
 
   _handleFatalSocketError = () => {
@@ -449,7 +442,12 @@ class QuiqChatClient {
       async () => {
         // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
         log.info('Client timeout due to inactivity. Closing websocket.');
-        await this._unsusbscribeFromChat();
+        await this.leaveChat();
+        this._unsusbscribeFromChat();
+        if (this.callbacks.onClientInactiveTimeout) {
+          this.callbacks.onClientInactiveTimeout();
+        }
+        setClientInactive(true);
       },
       minutes * 60 * 1000 + 1000, // add a second to avoid timing issues
     );

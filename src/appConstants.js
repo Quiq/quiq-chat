@@ -9,7 +9,7 @@ export const MessageTypes = {
   REGISTER: 'Register',
   BURN_IT_DOWN: 'BurnItDown',
   AGENT_TYPING: 'AgentTyping',
-  UNSUBSCRIBED: 'Unsubscribed',
+  UNSUBSCRIBE: 'Unsubscribe',
 };
 
 export const SupportedWebchatUrls = [
