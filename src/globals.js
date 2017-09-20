@@ -7,7 +7,7 @@ export const setBurned = () => {
   burned = true;
 };
 
-let quiqChatSettings: QuiqChatSettings;
+let quiqChatSettings: QuiqChatSettings = {};
 
 const defaults = {
   CONTACT_POINT: 'default',

@@ -1,26 +1,18 @@
 // @flow
 import store from 'store/dist/store.modern.min';
 import expirePlugin from 'store/plugins/expire';
+import modifiedTimestampPlugin from './modifiedTimestampPlugin';
+import contactPointNamespacePlugin from './contactPointNamespacePlugin';
+import {getContactPoint} from '../globals';
+import logger from '../logging';
 
-// Store.js plugin to store timestamps whenever a key is modified
-// NOTE: Do not add 'const' before this function, it must not be lexically bound to work with store.js
-function modifiedTimestampPlugin() {
-  const namespace = 'modified_timestamp_mixin';
-  const modifiedTimestampStore = this.createStore(
-    this.storage,
-    null,
-    this._namespacePrefix + namespace,
-  );
-  return {
-    set: (superFunc, key) => {
-      modifiedTimestampStore.set(key, Date.now());
-      return superFunc();
-    },
-  };
-}
+const log = logger('Storage');
 
+// NOTE: These plugins must be applied in exactly this order, to ensure that contact point namespacing
+// works for the expiration and modification plugins as well.
 store.addPlugin(expirePlugin);
 store.addPlugin(modifiedTimestampPlugin);
+store.addPlugin(contactPointNamespacePlugin);
 
 const expireInDays = (numberOfDays: number) =>
   new Date().getTime() + numberOfDays * 1000 * 60 * 60 * 24;
@@ -67,3 +59,10 @@ export const isStorageEnabled = () => {
 
   return storageEnabled;
 };
+
+export const localStorageKeys = [
+  'X-Quiq-Access-Token',
+  'quiq-chat-container-visible',
+  'quiq-tracking-id',
+  'quiq-user-taken-meaningful-action',
+];
