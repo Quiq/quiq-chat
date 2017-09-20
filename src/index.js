@@ -87,6 +87,11 @@ class QuiqChatClient {
     return this;
   };
 
+  onAgentEndedConversation = (callback: () => void): QuiqChatClient => {
+    this.callbacks.onAgentEndedConversation = callback;
+    return this;
+  };
+
   onError = (callback: (error: ?ApiError) => void): QuiqChatClient => {
     this.callbacks.onError = callback;
     registerCallbacks({onError: callback});
@@ -144,6 +149,8 @@ class QuiqChatClient {
       onInit();
 
       const conversation = await getConversation();
+
+      console.log('conversation %O', conversation);
 
       // Process initial messages, but do not send callback. We'll send all messages in callback next.
       this._processConversationResult(conversation, false);
@@ -359,6 +366,9 @@ class QuiqChatClient {
             this.callbacks.onAgentTyping(message.data.typing);
           }
           break;
+        case MessageTypes.ENDED:
+          this._agentEndedConversation();
+          break;
       }
     }
 
@@ -368,6 +378,12 @@ class QuiqChatClient {
 
     if (message.messageType === MessageTypes.UNSUBSCRIBE) {
       this._unsusbscribeFromChat();
+    }
+  };
+
+  _agentEndedConversation = () => {
+    if (this.callbacks.onAgentEndedConversation) {
+      this.callbacks.onAgentEndedConversation();
     }
   };
 

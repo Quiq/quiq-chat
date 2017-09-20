@@ -53,6 +53,7 @@ export type QuiqChatCallbacks = {
   onRegistration?: () => void,
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
+  onAgentEndedConversation?: () => void,
 };
 
 export type QuiqChatClientType = {
