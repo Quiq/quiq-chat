@@ -19,7 +19,7 @@ import {
   registerOnBurnCallback,
   isSupportedBrowser as supportedBrowser,
 } from './Utils/utils';
-import type {QuiqChatCallbacks} from 'types';
+import type {QuiqChatCallbacks, ConversationResult} from 'types';
 import * as storage from './storage';
 import logger from './logging';
 import * as Senty from './sentry';
@@ -27,17 +27,19 @@ import * as Senty from './sentry';
 Senty.init();
 
 const log = logger('QuiqChatClient');
-const getConversation = async (): Promise<{
-  events: Array<Event>,
-  messages: Array<TextMessage>,
-}> => {
+const getConversation = async (): Promise<ConversationResult> => {
   const conversation = await API.fetchConversation();
   const partitionedConversation = partition(conversation.messages, {
     type: MessageTypes.TEXT,
   });
   const messages = partitionedConversation[0];
   const events = partitionedConversation[1];
-  return {messages, events};
+  return {
+    messages,
+    events,
+    isSubscribed: conversation.subscribed,
+    isRegistered: conversation.registered,
+  };
 };
 
 class QuiqChatClient {
@@ -141,19 +143,23 @@ class QuiqChatClient {
       await API.login();
       onInit();
 
-      const {messages, events} = await getConversation();
-      // Process initial messages, but do not send callback. We'll send all messages in callback next.
-      this._processNewMessages(messages, events, false);
+      if (storage.getQuiqUserIsSubscribed()) {
+        const conversation = await getConversation();
 
-      // Send all messages in initial newMessages callback
-      if (this.callbacks.onNewMessages && this.textMessages.length) {
-        this.callbacks.onNewMessages(this.textMessages);
+        if (conversation.isSubscribed) {
+          // Process initial messages, but do not send callback. We'll send all messages in callback next.
+          this._processConversationResult(conversation, false);
+
+          // Send all messages in initial newMessages callback
+          if (this.callbacks.onNewMessages && this.textMessages.length) {
+            this.callbacks.onNewMessages(this.textMessages);
+          }
+
+          await this._establishWebSocketConnection();
+        } else {
+          storage.setQuiqUserIsSubscribed(false);
+        }
       }
-
-      if (storage.getQuiqUserTakenMeaningfulAction() && this.textMessages.length > 0) {
-        await this._establishWebSocketConnection();
-      }
-
       // If start is successful, begin the client inactive timer
       this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     } catch (err) {
@@ -174,8 +180,8 @@ class QuiqChatClient {
 
   getMessages = async (cache: boolean = true): Promise<Array<TextMessage>> => {
     if (!cache || !this.connected) {
-      const {messages, events} = await getConversation();
-      this._processNewMessages(messages, events);
+      const conversation = await getConversation();
+      this._processConversationResult(conversation);
     }
 
     return this.textMessages;
@@ -209,6 +215,7 @@ class QuiqChatClient {
       this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
       storage.setQuiqChatContainerVisible(true);
       storage.setQuiqUserTakenMeaningfulAction(true);
+      storage.setQuiqUserIsSubscribed(true);
 
       return API.addMessage(text);
     }
@@ -327,15 +334,30 @@ class QuiqChatClient {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
       switch (message.data.type) {
         case MessageTypes.TEXT:
-          this._processNewMessages([message.data]);
+          this._processConversationResult({
+            messages: [message.data],
+            events: [],
+            isRegistered: true,
+            isSubscribed: true,
+          });
           storage.setQuiqUserTakenMeaningfulAction(true);
           break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
-          this._processNewMessages([], [message.data]);
+          this._processConversationResult({
+            messages: [],
+            events: [message.data],
+            isRegistered: true,
+            isSubscribed: true,
+          });
           break;
         case MessageTypes.REGISTER:
-          this._processNewMessages([], [message.data]);
+          this._processConversationResult({
+            messages: [],
+            events: [message.data],
+            isRegistered: true,
+            isSubscribed: true,
+          });
           storage.setQuiqUserTakenMeaningfulAction(true);
           break;
         case MessageTypes.AGENT_TYPING:
@@ -349,6 +371,19 @@ class QuiqChatClient {
     if (message.messageType === MessageTypes.BURN_IT_DOWN) {
       burnItDown(message.data);
     }
+
+    if (message.messageType === MessageTypes.UNSUBSCRIBED) {
+      this._unsusbscribeFromChat();
+    }
+  };
+
+  _unsusbscribeFromChat = async () => {
+    await this.leaveChat();
+    this.stop();
+    if (this.callbacks.onClientInactiveTimeout) {
+      this.callbacks.onClientInactiveTimeout();
+    }
+    setClientInactive(true);
   };
 
   _handleFatalSocketError = () => {
@@ -364,9 +399,9 @@ class QuiqChatClient {
   };
 
   _handleConnectionEstablish = async () => {
-    const {messages, events} = await getConversation();
+    const conversation = await getConversation();
 
-    this._processNewMessages(messages, events);
+    this._processConversationResult(conversation);
 
     this.connected = true;
 
@@ -375,13 +410,16 @@ class QuiqChatClient {
     }
   };
 
-  _processNewMessages = (
-    messages: Array<TextMessage>,
-    events: Array<Event> = [],
+  _processConversationResult = (
+    conversation: ConversationResult,
     sendNewMessageCallback: boolean = true,
   ): void => {
-    const newMessages: Array<TextMessage> = differenceBy(messages, this.textMessages, 'id');
-    const newEvents: Array<Event> = differenceBy(events, this.events, 'id');
+    const newMessages: Array<TextMessage> = differenceBy(
+      conversation.messages,
+      this.textMessages,
+      'id',
+    );
+    const newEvents: Array<Event> = differenceBy(conversation.events, this.events, 'id');
 
     // Apparently, it's possible (though not common) to receive duplicate messages in transcript response.
     // We need to take union of new and current messages to account for this
@@ -398,14 +436,15 @@ class QuiqChatClient {
     // If we found new events, sort them, update cached events, and check if a new registration event was received. Fire callback if so.
     if (newEvents.length) {
       this.events = sortByTimestamp(unionBy(this.events, newEvents, 'id'));
+    }
 
-      if (newEvents.find(e => e.type === MessageTypes.REGISTER)) {
-        if (this.callbacks.onRegistration) {
-          this.callbacks.onRegistration();
-        }
-        this.userIsRegistered = true;
+    if (conversation.isRegistered && !this.userIsRegistered) {
+      if (this.callbacks.onRegistration) {
+        this.callbacks.onRegistration();
       }
     }
+
+    this.userIsRegistered = conversation.isRegistered;
   };
 
   _setTimeUntilInactive = (minutes: number) => {
@@ -414,12 +453,7 @@ class QuiqChatClient {
       async () => {
         // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
         log.info('Client timeout due to inactivity. Closing websocket.');
-        await this.leaveChat();
-        this.stop();
-        if (this.callbacks.onClientInactiveTimeout) {
-          this.callbacks.onClientInactiveTimeout();
-        }
-        setClientInactive(true);
+        await this._unsusbscribeFromChat();
       },
       minutes * 60 * 1000 + 1000, // add a second to avoid timing issues
     );

@@ -20,6 +20,8 @@ log.setLevel('debug');
 
 const initialConvo = {
   id: 'testConvo',
+  subscribed: true,
+  registered: false,
   messages: [
     {
       authorType: 'Customer',
@@ -63,6 +65,7 @@ describe('QuiqChatClient', () => {
     });
     mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
     mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
+    mockStore.getQuiqUserIsSubscribed.mockReturnValue(true);
 
     QuiqChatClient.initialize(host, contactPoint);
     QuiqChatClient.onNewMessages(onNewMessages);

@@ -34,6 +34,9 @@ export const setQuiqChatContainerVisible = (visible: boolean) => {
 export const setQuiqUserTakenMeaningfulAction = (visible: boolean) => {
   store.set('quiq-user-taken-meaningful-action', visible, expireInMinutes(30));
 };
+export const setQuiqUserIsSubscribed = (visible: boolean) => {
+  store.set('quiq-user-subscribed', visible, expireInDays(365));
+};
 export const setAccessToken = (token: string) => {
   store.set('X-Quiq-Access-Token', token, expireInDays(365));
 };
@@ -44,6 +47,7 @@ export const setTrackingId = (trackingId?: string) => {
 export const getQuiqChatContainerVisible = () => store.get('quiq-chat-container-visible') === true;
 export const getQuiqUserTakenMeaningfulAction = () =>
   store.get('quiq-user-taken-meaningful-action') === true;
+export const getQuiqUserIsSubscribed = () => store.get('quiq-user-subscribed') === true;
 export const getAccessToken = () => store.get('X-Quiq-Access-Token');
 export const getTrackingId = () => store.get('quiq-tracking-id');
 
