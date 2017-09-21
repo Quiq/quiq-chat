@@ -16,8 +16,8 @@ function contactPointNamespacePlugin() {
     const genericValue = superFunc(key);
     if (genericValue) {
       // Delete this generic key and update to be namespaced
+      this.remove(key, false);
       this.set(key, genericValue);
-      this.remove(key);
     }
     return genericValue;
   };
@@ -31,7 +31,18 @@ function contactPointNamespacePlugin() {
     return superFunc(`${key}_${ns}`, value);
   };
 
-  return {get, set};
+  const remove = (superFunc, key, useContactPointNamespace = true) => {
+    const ns = getContactPoint();
+    if (!ns && useContactPointNamespace) {
+      log.error(`Can't set key ${key} before global QuiqChatOptions have been set.`);
+      return;
+    }
+    const postfix = useContactPointNamespace ? `_${ns}` : '';
+    const modKey = `${key}${postfix}`;
+    return superFunc(modKey);
+  };
+
+  return {get, set, remove};
 }
 
 export default contactPointNamespacePlugin;

@@ -7,12 +7,18 @@ function modifiedTimestampPlugin() {
     null,
     this._namespacePrefix + namespace,
   );
-  return {
-    set: (superFunc, key) => {
-      modifiedTimestampStore.set(key, Date.now());
-      return superFunc();
-    },
+
+  const set = (superFunc, key) => {
+    modifiedTimestampStore.set(key, Date.now());
+    return superFunc();
   };
+
+  const remove = (superFunc, key) => {
+    modifiedTimestampStore.remove(key);
+    return superFunc(key);
+  };
+
+  return {set, remove};
 }
 
 export default modifiedTimestampPlugin;

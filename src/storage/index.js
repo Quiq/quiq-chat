@@ -59,10 +59,3 @@ export const isStorageEnabled = () => {
 
   return storageEnabled;
 };
-
-export const localStorageKeys = [
-  'X-Quiq-Access-Token',
-  'quiq-chat-container-visible',
-  'quiq-tracking-id',
-  'quiq-user-taken-meaningful-action',
-];
