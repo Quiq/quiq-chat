@@ -245,7 +245,9 @@ class QuiqChatClient {
   isStorageEnabled = () => storage.isStorageEnabled();
   isSupportedBrowser = () => supportedBrowser();
   isChatVisible = (): boolean => storage.getQuiqChatContainerVisible();
+  setIsChatVisible = (visible: boolean) => storage.setQuiqChatContainerVisible(visible);
   hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
+  isUserSubscribed = (): boolean => storage.getQuiqUserIsSubscribed();
 
   isRegistered = (): boolean => {
     return this.userIsRegistered;
@@ -389,6 +391,7 @@ class QuiqChatClient {
 
   _unsusbscribeFromChat = () => {
     this.stop();
+    storage.setQuiqUserIsSubscribed(false);
   };
 
   _handleFatalSocketError = () => {
