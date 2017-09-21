@@ -9,7 +9,17 @@ function contactPointNamespacePlugin() {
   const get = (superFunc, key) => {
     const ns = getContactPoint();
     if (!ns) return null;
-    return superFunc(`${key}_${ns}`);
+    const namespacedValue = superFunc(`${key}_${ns}`);
+    if (namespacedValue) return namespacedValue;
+
+    // For backwards compatibility, if namespaced key wasn't found, try generic key.
+    const genericValue = superFunc(key);
+    if (genericValue) {
+      // Delete this generic key and update to be namespaced
+      this.set(key, genericValue);
+      this.remove(key);
+    }
+    return genericValue;
   };
 
   const set = (superFunc, key, value) => {
@@ -21,16 +31,7 @@ function contactPointNamespacePlugin() {
     return superFunc(`${key}_${ns}`, value);
   };
 
-  const remove = (superFunc, key) => {
-    const ns = getContactPoint();
-    if (!ns) {
-      log.error(`Can't set key ${key} before global QuiqChatOptions have been set.`);
-      return;
-    }
-    return superFunc(`${key}_${ns}`);
-  };
-
-  return {get, set, remove};
+  return {get, set};
 }
 
 export default contactPointNamespacePlugin;
