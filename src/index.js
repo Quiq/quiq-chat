@@ -337,29 +337,12 @@ class QuiqChatClient {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
       switch (message.data.type) {
         case MessageTypes.TEXT:
-          this._processConversationResult({
-            messages: [message.data],
-            events: [],
-            isRegistered: true,
-            isSubscribed: true,
-          });
+          this._processNewMessages([message.data]);
           break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
-          this._processConversationResult({
-            messages: [],
-            events: [message.data],
-            isRegistered: true,
-            isSubscribed: true,
-          });
-          break;
         case MessageTypes.REGISTER:
-          this._processConversationResult({
-            messages: [],
-            events: [message.data],
-            isRegistered: true,
-            isSubscribed: true,
-          });
+          this._processNewEvents([message.data]);
           break;
         case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {
@@ -416,6 +399,21 @@ class QuiqChatClient {
     }
   };
 
+  _processNewMessages = (
+    newMessages: Array<TextMessage>,
+    sendNewMessageCallback: boolean = true,
+  ): void => {
+    this.textMessages = sortByTimestamp(unionBy(this.textMessages, newMessages, 'id'));
+
+    if (this.callbacks.onNewMessages && sendNewMessageCallback) {
+      this.callbacks.onNewMessages(this.textMessages);
+    }
+  };
+
+  _processNewEvents = (newEvents: Array<Event>): void => {
+    this.events = sortByTimestamp(unionBy(this.events, newEvents, 'id'));
+  };
+
   _processConversationResult = (
     conversation: ConversationResult,
     sendNewMessageCallback: boolean = true,
@@ -432,16 +430,12 @@ class QuiqChatClient {
 
     // If we found new messages, sort them, update cached textMessages, and send callback
     if (newMessages.length) {
-      this.textMessages = sortByTimestamp(unionBy(this.textMessages, newMessages, 'id'));
-
-      if (this.callbacks.onNewMessages && sendNewMessageCallback) {
-        this.callbacks.onNewMessages(this.textMessages);
-      }
+      this._processNewMessages(newMessages, sendNewMessageCallback);
     }
 
     // If we found new events, sort them, update cached events, and check if a new registration event was received. Fire callback if so.
     if (newEvents.length) {
-      this.events = sortByTimestamp(unionBy(this.events, newEvents, 'id'));
+      this._processNewEvents(newEvents);
     }
 
     if (conversation.isRegistered && !this.userIsRegistered) {
