@@ -53,6 +53,7 @@ export type QuiqChatCallbacks = {
   onRegistration?: () => void,
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
+  onAgentEndedConversation?: () => void,
 };
 
 export type QuiqChatClientType = {
@@ -79,7 +80,15 @@ export type QuiqChatClientType = {
 
 export type Conversation = {
   id: string,
+  subscribed: boolean,
+  registered: boolean,
   messages: Array<TextMessage | Event>,
+};
+export type ConversationResult = {
+  events: Array<Event>,
+  messages: Array<TextMessage>,
+  isSubscribed: boolean,
+  isRegistered: boolean,
 };
 export type AtmosphereTransportType =
   | 'websocket'
