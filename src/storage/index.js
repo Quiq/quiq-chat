@@ -3,10 +3,6 @@ import store from 'store/dist/store.modern.min';
 import expirePlugin from 'store/plugins/expire';
 import modifiedTimestampPlugin from './modifiedTimestampPlugin';
 import contactPointNamespacePlugin from './contactPointNamespacePlugin';
-import {getContactPoint} from '../globals';
-import logger from '../logging';
-
-const log = logger('Storage');
 
 // NOTE: These plugins must be applied in exactly this order, to ensure that contact point namespacing
 // works for the expiration and modification plugins as well.

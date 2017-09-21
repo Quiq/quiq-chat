@@ -1,4 +1,6 @@
-import {isStorageEnabled} from '../storage';
+jest.mock('../../logging');
+
+import {isStorageEnabled} from '../index';
 
 describe('isStorageEnabled', () => {
   it('fails if localStorage is disabled', () => {

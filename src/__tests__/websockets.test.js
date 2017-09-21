@@ -1,6 +1,8 @@
 // @flow
 jest.mock('atmosphere.js');
-jest.mock('../storage.js');
+jest.mock('../storage');
+jest.mock('../logging');
+
 import * as Websockets from '../websockets';
 import atmosphere from 'atmosphere.js';
 

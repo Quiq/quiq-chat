@@ -7,7 +7,7 @@ export const setBurned = () => {
   burned = true;
 };
 
-let quiqChatSettings: QuiqChatSettings = {};
+let quiqChatSettings: QuiqChatSettings;
 
 const defaults = {
   CONTACT_POINT: 'default',
@@ -32,18 +32,22 @@ export const checkRequiredSettings = () => {
   }
 };
 
-export const getHost = () => quiqChatSettings.HOST;
+export const getHost = () => quiqChatSettings && quiqChatSettings.HOST;
 
-export const getContactPoint = () => quiqChatSettings.CONTACT_POINT;
+export const getContactPoint = () => quiqChatSettings && quiqChatSettings.CONTACT_POINT;
 
-export const getPublicApiUrl = () => `${quiqChatSettings.HOST}/api/v1/messaging`;
+export const getPublicApiUrl = () =>
+  quiqChatSettings && `${quiqChatSettings.HOST}/api/v1/messaging`;
 
 export const getUrlForContactPoint = () =>
+  quiqChatSettings &&
   `${quiqChatSettings.HOST}/api/v1/messaging/chat/${quiqChatSettings.CONTACT_POINT}`;
 
-export const getSessionApiUrl = (host?: string) => `${host || quiqChatSettings.HOST}/session/web`;
+export const getSessionApiUrl = (host?: string) =>
+  quiqChatSettings && `${host || quiqChatSettings.HOST}/session/web`;
 
-export const getTokenApiUrl = (host?: string) => `${host || quiqChatSettings.HOST}/api/v1/token`;
+export const getTokenApiUrl = (host?: string) =>
+  quiqChatSettings && `${host || quiqChatSettings.HOST}/api/v1/token`;
 
 export const getGenerateUrl = (host?: string) =>
-  `${getTokenApiUrl(host || quiqChatSettings.HOST)}/generate`;
+  quiqChatSettings && `${getTokenApiUrl(host || quiqChatSettings.HOST)}/generate`;
