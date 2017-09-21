@@ -209,18 +209,15 @@ class QuiqChatClient {
   };
 
   sendMessage = async (text: string) => {
-    const oldTrackingId = this.trackingId;
     if (!this.connected) {
       await this._establishWebSocketConnection();
     }
 
-    if (oldTrackingId === this.trackingId) {
-      this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
-      storage.setQuiqChatContainerVisible(true);
-      storage.setQuiqUserIsSubscribed(true);
+    this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
+    storage.setQuiqChatContainerVisible(true);
+    storage.setQuiqUserIsSubscribed(true);
 
-      return API.addMessage(text);
-    }
+    return API.addMessage(text);
   };
 
   updateMessagePreview = (text: string, typing: boolean) => {
@@ -341,8 +338,16 @@ class QuiqChatClient {
           break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
+          this._processNewEvents([message.data]);
+          break;
         case MessageTypes.REGISTER:
           this._processNewEvents([message.data]);
+          if (!this.userIsRegistered) {
+            this.userIsRegistered = true;
+            if (this.callbacks.onRegistration) {
+              this.callbacks.onRegistration();
+            }
+          }
           break;
         case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {
@@ -403,39 +408,41 @@ class QuiqChatClient {
     newMessages: Array<TextMessage>,
     sendNewMessageCallback: boolean = true,
   ): void => {
-    this.textMessages = sortByTimestamp(unionBy(this.textMessages, newMessages, 'id'));
+    const newFilteredMessages: Array<TextMessage> = differenceBy(
+      newMessages,
+      this.textMessages,
+      'id',
+    );
 
-    if (this.callbacks.onNewMessages && sendNewMessageCallback) {
-      this.callbacks.onNewMessages(this.textMessages);
+    // If we found new messages, sort them, update cached textMessages, and send callback
+    if (newFilteredMessages.length > 0) {
+      this.textMessages = sortByTimestamp(unionBy(this.textMessages, newFilteredMessages, 'id'));
+
+      if (this.callbacks.onNewMessages && sendNewMessageCallback) {
+        this.callbacks.onNewMessages(this.textMessages);
+      }
     }
   };
 
   _processNewEvents = (newEvents: Array<Event>): void => {
-    this.events = sortByTimestamp(unionBy(this.events, newEvents, 'id'));
+    const newFilteredEvents: Array<Event> = differenceBy(newEvents, this.events, 'id');
+
+    // If we found new events, sort them, update cached events, and check if a new registration event was received. Fire callback if so.
+    if (newFilteredEvents.length > 0) {
+      this.events = sortByTimestamp(unionBy(this.events, newEvents, 'id'));
+    }
   };
 
   _processConversationResult = (
     conversation: ConversationResult,
     sendNewMessageCallback: boolean = true,
   ): void => {
-    const newMessages: Array<TextMessage> = differenceBy(
-      conversation.messages,
-      this.textMessages,
-      'id',
-    );
-    const newEvents: Array<Event> = differenceBy(conversation.events, this.events, 'id');
-
-    // Apparently, it's possible (though not common) to receive duplicate messages in transcript response.
-    // We need to take union of new and current messages to account for this
-
-    // If we found new messages, sort them, update cached textMessages, and send callback
-    if (newMessages.length) {
-      this._processNewMessages(newMessages, sendNewMessageCallback);
+    if (conversation.messages.length) {
+      this._processNewMessages(conversation.messages, sendNewMessageCallback);
     }
 
-    // If we found new events, sort them, update cached events, and check if a new registration event was received. Fire callback if so.
-    if (newEvents.length) {
-      this._processNewEvents(newEvents);
+    if (conversation.events.length) {
+      this._processNewEvents(conversation.events);
     }
 
     if (conversation.isRegistered && !this.userIsRegistered) {
