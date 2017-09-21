@@ -150,8 +150,6 @@ class QuiqChatClient {
 
       const conversation = await getConversation();
 
-      console.log('conversation %O', conversation);
-
       // Process initial messages, but do not send callback. We'll send all messages in callback next.
       this._processConversationResult(conversation, false);
 
