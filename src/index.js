@@ -6,7 +6,7 @@ import {
   disconnectSocket as disconnectAtmosphere,
 } from './websockets';
 import QuiqSocket from './QuiqSockets/quiqSockets';
-import {MessageTypes, MINUTES_UNTIL_INACTIVE} from './appConstants';
+import {MessageTypes} from './appConstants';
 import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
 import type {ChatMessage, BurnItDownMessage, TextMessage, ApiError, Event} from './types';
 import differenceBy from 'lodash/differenceBy';
@@ -162,9 +162,6 @@ class QuiqChatClient {
       if (conversation.isSubscribed) {
         await this._establishWebSocketConnection();
       }
-
-      // If start is successful, begin the client inactive timer
-      this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     } catch (err) {
       log.error(`Could not start QuiqChatClient: ${err.message}`);
       this._disconnectSocket();
@@ -213,7 +210,6 @@ class QuiqChatClient {
       await this._establishWebSocketConnection();
     }
 
-    this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserIsSubscribed(true);
 
@@ -225,7 +221,6 @@ class QuiqChatClient {
   };
 
   sendRegistration = async (fields: {[string]: string}) => {
-    this._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
     storage.setQuiqChatContainerVisible(true);
     const result = await API.sendRegistration(fields);
 
@@ -452,23 +447,6 @@ class QuiqChatClient {
     }
 
     this.userIsRegistered = conversation.isRegistered;
-  };
-
-  _setTimeUntilInactive = (minutes: number) => {
-    clearTimeout(this.clientInactiveTimer);
-    this.clientInactiveTimer = setTimeout(
-      async () => {
-        // Leaving a console log in to give context to the atmosphere console message 'Websocket closed normally'
-        log.info('Client timeout due to inactivity. Closing websocket.');
-        await this.leaveChat();
-        this._unsusbscribeFromChat();
-        if (this.callbacks.onClientInactiveTimeout) {
-          this.callbacks.onClientInactiveTimeout();
-        }
-        setClientInactive(true);
-      },
-      minutes * 60 * 1000 + 1000, // add a second to avoid timing issues
-    );
   };
 }
 
