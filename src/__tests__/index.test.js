@@ -11,7 +11,6 @@ import * as ApiCalls from '../apiCalls';
 import * as storage from '../storage';
 import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'store';
-import {MINUTES_UNTIL_INACTIVE} from '../appConstants';
 import * as stubbornFetch from '../stubbornFetch';
 import * as Utils from '../Utils/utils';
 import log from 'loglevel';
@@ -475,73 +474,6 @@ describe('QuiqChatClient', () => {
 
       it('calls storage.setQuiqChatContainerVisible', () => {
         expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(true);
-      });
-    });
-  });
-
-  describe('client inactivity timeout', () => {
-    beforeEach(() => {
-      if (!QuiqChatClient) {
-        throw new Error('Client should be defined');
-      }
-    });
-
-    afterEach(() => {
-      clearTimeout(QuiqChatClient.clientInactiveTimer);
-    });
-
-    it('initializes with a timer set', () => {
-      expect(QuiqChatClient.clientInactiveTimer).toBeDefined();
-    });
-
-    it('sets a timer when registration sent', () => {
-      QuiqChatClient.sendRegistration({
-        firstName: 'SpongeBob',
-        lastName: 'SquarePants',
-      });
-      expect(QuiqChatClient.clientInactiveTimer).toBeDefined();
-    });
-
-    it('sets a timer when message sent', () => {
-      QuiqChatClient.sendMessage('ahoy');
-      expect(QuiqChatClient.clientInactiveTimer).toBeDefined();
-    });
-
-    describe('timeout logic when timer expires', () => {
-      beforeEach(() => {
-        jest.useFakeTimers();
-        jest.clearAllMocks();
-        QuiqChatClient.stop = jest.fn();
-        QuiqChatClient.leaveChat = jest.fn().mockReturnValue(Promise.resolve());
-        QuiqChatClient._setTimeUntilInactive(MINUTES_UNTIL_INACTIVE);
-
-        expect(QuiqChatClient.leaveChat).not.toBeCalled();
-        expect(onClientInactiveTimeout).not.toBeCalled();
-        expect(QuiqChatClient.stop).not.toBeCalled();
-        expect(setClientInactive).not.toBeCalled();
-
-        jest.runAllTimers();
-      });
-
-      it('times out after appConstants.MINUTES_UNTIL_INACTIVE minutes', () => {
-        expect(setTimeout.mock.calls.length).toBe(1);
-        expect(setTimeout.mock.calls[0][1]).toBe(MINUTES_UNTIL_INACTIVE * 60 * 1000 + 1000);
-      });
-
-      it('calls leaveChat', () => {
-        expect(QuiqChatClient.leaveChat).toBeCalled();
-      });
-
-      it('calls onClientInactiveTimeout callback', () => {
-        expect(onClientInactiveTimeout).toBeCalled();
-      });
-
-      it('calls stop', () => {
-        expect(QuiqChatClient.stop).toBeCalled();
-      });
-
-      it('calls setClientInactive with true', () => {
-        expect(setClientInactive).toBeCalledWith(true);
       });
     });
   });
