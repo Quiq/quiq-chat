@@ -21,7 +21,7 @@ class SlumberParty {
     setInterval(() => {
       // See https://stackoverflow.com/a/4080174/3961837
       const currentTime = Date.now();
-      if (Date.now() > this.wallClockTime + 30000) {
+      if (currentTime > this.wallClockTime + 30000) {
         // ignore small delays
         // Probably just woke up!
         log.info('Firing wake handlers');
