@@ -58,7 +58,7 @@ QuiqChat works with any browser that supports Local Storage, standard AJAX CORS 
   * Safari 6.1
   * Internet Explorer 10
   * Internet Explorer 11
-  * Microsoft Edge 14
+  * Microsoft Edge 12
   * Mobile devices
 
 ### QuiqChatClient

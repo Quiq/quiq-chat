@@ -32,7 +32,7 @@ export const isSupportedBrowser = () => {
   if (name === 'Chrome' && major >= 43) return true;
   if (name === 'Firefox' && major >= 48) return true;
   if (name === 'Safari' && major >= 6.1) return true;
-  if (name === 'Edge' && major >= 14) return true;
+  if (name === 'Edge' && major >= 12) return true;
   if (name === 'IE' && major >= 10) return true;
   if (name === 'Opera' && major >= 13) return true;
 
