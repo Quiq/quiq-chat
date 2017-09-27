@@ -21,11 +21,9 @@ import {
 } from './Utils/utils';
 import type {QuiqChatCallbacks, ConversationResult} from 'types';
 import * as storage from './storage';
-import SlumberParty from './slumberParty';
 import logger from './logging';
 import * as Senty from './sentry';
 
-// Initialize Sentry
 Senty.init();
 
 const log = logger('QuiqChatClient');
@@ -164,9 +162,6 @@ class QuiqChatClient {
       if (conversation.isSubscribed) {
         await this._establishWebSocketConnection();
       }
-
-      // Listen for machine wakeup, so we can refresh app to clear any connection oddities
-      SlumberParty.addEventListener('wake', this._handleMachineWake);
     } catch (err) {
       log.error(`Could not start QuiqChatClient: ${err.message}`);
       this._disconnectSocket();
@@ -181,9 +176,6 @@ class QuiqChatClient {
     this._disconnectSocket();
     this.initialized = false;
     this.connected = false;
-
-    // Stop listening for wake events
-    SlumberParty.removeEventListener('wake', this._handleMachineWake);
   };
 
   getMessages = async (cache: boolean = true): Promise<Array<TextMessage>> => {
@@ -405,11 +397,6 @@ class QuiqChatClient {
     if (this.callbacks.onConnectionStatusChange) {
       this.callbacks.onConnectionStatusChange(true);
     }
-  };
-
-  _handleMachineWake = () => {
-    this.stop();
-    this.start();
   };
 
   _processNewMessages = (
