@@ -9,7 +9,7 @@ import {
 } from './globals';
 import quiqFetch from './quiqFetch';
 import {setAccessToken, getAccessToken, setTrackingId, getTrackingId} from './storage';
-import type {Conversation} from 'types';
+import type {Conversation, ChatMetadata} from 'types';
 import logger from './logging';
 import Raven from 'raven-js';
 
@@ -26,6 +26,9 @@ export const keepAlive = () => quiqFetch(`${getUrlForContactPoint()}/keep-alive`
 export const joinChat = () => quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST'});
 
 export const leaveChat = () => quiqFetch(`${getUrlForContactPoint()}/leave`, {method: 'POST'});
+
+export const getChatConfiguration = (): Promise<ChatMetadata> =>
+  quiqFetch(`${getUrlForContactPoint()}/configuration`, undefined, {responseType: 'JSON'});
 
 export const addMessage = (text: string) =>
   quiqFetch(`${getUrlForContactPoint()}/send-message`, {

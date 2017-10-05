@@ -187,6 +187,9 @@ class QuiqChatClient {
     return this.textMessages;
   };
 
+  // This is specific to our chat client. Don't document it.
+  getChatConfiguration = () => API.getChatConfiguration();
+
   /** API wrappers: these return Promises around the API response * */
   joinChat = async () => {
     await this.getMessages();
