@@ -460,7 +460,7 @@ class QuiqSocket {
   };
 
   _verifyConnectivity = () => {
-    // Only continue if we are in CONNECTED state
+    // Only continue if we are in CONNECTED state (readyState === 1)
     if (!this.socket || this.socket.readyState !== 1 || !this.lastPongReceivedTimestamp) return;
 
     log.debug('Verifying connectivity');
