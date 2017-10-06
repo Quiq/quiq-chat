@@ -42,11 +42,20 @@ class QuiqSocket {
 
   // Websocket options
   options: {[string]: any} = {
-    maxRetriesOnConnectionLoss: 100, // Number of times to attempt reconnecting on a single connection
-    backoffFunction: (attempt: number) => clamp((attempt ** 2 - 1) / 2 * 1000, 0, 30000), // Function of the form attempt => delay used for delaying retry attempts
-    maxConnectionCount: 100, // the maximum number of times connect() will be called, either externally or in doing retries, for the entire session.
-    connectionAttemptTimeout: 10 * 1000, // The timeout for WebSocket.onopen to be called for a connection attempt.
-    heartbeatFrequency: 50 * 1000, // Frequency to send ping across websocket
+    // Number of times to attempt reconnecting on a single connection
+    maxRetriesOnConnectionLoss: 100,
+
+    // Function of the form attempt => delay used for delaying retry attempts
+    backoffFunction: (attempt: number) => clamp((attempt ** 2 - 1) / 2 * 1000, 0, 30000),
+
+    // the maximum number of times connect() will be called, either externally or in doing retries, for the entire session.
+    maxConnectionCount: 100,
+
+    // The timeout for WebSocket.onopen to be called for a connection attempt.
+    connectionAttemptTimeout: 10 * 1000,
+
+    // Frequency to send ping across websocket
+    heartbeatFrequency: 50 * 1000,
   };
 
   // Internal WebSocket instance
@@ -57,10 +66,14 @@ class QuiqSocket {
   connectionCount: number = 0;
 
   // Timers and intervals
-  connectionTimeout: ?Timeout;
-  retryTiemout: ?Timeout;
-  heartbeatInterval: ?Interval;
+  connectionTimeout: ?Timeout; // Timeout for connection/handshake attempt
+  retryTiemout: ?Timeout; // Timeout for backoff on retry attempts
+  heartbeatInterval: ?Interval; // Interval for sending of heartbeat
 
+  // Connection state
+  lastPongReceivedTimestamp: number;
+
+  // Status flags
   waitingForOnlineToReconnect: boolean = false;
 
   constructor() {
@@ -92,6 +105,13 @@ class QuiqSocket {
         this._reset();
       }
       return null;
+    });
+
+    // Focus listener: this is used to detect computer coming back from sleep, but will be fired anytime tab is focused.
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        this._verifyConnectivity();
+      }
     });
   }
 
@@ -316,8 +336,9 @@ class QuiqSocket {
    * @private
    */
   _handleMessage = (e: MessageEvent) => {
-    // If this is a pong, ignore.
+    // If this is a pong, update pong timestamp and bail out
     if (e.data && e.data === 'X') {
+      this.lastPongReceivedTimestamp = Date.now();
       return;
     }
 
@@ -426,6 +447,9 @@ class QuiqSocket {
       clearInterval(this.heartbeatInterval);
     }
 
+    // Reset pong time
+    this.lastPongReceivedTimestamp = Date.now();
+
     this.heartbeatInterval = setInterval(() => {
       if (!this.socket) {
         log.error('Trying to send heartbeat, but no socket connection exists.');
@@ -433,6 +457,23 @@ class QuiqSocket {
       }
       this.socket.send('X');
     }, this.options.heartbeatFrequency);
+  };
+
+  _verifyConnectivity = () => {
+    // Only continue if we are in CONNECTED state
+    if (!this.socket || this.socket.readyState !== 1 || !this.lastPongReceivedTimestamp) return;
+
+    log.debug('Verifying connectivity');
+
+    if (Date.now() - this.lastPongReceivedTimestamp > this.options.heartbeatFrequency) {
+      log.info('Our heart has skipped a beat...reconnecting.');
+      // Fire event handler
+      if (this.connectionLossHandler) {
+        this.connectionLossHandler(1001, 'Heartbeat failure');
+      }
+      // Reconnect
+      this.connect();
+    }
   };
 }
 
