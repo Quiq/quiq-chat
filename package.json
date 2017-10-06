@@ -1,6 +1,6 @@
 {
   "name": "quiq-chat",
-  "version": "1.18.2",
+  "version": "1.19.0",
   "description":
     "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
