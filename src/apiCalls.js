@@ -8,7 +8,7 @@ import {
   getGenerateUrl,
 } from './globals';
 import quiqFetch from './quiqFetch';
-import {setAccessToken, getAccessToken, setTrackingId, getTrackingId} from './storage';
+import {setAccessToken, getAccessToken, getTrackingId} from './storage';
 import type {Conversation, ChatMetadata} from 'types';
 import logger from './logging';
 import Raven from 'raven-js';
@@ -83,9 +83,8 @@ export const login = (host?: string) =>
     },
   ).then((res: {accessToken: string, tokenId: string}) => {
     setAccessToken(res.accessToken);
-    setTrackingId(res.tokenId);
 
-    if (getAccessToken() !== res.accessToken || getTrackingId() !== res.tokenId) {
+    if (getAccessToken() !== res.accessToken) {
       burnItDown();
       return Promise.reject();
     }
@@ -97,7 +96,7 @@ export const login = (host?: string) =>
     // Tell sentry about the new trackingId
     // This will let us track logs by trackingId
     Raven.setUserContext({
-      id: res.tokenId,
+      id: getTrackingId(),
     });
 
     log.debug(`Login successful. trackingId: ${res.tokenId}`);

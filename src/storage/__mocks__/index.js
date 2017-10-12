@@ -1,7 +1,6 @@
 export const setQuiqChatContainerVisible = jest.fn();
 export const setQuiqUserTakenMeaningfulAction = jest.fn();
 export const setAccessToken = jest.fn();
-export const setTrackingId = jest.fn();
 export const getQuiqChatContainerVisible = jest.fn(() => true);
 export const getQuiqUserTakenMeaningfulAction = jest.fn(() => true);
 export const getQuiqUserIsSubscribed = jest.fn(() => true);
