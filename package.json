@@ -1,6 +1,6 @@
 {
   "name": "quiq-chat",
-  "version": "1.19.0",
+  "version": "1.19.1",
   "description":
     "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
@@ -32,6 +32,7 @@
     "atmosphere.js":
       "https://github.com/Quiq/atmosphere-js/tarball/cf35c913143cf2c391b6bcb694ae8a47794a1b88",
     "isomorphic-fetch": "2.2.1",
+    "jwt-decode": "2.2.0",
     "lodash": "4.17.4",
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",
