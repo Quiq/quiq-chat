@@ -84,7 +84,7 @@ export const login = (host?: string) =>
   ).then((res: {accessToken: string, tokenId: string}) => {
     setAccessToken(res.accessToken);
 
-    if (getAccessToken() !== res.accessToken || getTrackingId() !== res.tokenId) {
+    if (getAccessToken() !== res.accessToken) {
       burnItDown();
       return Promise.reject();
     }
