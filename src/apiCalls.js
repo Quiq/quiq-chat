@@ -96,7 +96,7 @@ export const login = (host?: string) =>
     // Tell sentry about the new trackingId
     // This will let us track logs by trackingId
     Raven.setUserContext({
-      id: res.tokenId,
+      id: getTrackingId(),
     });
 
     log.debug(`Login successful. trackingId: ${res.tokenId}`);
