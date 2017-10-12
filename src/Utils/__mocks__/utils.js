@@ -5,3 +5,4 @@ export const sortByTimestamp = (arr: Array<Object>): Array<Object> => arr;
 export const burnItDown = jest.fn();
 export const registerOnBurnCallback = jest.fn();
 export const inLocalDevelopment = () => true;
+export const getTenantFromHostname = () => 'tester';
