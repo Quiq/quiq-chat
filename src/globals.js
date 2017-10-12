@@ -1,4 +1,6 @@
 // @flow
+import Raven from 'raven-js';
+import {getTenantFromHostname} from 'Utils/utils';
 import type {QuiqChatSettings} from 'types';
 
 let burned = false;
@@ -15,6 +17,13 @@ const defaults = {
 
 export const setGlobals = (globals: QuiqChatSettings) => {
   quiqChatSettings = Object.assign({}, defaults, globals);
+
+  // Update Raven if host is defined
+  if (quiqChatSettings.HOST) {
+    Raven.setTagsContext({
+      tenant: getTenantFromHostname(quiqChatSettings.HOST),
+    });
+  }
 };
 
 export const checkRequiredSettings = () => {
