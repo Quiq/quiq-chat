@@ -210,7 +210,7 @@ class QuiqChatClient {
 
   sendMessage = async (text: string) => {
     if (!this.connected) {
-      await this._establishWebSocketConnection(() => {
+      this._establishWebSocketConnection(() => {
         storage.setQuiqChatContainerVisible(true);
         storage.setQuiqUserIsSubscribed(true);
 
