@@ -430,6 +430,7 @@ describe('QuiqChatClient', () => {
           throw new Error('Client undefined');
         }
 
+        QuiqChatClient.connected = true;
         QuiqChatClient.sendMessage('text');
       });
 

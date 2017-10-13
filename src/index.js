@@ -210,13 +210,18 @@ class QuiqChatClient {
 
   sendMessage = async (text: string) => {
     if (!this.connected) {
-      await this._establishWebSocketConnection();
+      await this._establishWebSocketConnection(() => {
+        storage.setQuiqChatContainerVisible(true);
+        storage.setQuiqUserIsSubscribed(true);
+
+        return API.addMessage(text);
+      });
+    } else {
+      storage.setQuiqChatContainerVisible(true);
+      storage.setQuiqUserIsSubscribed(true);
+
+      return API.addMessage(text);
     }
-
-    storage.setQuiqChatContainerVisible(true);
-    storage.setQuiqUserIsSubscribed(true);
-
-    return API.addMessage(text);
   };
 
   updateMessagePreview = (text: string, typing: boolean) => {
@@ -262,13 +267,13 @@ class QuiqChatClient {
   };
 
   /** Private Members * */
-  _establishWebSocketConnection = async () => {
+  _establishWebSocketConnection = async (connectedCallback: any) => {
     this._disconnectSocket(); // Ensure we only have one websocket connection open
     const wsInfo: {url: string, protocol: string} = await API.fetchWebsocketInfo();
-    this._connectSocket(wsInfo);
+    this._connectSocket(wsInfo, connectedCallback);
   };
 
-  _connectSocket = (wsInfo: {url: string, protocol: string}) => {
+  _connectSocket = (wsInfo: {url: string, protocol: string}, connectedCallback: any) => {
     this.socketProtocol = wsInfo.protocol;
 
     // If we didn't get protocol, or it was an unsupported value, default to 'atmosphere'
@@ -281,11 +286,18 @@ class QuiqChatClient {
 
     log.info(`Using ${this.socketProtocol} protocol`);
 
+    const connectionEstablish = connectedCallback
+      ? () => {
+          this._handleConnectionEstablish();
+          connectedCallback();
+        }
+      : this._handleConnectionEstablish;
+
     switch (this.socketProtocol) {
       case 'quiq':
         QuiqSocket.withURL(`wss://${wsInfo.url}`)
           .onConnectionLoss(this._handleConnectionLoss)
-          .onConnectionEstablish(this._handleConnectionEstablish)
+          .onConnectionEstablish(connectionEstablish)
           .onMessage(this._handleWebsocketMessage)
           .onFatalError(this._handleFatalSocketError)
           .connect();
@@ -295,7 +307,7 @@ class QuiqChatClient {
           socketUrl: wsInfo.url,
           callbacks: {
             onConnectionLoss: this._handleConnectionLoss,
-            onConnectionEstablish: this._handleConnectionEstablish,
+            onConnectionEstablish: connectionEstablish,
             onMessage: this._handleWebsocketMessage,
             onFatalError: this._handleFatalSocketError,
           },
