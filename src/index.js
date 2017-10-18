@@ -239,6 +239,10 @@ class QuiqChatClient {
     return result;
   };
 
+  getHandle = throttle((host?: string) => storage.getTrackingId() || API.login(host), 10000, {
+    trailing: false,
+  });
+
   checkForAgents = throttle(API.checkForAgents, 10000, {trailing: false});
   isStorageEnabled = () => storage.isStorageEnabled();
   isSupportedBrowser = () => supportedBrowser();
