@@ -100,6 +100,8 @@ export const login = (host?: string) =>
     });
 
     log.debug(`Login successful. trackingId: ${res.tokenId}`);
+
+    return getTrackingId();
   });
 
 export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'});
