@@ -433,8 +433,8 @@ class QuiqSocket {
    * Handles a fatal, non-recoverable error such as hitting the retry maximum.
    * @private
    */
-  _handleFatalError = e => {
-    log.error(`QuiqSocket encountered a fatal error: ${e && e.message}`, {exception: e});
+  _handleFatalError = () => {
+    log.error('QuiqSocket encountered a fatal error.');
 
     if (this.fatalErrorHandler) {
       this.fatalErrorHandler();

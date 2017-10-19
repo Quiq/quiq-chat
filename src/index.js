@@ -201,11 +201,6 @@ class QuiqChatClient {
   };
 
   sendMessage = async (text: string) => {
-    try {
-      throw new Error('THis is a test!');
-    } catch (e) {
-      log.error('Testing', {exception: e, data: {testKey: 'testValue'}});
-    }
     if (!this.connected) {
       this._establishWebSocketConnection(() => {
         storage.setQuiqChatContainerVisible(true);
