@@ -45,26 +45,18 @@ const getConversation = async (): Promise<ConversationResult> => {
 class QuiqChatClient {
   host: string;
   contactPoint: string;
-  callbacks: QuiqChatCallbacks;
-  textMessages: Array<TextMessage>;
-  events: Array<Event>;
-  connected: boolean;
   socketProtocol: ?string;
-  userIsRegistered: boolean;
-  trackingId: ?string;
-  initialized: boolean;
-  clientInactiveTimer: number;
+  callbacks: QuiqChatCallbacks = {};
+  textMessages: Array<TextMessage> = [];
+  events: Array<Event> = [];
+  connected: boolean = false;
+  userIsRegistered: boolean = false;
+  trackingId: ?string = null;
+  initialized: boolean = false;
 
   initialize = (host: string, contactPoint: string) => {
     this.host = host;
     this.contactPoint = contactPoint;
-    this.callbacks = {};
-    this.textMessages = [];
-    this.events = [];
-    this.userIsRegistered = false;
-    this.connected = false;
-    this.trackingId = null;
-    this.initialized = false;
 
     setGlobals({
       HOST: this.host,
@@ -163,7 +155,7 @@ class QuiqChatClient {
         await this._establishWebSocketConnection();
       }
     } catch (err) {
-      log.error(`Could not start QuiqChatClient: ${err.message}`);
+      log.error(`Could not start QuiqChatClient: ${err.message}`, {exception: err});
       this._disconnectSocket();
 
       if (this.callbacks.onError) {
@@ -209,6 +201,11 @@ class QuiqChatClient {
   };
 
   sendMessage = async (text: string) => {
+    try {
+      throw new Error('THis is a test!');
+    } catch (e) {
+      log.error('Testing', {exception: e, data: {testKey: 'testValue'}});
+    }
     if (!this.connected) {
       this._establishWebSocketConnection(() => {
         storage.setQuiqChatContainerVisible(true);
@@ -271,6 +268,23 @@ class QuiqChatClient {
   };
 
   /** Private Members * */
+  _withSentryMetadataCallback = (callback: () => Object) => {
+    this.callbacks.sentryMetadata = callback;
+  };
+
+  /**
+   * Returns an object of state information, useful for logging errors.
+   * @private
+   */
+  _getState = (): Object => {
+    return {
+      clientState: this.callbacks.sentryMetadata ? this.callbacks.sentryMetadata() : null,
+      connected: this.connected,
+      initialized: this.initialized,
+      events: this.events,
+    };
+  };
+
   _establishWebSocketConnection = async (connectedCallback: any) => {
     this._disconnectSocket(); // Ensure we only have one websocket connection open
     const wsInfo: {url: string, protocol: string} = await API.fetchWebsocketInfo();

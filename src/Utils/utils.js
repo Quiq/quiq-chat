@@ -66,7 +66,7 @@ export const burnItDown = (message?: BurnItDownResponse) => {
     // Just in case something goes wrong while burning...
     // as a last ditch effort ensure we at least set burned status.
     setBurned();
-    log.error(`Error encountered while burning it down: ${e.message}`);
+    log.error(`Error encountered while burning it down: ${e.message}`, {exception: e});
   }
 };
 

@@ -120,7 +120,7 @@ const onMessage = (res: AtmosphereResponse) => {
   try {
     message = atmosphere.util.parseJSON(res.responseBody);
   } catch (e) {
-    log.error('Error parsing Quiq websocket message'); // eslint-disable-line no-console
+    log.error('Error parsing Quiq websocket message', {exception: e});
     return;
   }
 

@@ -54,6 +54,7 @@ export type QuiqChatCallbacks = {
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
   onAgentEndedConversation?: () => void,
+  sentryMetadata?: () => Object,
 };
 
 export type QuiqChatClientType = {

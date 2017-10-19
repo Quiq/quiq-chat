@@ -27,23 +27,35 @@ type FetchCallbacks = {
   onRetryableError?: (error: ?ApiError) => void,
   onErrorResolved?: () => void,
 };
+
+const bypassUrls = ['/generate', '/agents-available', '/chat'];
 let callbacks: FetchCallbacks = {};
+let initialized = false;
+let clientInactive = false;
+let errorCount = 0;
+
 export const registerCallbacks = (cbs: FetchCallbacks = {}) => {
   callbacks = Object.assign({}, callbacks, cbs);
 };
 
-let initialized = false;
 export const onInit = () => {
   initialized = true;
 };
 
-let clientInactive = false;
 export const setClientInactive = (isInactive: boolean) => {
   clientInactive = isInactive;
 };
 
-let errorCount = 0;
-const bypassUrls = ['/generate', '/agents-available', '/chat'];
+const logRequest = (logData: Object) => {
+  if (logData._logged) return;
+  logData._logged = true;
+
+  const statusCode =
+    logData.statusCode || (logData.responses[0] && logData.responses[0].statusCode);
+  const reason = logData.reason || (logData.responses[0] && logData.responses[0].statusText);
+  log.debug(`[${statusCode}] (${reason}) ${logData.url}`, {data: logData, capture: true});
+};
+
 export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
   let retryCount = 0;
   let timedOut = false;
@@ -63,28 +75,47 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
   };
 
   return new Promise((resolve, reject) => {
+    const logData = {
+      url,
+      fetchRequest,
+      retries: -1,
+      responses: [],
+      startTime: Date.now(),
+      _logged: false,
+    };
+
     timerId = window.setTimeout(() => {
       timedOut = true;
       if (callbacks.onError) callbacks.onError();
-      log.info(`Aborting fetch to ${url}, timed out.`);
-      return reject(new Error(messages.maxTriesExceeded));
+      logData.statusCode = -1;
+      logData.reason = 'Timed out';
+      logRequest(logData);
+      return reject(new Error(`${messages.maxTriesExceeded} ${url}`));
     }, 30000);
 
     const request = () => {
+      logData.retries++;
+
       if (clientInactive) {
-        log.info(`Request to ${url} blocked because client is inactive`);
+        logData.statusCode = -1;
+        logData.reason = 'Request blocked because client is inactive';
+        logRequest(logData);
         return reject(new Error(messages.clientInactive));
       }
       if (!bypassUrls.find(u => url.includes(u)) && !initialized) {
-        log.warn(`Request to ${url} blocked because client is not yet initialized`);
+        log.warn(`Request to ${url} blocked because client is not yet initialized`, {
+          data: logData,
+        });
         return reject(new Error(messages.clientNotInitialized));
       }
       if (getBurned()) {
-        log.info(`Aborting request to ${url} because client is burned.`);
+        logData.statusCode = -1;
+        logData.reason = 'Client is burned';
+        logRequest(logData);
         return reject(new Error(messages.burned));
       }
       if (errorCount > 100) {
-        log.error('Max error count exceeded. Burning client.');
+        log.error('Max error count exceeded. Burning client.', {data: logData});
         burnIt();
         return reject(new Error(messages.totalErrorsExceeded));
       }
@@ -96,10 +127,21 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
       delayIfNeeded().then(() =>
         fetch(url, req).then(
           (response: Response) => {
-            if (getBurned()) return reject(new Error(messages.burnedInResponse));
+            logData.responses.push({
+              statusCode: response.status,
+              statusText: response.statusText,
+              type: response.type,
+            });
+
+            if (getBurned()) {
+              logData.statusCode = -1;
+              logData.reason = 'Got a response, but client has been burned';
+              logRequest(logData);
+              return reject(new Error(messages.burnedInResponse));
+            }
 
             if (response.status === 466) {
-              log.info('466 received. Burning client');
+              logRequest(logData);
               burnIt();
               return reject(new Error(messages.burnedFromServer));
             }
@@ -108,7 +150,7 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
             if (response.status === 401) {
               // If we get a 401 during the handshake, things went south.  Get us out of here, Chewy!
               if (url === getGenerateUrl() || url === getSessionApiUrl()) {
-                log.error('Received 401 during handshake, burning');
+                log.error('Received 401 during login, burning', {data: logData});
                 burnIt();
                 return reject(new Error(response));
               }
@@ -128,6 +170,9 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
 
             window.clearTimeout(timerId);
 
+            // Log request
+            logRequest(logData);
+
             // Success
             if (response.status < 400) {
               if (retryCount > 0 && callbacks.onErrorResolved) callbacks.onErrorResolved();
@@ -139,6 +184,11 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
             return reject(response);
           },
           (error: IsomorphicFetchNetworkError) => {
+            logData.responses.push({
+              statusCode: -1,
+              statusText: 'IsomorphicFetchNetworkError',
+            });
+
             if (getBurned()) return reject(messages.burnedInResponse);
 
             // We aren't given a status code in this code path.  If we didn't get here from an auth call,
@@ -154,6 +204,7 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
             const err: IsomorphicFetchNetworkError = error;
             err.status = 1000;
             window.clearTimeout(timerId);
+            logRequest(logData);
             return reject(err);
           },
         ),

@@ -176,7 +176,7 @@ class QuiqSocket {
   connect = (): QuiqSocket => {
     // Check burn status
     if (getBurned()) {
-      log.error('Client in bad state. Aborting websocket connection.');
+      log.info('Client in bad state. Aborting websocket connection.');
       return this;
     }
 
@@ -222,7 +222,10 @@ class QuiqSocket {
       });
       this.socket = new WebSocket(parsedUrl, accessToken);
     } catch (e) {
-      log.error(`Unable to construct WebSocket: ${e}`);
+      log.error(`Unable to construct WebSocket: ${e.message}`, {
+        data: {url: this.url, protocol: this.protocol},
+        exception: e,
+      });
       throw new Error('Cannot construct WebSocket.');
     }
 
@@ -351,14 +354,13 @@ class QuiqSocket {
           this.messageHandler(parsedData);
         }
       } else {
-        log.error('Message data was not of string type');
+        log.error('Websocket message data was not of string type');
       }
     } catch (ex) {
-      log.error(
-        `Unable to parse websocket message "${typeof e.data === 'string'
-          ? e.data
-          : '.'}", Error: ${ex.message}`,
-      );
+      log.error(`Unable to handle websocket message: ${ex.message}`, {
+        data: {message: e.data},
+        exception: ex,
+      });
     }
   };
 
@@ -420,18 +422,19 @@ class QuiqSocket {
    * WebSocket error handler. Logs warning, but does nothing else. (Close handler will deal with error resolution.)
    * @private
    */
-  _handleSocketError = () => {
+  _handleSocketError = e => {
     // NOTE: onError event is not provided with any information, onClose must deal with causeality.
     // This is simply a notification.
-    log.warn('A websocket error occurred.');
+    // We'll pass a potential exception just in case; apparently some browsers will provide one.
+    log.warn('A websocket error occurred.', {exception: e});
   };
 
   /**
    * Handles a fatal, non-recoverable error such as hitting the retry maximum.
    * @private
    */
-  _handleFatalError = () => {
-    log.error('QuiqSocket encountered a fatal error.');
+  _handleFatalError = e => {
+    log.error(`QuiqSocket encountered a fatal error: ${e && e.message}`, {exception: e});
 
     if (this.fatalErrorHandler) {
       this.fatalErrorHandler();
