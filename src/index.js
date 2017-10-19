@@ -28,10 +28,11 @@ Senty.init();
 
 const log = logger('QuiqChatClient');
 const getConversation = async (): Promise<ConversationResult> => {
+  const conversationMessageTypes = [MessageTypes.TEXT, MessageTypes.ATTACHMENT];
   const conversation = await API.fetchConversation();
-  const partitionedConversation = partition(conversation.messages, {
-    type: MessageTypes.TEXT,
-  });
+  const partitionedConversation = partition(conversation.messages, o =>
+    conversationMessageTypes.includes(o.type),
+  );
   const messages = partitionedConversation[0];
   const events = partitionedConversation[1];
   return {

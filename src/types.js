@@ -9,16 +9,9 @@ export type QuiqChatSettings = {
 export type EventType = 'Join' | 'Leave' | 'Register';
 export type AuthorType = 'Customer' | 'User' | 'System';
 export type TextMessageType = 'Text';
+export type AttachmentMessageType = 'Attachment';
 export type WebsocketMessageType = 'ChatMessage' | 'BurnItDown';
 export type UserEventTypes = 'Join' | 'Leave';
-
-export type TextMessage = {
-  authorType: AuthorType,
-  text: string,
-  id: string,
-  timestamp: number,
-  type: TextMessageType,
-};
 
 export type IsomorphicFetchNetworkError = {
   message: string,
@@ -174,13 +167,47 @@ export type AtmosphereConnection = {
 export type ChatMessage = {
   tenantId: string,
   messageType: 'ChatMessage',
-  data: Event | TextMessage | AgentTypingMessage,
+  data: Event | TextMessage | AttachmentMessage | AgentTypingMessage,
+};
+
+export type TextMessage = {
+  authorType: AuthorType,
+  text: string,
+  id: string,
+  timestamp: number,
+  type: TextMessageType,
+};
+
+export type AttachmentMessage = {
+  id: string,
+  timestamp: number,
+  type: AttachmentMessageType,
+  authorType: AuthorType,
+  url: string,
+  contentType: string,
+};
+
+export type Event = {
+  id: string,
+  timestamp: number,
+  type: EventType,
+};
+
+export type AgentTypingMessage = {
+  type: 'AgentTyping',
+  typing: boolean,
 };
 
 export type BurnItDownMessage = {
   tenantId: string,
   messageType: 'BurnItDown',
   data: BurnItDownPayload,
+};
+
+export type BurnItDownPayload = {
+  before?: number,
+  code: 466,
+  force?: boolean,
 };
 
 export type ChatMetadata = {
