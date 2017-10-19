@@ -36,7 +36,7 @@ export const addMessage = (text: string) =>
     body: JSON.stringify({text}),
   });
 
-export const fetchWebsocketInfo = (): Promise<{ url: string, protocol: string }> =>
+export const fetchWebsocketInfo = (): Promise<{url: string, protocol: string}> =>
   quiqFetch(`${getUrlForContactPoint()}/socket-info`, undefined, {responseType: 'JSON'});
 
 // Use socket-info as a ping since the ping endpoint isn't publicly exposed
@@ -51,13 +51,13 @@ export const updateMessagePreview = (text: string, typing: boolean) =>
     body: JSON.stringify({text, typing}),
   });
 
-export const sendRegistration = (fields: { [string]: string }) =>
+export const sendRegistration = (fields: {[string]: string}) =>
   quiqFetch(`${getUrlForContactPoint()}/register`, {
     method: 'POST',
     body: JSON.stringify({form: fields}),
   });
 
-export const checkForAgents = (): Promise<{ available: boolean }> =>
+export const checkForAgents = (): Promise<{available: boolean}> =>
   quiqFetch(
     formatQueryParams(`${getPublicApiUrl()}/agents-available`, {
       platform: 'Chat',
@@ -81,7 +81,7 @@ export const login = (host?: string) =>
     {
       responseType: 'JSON',
     },
-  ).then((res: { accessToken: string, tokenId: string }) => {
+  ).then((res: {accessToken: string, tokenId: string}) => {
     setAccessToken(res.accessToken);
 
     if (getAccessToken() !== res.accessToken) {
@@ -93,15 +93,17 @@ export const login = (host?: string) =>
       _onNewSession(res.tokenId);
     }
 
+    const trackingId = getTrackingId();
+
     // Tell sentry about the new trackingId
     // This will let us track logs by trackingId
     Raven.setUserContext({
-      id: getTrackingId(),
+      id: trackingId,
     });
 
-    log.info(`Login successful. trackingId: ${getTrackingId()}`);
+    log.info(`Login successful. trackingId: ${trackingId}`);
 
-    return getTrackingId();
+    return trackingId;
   });
 
 export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'});
