@@ -215,15 +215,16 @@ class QuiqSocket {
     }
 
     // Connect socket.
+    const parsedUrl = formatQueryParams(this.url, {
+      trackingId: getTrackingId() || 'noAssociatedTrackingId',
+      quiqVersion: version,
+    });
+
     try {
-      const parsedUrl = formatQueryParams(this.url, {
-        trackingId: getTrackingId() || 'noAssociatedTrackingId',
-        quiqVersion: version,
-      });
       this.socket = new WebSocket(parsedUrl, accessToken);
     } catch (e) {
       log.error(`Unable to construct WebSocket: ${e.message}`, {
-        data: {url: this.url, protocol: this.protocol},
+        data: {url: parsedUrl},
         exception: e,
       });
       throw new Error('Cannot construct WebSocket.');
@@ -422,7 +423,7 @@ class QuiqSocket {
    * WebSocket error handler. Logs warning, but does nothing else. (Close handler will deal with error resolution.)
    * @private
    */
-  _handleSocketError = e => {
+  _handleSocketError = (e: any) => {
     // NOTE: onError event is not provided with any information, onClose must deal with causeality.
     // This is simply a notification.
     // We'll pass a potential exception just in case; apparently some browsers will provide one.

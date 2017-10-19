@@ -48,12 +48,20 @@ export const setClientInactive = (isInactive: boolean) => {
 
 const logRequest = (logData: Object) => {
   if (logData._logged) return;
+  // eslint-disable-next-line no-param-reassign
   logData._logged = true;
 
+  const dataCopy = Object.assign({}, logData);
+
+  // Redact access token
+  if (dataCopy.fetchRequest && dataCopy.fetchRequest.headers) {
+    delete dataCopy.fetchRequest.headers['X-Quiq-Access-Token'];
+  }
+
   const statusCode =
-    logData.statusCode || (logData.responses[0] && logData.responses[0].statusCode);
-  const reason = logData.reason || (logData.responses[0] && logData.responses[0].statusText);
-  log.debug(`[${statusCode}] (${reason}) ${logData.url}`, {data: logData, capture: true});
+    dataCopy.statusCode || (dataCopy.responses[0] && dataCopy.responses[0].statusCode);
+  const reason = dataCopy.reason || (dataCopy.responses[0] && dataCopy.responses[0].statusText);
+  log.debug(`[${statusCode}] (${reason}) ${dataCopy.url}`, {data: dataCopy, capture: true});
 };
 
 export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
@@ -80,6 +88,8 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
       fetchRequest,
       retries: -1,
       responses: [],
+      statusCode: 0,
+      reason: '',
       startTime: Date.now(),
       _logged: false,
     };

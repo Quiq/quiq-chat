@@ -1,4 +1,7 @@
 // @flow
+
+jest.mock('../logging');
+
 import * as Globals from '../globals';
 
 describe('Globals module', () => {

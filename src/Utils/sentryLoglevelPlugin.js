@@ -6,6 +6,7 @@ import QuiqChatClient from '../index';
 const sentryPlugin = {
   apply: (log: Object) => {
     const originalFactory = log.methodFactory;
+    // eslint-disable-next-line no-param-reassign
     log.methodFactory = (methodName, logLevel, loggerName) => {
       const rawMethod = originalFactory(methodName, logLevel, loggerName);
 

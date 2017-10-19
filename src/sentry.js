@@ -14,3 +14,5 @@ export const init = () => {
       },
     }).install();
 };
+
+export default init;
