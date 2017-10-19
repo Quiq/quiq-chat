@@ -101,7 +101,7 @@ export const login = (host?: string) =>
       id: trackingId,
     });
 
-    log.info(`Login successful. trackingId: ${trackingId}`);
+    log.info(`Login successful. trackingId: ${trackingId || 'unknown'}`);
 
     return trackingId;
   });
