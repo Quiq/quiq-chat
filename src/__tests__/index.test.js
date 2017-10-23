@@ -447,14 +447,14 @@ describe('QuiqChatClient', () => {
       });
     });
 
-    describe('updateMessagePreview', () => {
+    describe('updateTypingIndicator', () => {
       it('proxies call', () => {
         if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
 
-        QuiqChatClient.updateMessagePreview('text', true);
-        expect(API.updateMessagePreview).toBeCalledWith('text', true);
+        QuiqChatClient.updateTypingIndicator('text', true);
+        expect(API.updateTypingIndicator).toBeCalledWith('text', true);
       });
     });
 

@@ -8,7 +8,6 @@ import {
 import QuiqSocket from './QuiqSockets/quiqSockets';
 import {MessageTypes} from './appConstants';
 import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
-import type {ChatMessage, BurnItDownMessage, TextMessage, ApiError, Event} from './types';
 import differenceBy from 'lodash/differenceBy';
 import unionBy from 'lodash/unionBy';
 import partition from 'lodash/partition';
@@ -19,7 +18,18 @@ import {
   registerOnBurnCallback,
   isSupportedBrowser as supportedBrowser,
 } from './Utils/utils';
-import type {QuiqChatCallbacks, ConversationResult, EmailTranscriptPayload} from 'types';
+import * as S3 from './services/S3';
+import type {
+  ConversationElement,
+  ConversationMessage,
+  BurnItDownMessage,
+  TextMessage,
+  ApiError,
+  Event,
+  QuiqChatCallbacks,
+  ConversationResult,
+  EmailTranscriptPayload,
+} from './types';
 import * as storage from './storage';
 import logger from './logging';
 import * as Senty from './sentry';
@@ -27,11 +37,12 @@ import * as Senty from './sentry';
 Senty.init();
 
 const log = logger('QuiqChatClient');
+
 const getConversation = async (): Promise<ConversationResult> => {
   const conversationMessageTypes = [MessageTypes.TEXT, MessageTypes.ATTACHMENT];
   const conversation = await API.fetchConversation();
-  const partitionedConversation = partition(conversation.messages, o =>
-    conversationMessageTypes.includes(o.type),
+  const partitionedConversation = partition(conversation.messages, m =>
+    conversationMessageTypes.includes(m.type),
   );
   const messages = partitionedConversation[0];
   const events = partitionedConversation[1];
@@ -48,7 +59,7 @@ class QuiqChatClient {
   contactPoint: string;
   socketProtocol: ?string;
   callbacks: QuiqChatCallbacks = {};
-  textMessages: Array<TextMessage> = [];
+  messages: Array<ConversationMessage> = [];
   events: Array<Event> = [];
   connected: boolean = false;
   userIsRegistered: boolean = false;
@@ -147,8 +158,8 @@ class QuiqChatClient {
       this._processConversationResult(conversation, false);
 
       // Send all messages in initial newMessages callback
-      if (this.callbacks.onNewMessages && this.textMessages.length) {
-        this.callbacks.onNewMessages(this.textMessages);
+      if (this.callbacks.onNewMessages && this.messages.length) {
+        this.callbacks.onNewMessages(this.messages);
       }
 
       storage.setQuiqUserIsSubscribed(conversation.isSubscribed);
@@ -171,13 +182,13 @@ class QuiqChatClient {
     this.connected = false;
   };
 
-  getMessages = async (cache: boolean = true): Promise<Array<TextMessage>> => {
+  getMessages = async (cache: boolean = true): Promise<Array<ConversationMessage>> => {
     if (!cache || !this.connected) {
       const conversation = await getConversation();
       this._processConversationResult(conversation);
     }
 
-    return this.textMessages;
+    return this.messages;
   };
 
   // This is specific to our chat client. Don't document it.
@@ -201,19 +212,19 @@ class QuiqChatClient {
     return API.leaveChat();
   };
 
-  sendMessage = async (text: string) => {
+  sendTextMessage = async (text: string) => {
     if (!this.connected) {
       this._establishWebSocketConnection(() => {
         storage.setQuiqChatContainerVisible(true);
         storage.setQuiqUserIsSubscribed(true);
 
-        return API.addMessage(text);
+        return API.sendTextMessage(text);
       });
     } else {
       storage.setQuiqChatContainerVisible(true);
       storage.setQuiqUserIsSubscribed(true);
 
-      return API.addMessage(text);
+      return API.sendTextMessage(text);
     }
   };
 
@@ -221,7 +232,33 @@ class QuiqChatClient {
     return API.emailTranscript(data);
   };
 
-  updateMessagePreview = (text: string, typing: boolean) => {
+  sendAttachmentMessage = async (
+    file: File,
+    progressCallback: (progress: number) => void,
+  ): Promise<string> => {
+    if (!this.connected) {
+      await this._establishWebSocketConnection();
+      storage.setQuiqChatContainerVisible(true);
+      storage.setQuiqUserIsSubscribed(true);
+    }
+
+    // Returns an array of directives, but we'll always be asking for only 1 here
+    const uploadDirectives = await API.getAttachmentMessageUploadDirectives();
+    const uploadDirective = uploadDirectives.uploads[0];
+    const {url, formEntries} = uploadDirective.directive;
+    try {
+      await S3.uploadAttachment(file, url, formEntries, progressCallback);
+    } catch (e) {
+      // Remove temporary attachment message, since this upload failed
+      log.error(`An error sending attachment message: ${e.message}`, {exception: e});
+      throw e;
+    }
+    const {id} = await API.sendAttachmentMessage(uploadDirective.uploadId);
+
+    return id;
+  };
+
+  updateTypingIndicator = (text: string, typing: boolean) => {
     return API.updateMessagePreview(text, typing);
   };
 
@@ -342,7 +379,7 @@ class QuiqChatClient {
   _handleNewSession = async (newTrackingId: string) => {
     if (this.trackingId && newTrackingId !== this.trackingId) {
       // Clear message and events caches (tracking ID is different now, so we essentially have a new Conversation)
-      this.textMessages = [];
+      this.messages = [];
       this.events = [];
       this.userIsRegistered = false;
 
@@ -358,10 +395,11 @@ class QuiqChatClient {
     this.trackingId = newTrackingId;
   };
 
-  _handleWebsocketMessage = (message: ChatMessage | BurnItDownMessage) => {
+  _handleWebsocketMessage = (message: ConversationElement | BurnItDownMessage) => {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
       switch (message.data.type) {
         case MessageTypes.TEXT:
+        case MessageTypes.ATTACHMENT:
           this._processNewMessages([message.data]);
           break;
         case MessageTypes.JOIN:
@@ -433,21 +471,21 @@ class QuiqChatClient {
   };
 
   _processNewMessages = (
-    newMessages: Array<TextMessage>,
+    newMessages: Array<ConversationMessage>,
     sendNewMessageCallback: boolean = true,
   ): void => {
-    const newFilteredMessages: Array<TextMessage> = differenceBy(
+    const newFilteredMessages: Array<ConversationMessage> = differenceBy(
       newMessages,
-      this.textMessages,
+      this.messages,
       'id',
     );
 
     // If we found new messages, sort them, update cached textMessages, and send callback
     if (newFilteredMessages.length > 0) {
-      this.textMessages = sortByTimestamp(unionBy(this.textMessages, newFilteredMessages, 'id'));
+      this.messages = sortByTimestamp(unionBy(this.messages, newFilteredMessages, 'id'));
 
       if (this.callbacks.onNewMessages && sendNewMessageCallback) {
-        this.callbacks.onNewMessages(this.textMessages);
+        this.callbacks.onNewMessages(this.messages);
       }
     }
   };

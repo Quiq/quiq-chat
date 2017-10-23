@@ -9,7 +9,7 @@ import {
 } from './globals';
 import quiqFetch from './quiqFetch';
 import {setAccessToken, getAccessToken, getTrackingId} from './storage';
-import type {Conversation, ChatMetadata, EmailTranscriptPayload} from 'types';
+import type {Conversation, ChatMetadata, UploadDirective, EmailTranscriptPayload} from 'types';
 import logger from './logging';
 import Raven from 'raven-js';
 
@@ -30,11 +30,42 @@ export const leaveChat = () => quiqFetch(`${getUrlForContactPoint()}/leave`, {me
 export const getChatConfiguration = (): Promise<ChatMetadata> =>
   quiqFetch(`${getUrlForContactPoint()}/configuration`, undefined, {responseType: 'JSON'});
 
-export const addMessage = (text: string) =>
+export const sendTextMessage = (text: string) =>
   quiqFetch(`${getUrlForContactPoint()}/send-message`, {
     method: 'POST',
     body: JSON.stringify({text}),
   });
+
+export const sendAttachmentMessage = (uploadId: string): Promise<{id: string}> =>
+  quiqFetch(
+    `${getUrlForContactPoint()}/send-attachment`,
+    {
+      method: 'POST',
+      body: JSON.stringify({uploadId}),
+    },
+    {
+      responseType: 'JSON',
+      requestType: 'JSON',
+    },
+  );
+
+export type UploadDirectivesResponse = {
+  uploads: Array<UploadDirective>,
+};
+export const getAttachmentMessageUploadDirectives = (
+  numUploads: number = 1,
+): Promise<UploadDirectivesResponse> =>
+  quiqFetch(
+    `${getUrlForContactPoint()}/prepare-uploads`,
+    {
+      method: 'POST',
+      body: JSON.stringify({numUploads}),
+    },
+    {
+      responseType: 'JSON',
+      requestType: 'JSON',
+    },
+  );
 
 export const fetchWebsocketInfo = (): Promise<{url: string, protocol: string}> =>
   quiqFetch(`${getUrlForContactPoint()}/socket-info`, undefined, {responseType: 'JSON'});

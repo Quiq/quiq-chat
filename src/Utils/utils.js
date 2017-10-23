@@ -46,6 +46,7 @@ let _onBurn: () => void;
 export const registerOnBurnCallback = (onBurn: () => void) => {
   _onBurn = onBurn;
 };
+
 export const burnItDown = (message?: BurnItDownResponse) => {
   try {
     let timeToBurnItDown =

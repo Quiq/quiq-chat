@@ -12,6 +12,7 @@ export type TextMessageType = 'Text';
 export type AttachmentMessageType = 'Attachment';
 export type WebsocketMessageType = 'ChatMessage' | 'BurnItDown';
 export type UserEventTypes = 'Join' | 'Leave';
+export type MessageStatusType = 'pending' | 'delivered';
 
 export type IsomorphicFetchNetworkError = {
   message: string,
@@ -164,11 +165,21 @@ export type AtmosphereConnection = {
   },
 };
 
-export type ChatMessage = {
+export type UploadDirective = {
+  uploadId: string,
+  directive: {
+    url: string,
+    formEntires: {[string]: string},
+  },
+};
+
+export type ConversationElement = {
   tenantId: string,
   messageType: 'ChatMessage',
-  data: Event | TextMessage | AttachmentMessage | AgentTypingMessage,
+  data: Event | ConversationMessage | AgentTypingMessage,
 };
+
+export type ConversationMessage = TextMessage | AttachmentMessage;
 
 export type TextMessage = {
   authorType: AuthorType,
@@ -185,6 +196,7 @@ export type AttachmentMessage = {
   authorType: AuthorType,
   url: string,
   contentType: string,
+  status?: MessageStatusType,
 };
 
 export type Event = {
