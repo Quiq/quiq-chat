@@ -30,7 +30,7 @@ const initialConvo = {
       type: 'Text',
     },
     {
-      authorType: 'Agent',
+      authorType: 'User',
       text: 'Polo',
       id: 'msg2',
       timestamp: 2,

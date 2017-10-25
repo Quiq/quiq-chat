@@ -97,6 +97,9 @@ Called when quiq-chat disconnects the websocket due to the chat client being ina
 #### getMessages(cache?: boolean = true) => Promise<Array<[TextMessage](#TextMessage)>>
 Retrieve all messages for the current chat.  If `cache` is set to true, a hit to the API is not made, and only the messages currently in memory are returned.
 
+#### emailTranscript(data: [EmailTranscriptPayload](#EmailTranscriptPayload)) => void
+Email a transcript of the current conversation to the specified e-mail.  If an agent has not yet responded to the conversation, a 400 will be returned.
+
 #### sendMessage(text: string) => void
 Send a text message from the customer.  Can be used to initiate a conversation if no messages have been sent.
 
@@ -150,7 +153,7 @@ Returns whether the end user has triggered a registration event.  This happens w
 ### TextMessage
 ```javascript
 {
-  authorType: 'Customer' | 'Agent',
+  authorType: 'Customer' | 'User' | 'System',
   text: string,
   id: string,
   timestamp: number,
@@ -179,4 +182,13 @@ Returns whether the end user has triggered a registration event.  This happens w
 ### UserEvent
 ```javascript
 'Join' | 'Leave'
+```
+
+### EmailTranscriptPayload
+```javascript
+{
+  email: string,
+  originUrl: string,
+  timezone?: string,
+};
 ```

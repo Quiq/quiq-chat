@@ -9,7 +9,7 @@ import {
 } from './globals';
 import quiqFetch from './quiqFetch';
 import {setAccessToken, getAccessToken, getTrackingId} from './storage';
-import type {Conversation, ChatMetadata} from 'types';
+import type {Conversation, ChatMetadata, EmailTranscriptPayload} from 'types';
 import logger from './logging';
 import Raven from 'raven-js';
 
@@ -66,6 +66,12 @@ export const checkForAgents = (): Promise<{available: boolean}> =>
     undefined,
     {responseType: 'JSON', cached: true},
   );
+
+export const emailTranscript = (data: EmailTranscriptPayload) =>
+  quiqFetch(`${getUrlForContactPoint()}/email-transcript`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 
 /**
  * Creates a new session and tracking ID

@@ -19,7 +19,7 @@ import {
   registerOnBurnCallback,
   isSupportedBrowser as supportedBrowser,
 } from './Utils/utils';
-import type {QuiqChatCallbacks, ConversationResult} from 'types';
+import type {QuiqChatCallbacks, ConversationResult, EmailTranscriptPayload} from 'types';
 import * as storage from './storage';
 import logger from './logging';
 import * as Senty from './sentry';
@@ -214,6 +214,10 @@ class QuiqChatClient {
 
       return API.addMessage(text);
     }
+  };
+
+  emailTranscript = async (data: EmailTranscriptPayload) => {
+    return API.emailTranscript(data);
   };
 
   updateMessagePreview = (text: string, typing: boolean) => {

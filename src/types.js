@@ -7,7 +7,7 @@ export type QuiqChatSettings = {
 };
 
 export type EventType = 'Join' | 'Leave' | 'Register';
-export type AuthorType = 'Customer' | 'Agent';
+export type AuthorType = 'Customer' | 'User' | 'System';
 export type TextMessageType = 'Text';
 export type WebsocketMessageType = 'ChatMessage' | 'BurnItDown';
 export type UserEventTypes = 'Join' | 'Leave';
@@ -41,6 +41,12 @@ export type BurnItDownPayload = {
   before?: number,
   code: 466,
   force?: boolean,
+};
+
+export type EmailTranscriptPayload = {
+  email: string,
+  originUrl: string,
+  timezone?: string,
 };
 
 export type QuiqChatCallbacks = {
