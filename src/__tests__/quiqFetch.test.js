@@ -20,7 +20,7 @@ describe('quiqFetch', () => {
 
   it('transforms data', () => {
     quiqFetch('someUrl');
-    expect(mockFetch.mock.calls[0][0]).toBe('someUrl');
+    expect(mockFetch.mock.calls[0][0].split('#')[0]).toBe('someUrl');
     expect(mockFetch.mock.calls[0][1].mode).toBe('cors');
     expect(mockFetch.mock.calls[0][1].method).toBe('GET');
     expect(mockFetch.mock.calls[0][1].headers['X-Quiq-Line']).toBe('2');

@@ -9,6 +9,18 @@ import logger from './logging';
 
 const log = logger('QuiqFetch');
 
+// This temporary code was borrowed from
+// http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+const createGuid = (): string => {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+
+  return `${s4() + s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
+};
+
 const quiqFetch = (
   url: string,
   overrides?: Object,
@@ -30,13 +42,15 @@ const quiqFetch = (
 
   if (options.checkRequiredSettings) checkRequiredSettings();
 
+  const correlationId = createGuid();
   // Only append this data to a non-cached endpoint so we don't cache bust.
-  const parsedUrl = options.cached
+  let parsedUrl = options.cached
     ? url
     : formatQueryParams(url, {
         trackingId: getTrackingId() || 'noAssociatedTrackingId',
         quiqVersion: version,
       });
+  parsedUrl = `${parsedUrl}#correlationId=${correlationId}`;
 
   let request: RequestOptions = {
     // Leave this as cors even though we are on same origin for default webchat case.
@@ -48,6 +62,7 @@ const quiqFetch = (
       'X-Quiq-Line': '2',
       'X-Quiq-Client-Id': 'Quiq-Chat-Client',
       'X-Quiq-Client-Version': version,
+      'x-centricient-correlation-id': correlationId,
     },
   };
 
