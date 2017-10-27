@@ -20,12 +20,6 @@ export type IsomorphicFetchNetworkError = {
   status?: number, // We manually append this, it is not normally present on the object.
 };
 
-export type Event = {
-  id: string,
-  timestamp: number,
-  type: EventType,
-};
-
 export type AgentTypingMessage = {
   type: 'AgentTyping',
   typing: boolean,
@@ -44,7 +38,7 @@ export type EmailTranscriptPayload = {
 };
 
 export type QuiqChatCallbacks = {
-  onNewMessages?: (messages: Array<TextMessage>) => void,
+  onNewMessages?: (messages: Array<ConversationMessage>) => void,
   onAgentTyping?: (typing: boolean) => void,
   onError?: (error: ?ApiError) => void,
   onRetryableError?: (error: ?ApiError) => void,
@@ -87,7 +81,7 @@ export type Conversation = {
 };
 export type ConversationResult = {
   events: Array<Event>,
-  messages: Array<TextMessage>,
+  messages: Array<ConversationMessage>,
   isSubscribed: boolean,
   isRegistered: boolean,
 };
@@ -169,7 +163,7 @@ export type UploadDirective = {
   uploadId: string,
   directive: {
     url: string,
-    formEntires: {[string]: string},
+    formEntries: Array<{name: string, value: string}>,
   },
 };
 
@@ -205,21 +199,10 @@ export type Event = {
   type: EventType,
 };
 
-export type AgentTypingMessage = {
-  type: 'AgentTyping',
-  typing: boolean,
-};
-
 export type BurnItDownMessage = {
   tenantId: string,
   messageType: 'BurnItDown',
   data: BurnItDownPayload,
-};
-
-export type BurnItDownPayload = {
-  before?: number,
-  code: 466,
-  force?: boolean,
 };
 
 export type ChatMetadata = {
@@ -239,7 +222,7 @@ export type ChatMetadata = {
 export type WebsocketCallbacks = {
   onConnectionLoss?: () => void,
   onConnectionEstablish?: () => ?Promise<void>,
-  onMessage?: (message: ChatMessage | BurnItDownMessage) => void,
+  onMessage?: (message: ConversationElement | BurnItDownMessage) => void,
   onTransportFailure?: (errorMsg: string, req: AtmosphereRequest) => void,
   onClose?: () => void,
   onFatalError?: () => void,

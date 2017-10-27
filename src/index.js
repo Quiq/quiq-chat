@@ -23,7 +23,6 @@ import type {
   ConversationElement,
   ConversationMessage,
   BurnItDownMessage,
-  TextMessage,
   ApiError,
   Event,
   QuiqChatCallbacks,
@@ -81,7 +80,7 @@ class QuiqChatClient {
 
   /** Fluent client builder functions: these all return the client object * */
 
-  onNewMessages = (callback: (messages: Array<TextMessage>) => void): QuiqChatClient => {
+  onNewMessages = (callback: (messages: Array<ConversationMessage>) => void): QuiqChatClient => {
     this.callbacks.onNewMessages = callback;
     return this;
   };

@@ -405,7 +405,7 @@ describe('QuiqChatClient', () => {
       });
     });
 
-    describe('sendMessage', () => {
+    describe('sendTextMessage', () => {
       beforeEach(() => {
         jest.clearAllMocks();
         API.fetchWebsocketInfo.mockReturnValue({
@@ -431,11 +431,11 @@ describe('QuiqChatClient', () => {
         }
 
         QuiqChatClient.connected = true;
-        QuiqChatClient.sendMessage('text');
+        QuiqChatClient.sendTextMessage('text');
       });
 
       it('proxies call on send messagewqw', () => {
-        expect(API.addMessage).toBeCalledWith('text');
+        expect(API.sendTextMessage).toBeCalledWith('text');
       });
 
       it('calls storage.setQuiqChatContainerVisible', () => {
