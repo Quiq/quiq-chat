@@ -259,7 +259,7 @@ class QuiqChatClient {
   };
 
   updateTypingIndicator = (text: string, typing: boolean) => {
-    return API.updateMessagePreview(text, typing);
+    return API.updateTypingIndicator(text, typing);
   };
 
   sendRegistration = async (fields: {[string]: string}) => {

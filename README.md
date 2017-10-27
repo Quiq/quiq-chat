@@ -136,7 +136,7 @@ Fetches a unique handle to track the session through.  If a session already exis
 #### checkForAgents() => Promise<{available: boolean}>
 Fetches whether or not there are agents available for the contact point the webchat is connected to.  The value of this call is cached for 10 seconds.
 
-#### updateMessagePreview(text:string, typing:boolean) => void
+#### updateTypingIndicator(text:string, typing:boolean) => void
 Sends a message to Quiq Messaging that the end user is typing and what they've typed in the message field
 
 #### joinChat() => void

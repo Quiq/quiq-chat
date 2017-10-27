@@ -76,7 +76,7 @@ export const ping = () => fetchWebsocketInfo();
 export const fetchConversation = (): Promise<Conversation> =>
   quiqFetch(getUrlForContactPoint(), undefined, {responseType: 'JSON'});
 
-export const updateMessagePreview = (text: string, typing: boolean) =>
+export const updateTypingIndicator = (text: string, typing: boolean) =>
   quiqFetch(`${getUrlForContactPoint()}/typing`, {
     method: 'POST',
     body: JSON.stringify({text, typing}),
