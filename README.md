@@ -100,7 +100,7 @@ Retrieve all messages for the current chat.  If `cache` is set to true, a hit to
 #### emailTranscript(data: [EmailTranscriptPayload](#EmailTranscriptPayload)) => void
 Email a transcript of the current conversation to the specified e-mail.  If an agent has not yet responded to the conversation, a 400 will be returned.
 
-#### sendMessage(text: string) => void
+#### sendTextMessage(text: string) => void
 Send a text message from the customer.  Can be used to initiate a conversation if no messages have been sent.
 
 #### start() => Promise<[QuiqChatClient](#quiqchatclient)>
