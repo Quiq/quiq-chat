@@ -6,7 +6,7 @@ export type QuiqChatSettings = {
   BURNED?: boolean,
 };
 
-export type EventType = 'Join' | 'Leave' | 'Register';
+export type EventType = 'Join' | 'Leave' | 'Register' | 'SendTranscript';
 export type AuthorType = 'Customer' | 'User' | 'System';
 export type TextMessageType = 'Text';
 export type AttachmentMessageType = 'Attachment';
@@ -45,6 +45,7 @@ export type QuiqChatCallbacks = {
   onErrorResolved?: () => void,
   onConnectionStatusChange?: (connected: boolean) => void,
   onRegistration?: () => void,
+  onSendTranscript?: (event: Event) => void,
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
   onAgentEndedConversation?: () => void,
