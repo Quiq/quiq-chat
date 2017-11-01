@@ -8,6 +8,7 @@ export const MessageTypes = {
   JOIN: 'Join',
   LEAVE: 'Leave',
   REGISTER: 'Register',
+  SEND_TRANSCRIPT: 'SendTranscript',
   BURN_IT_DOWN: 'BurnItDown',
   AGENT_TYPING: 'AgentTyping',
   UNSUBSCRIBE: 'Unsubscribe',

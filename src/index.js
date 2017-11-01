@@ -90,6 +90,11 @@ class QuiqChatClient {
     return this;
   };
 
+  onSendTranscript = (callback: (event: Event) => void): QuiqChatClient => {
+    this.callbacks.onSendTranscript = callback;
+    return this;
+  };
+
   onAgentEndedConversation = (callback: () => void): QuiqChatClient => {
     this.callbacks.onAgentEndedConversation = callback;
     return this;
@@ -422,6 +427,11 @@ class QuiqChatClient {
         case MessageTypes.ENDED:
           this._agentEndedConversation();
           break;
+        case MessageTypes.SEND_TRANSCRIPT:
+          if (this.callbacks.onSendTranscript) {
+            this.callbacks.onSendTranscript(message.data);
+          }
+          break;
       }
     }
 
@@ -495,6 +505,16 @@ class QuiqChatClient {
     // If we found new events, sort them, update cached events, and check if a new registration event was received. Fire callback if so.
     if (newFilteredEvents.length > 0) {
       this.events = sortByTimestamp(unionBy(this.events, newEvents, 'id'));
+
+      const sendTranscriptEvents = newFilteredEvents.filter(
+        e => e.type === MessageTypes.SEND_TRANSCRIPT,
+      );
+
+      if (sendTranscriptEvents.length) {
+        sendTranscriptEvents.forEach((e: Event) => {
+          if (this.callbacks.onSendTranscript) this.callbacks.onSendTranscript(e);
+        });
+      }
     }
   };
 

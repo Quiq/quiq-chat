@@ -81,6 +81,9 @@ Called whenever any error from the API has been resolved
 #### onRegistration() => [QuiqChatClient](#quiqchatclient)
 Called when Register event is received through a websocket message
 
+#### onSendTranscript(event: [Event](#Event)) => [QuiqChatClient](#quiqchatclient)
+Called when a transcript is requested either through a websocket message or as a new event on the transcript
+
 #### onNewSession() => [QuiqChatClient](#quiqchatclient)
 Called when the end users previous session has expired and has begun a new session.  This is a good spot to
 have the UI reset itself to an initial state
@@ -191,4 +194,13 @@ Returns whether the end user has triggered a registration event.  This happens w
   originUrl: string,
   timezone?: string,
 };
+```
+
+### Event
+```javascript
+  {
+    id: string,
+    timestamp: number,
+    type: string,
+  };
 ```
