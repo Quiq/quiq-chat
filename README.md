@@ -81,7 +81,7 @@ Called whenever any error from the API has been resolved
 #### onRegistration() => [QuiqChatClient](#quiqchatclient)
 Called when Register event is received through a websocket message
 
-#### onSendTranscript(event: Event) => [QuiqChatClient](#quiqchatclient)
+#### onSendTranscript(event: [Event](#Event)) => [QuiqChatClient](#quiqchatclient)
 Called when a transcript is requested either through a websocket message or as a new event on the transcript
 
 #### onNewSession() => [QuiqChatClient](#quiqchatclient)
