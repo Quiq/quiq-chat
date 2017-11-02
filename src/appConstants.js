@@ -4,6 +4,7 @@ export const MessageTypes = {
   // eslint-disable-line import/prefer-default-export
   TEXT: 'Text',
   ATTACHMENT: 'Attachment',
+  FAILED: 'Failed',
   CHAT_MESSAGE: 'ChatMessage',
   JOIN: 'Join',
   LEAVE: 'Leave',

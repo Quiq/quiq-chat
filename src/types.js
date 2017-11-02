@@ -40,6 +40,7 @@ export type EmailTranscriptPayload = {
 export type QuiqChatCallbacks = {
   onNewMessages?: (messages: Array<ConversationMessage>) => void,
   onAgentTyping?: (typing: boolean) => void,
+  onMessageSendFailure?: (messageId: string) => void,
   onError?: (error: ?ApiError) => void,
   onRetryableError?: (error: ?ApiError) => void,
   onErrorResolved?: () => void,

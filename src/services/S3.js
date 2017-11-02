@@ -11,9 +11,11 @@ export const uploadAttachment = (
   progressCallback: (progress: number) => void,
 ): Promise<*> => {
   const form = new FormData();
+  // NOTE: This order is important!
   additionalFields.forEach(field => {
     form.append(field.name, field.value);
   });
+  form.append('Content-Type', file.type);
   form.append('file', file);
 
   const handleProgress = (e: ProgressEvent) => {
@@ -30,18 +32,21 @@ export const uploadAttachment = (
     const req = new XMLHttpRequest();
     req.addEventListener('load', () => {
       if (req.status !== 200) {
-        log.info(`Upload to S3 failed with code ${req.status}`);
-        reject();
+        const error = `Upload to S3 failed with code ${req.status}`;
+        log.info(error);
+        reject(new Error(error));
       } else {
         resolve();
       }
     });
     req.addEventListener('abort', () => {
-      log.info('S3 attachment upload aborted');
-      reject();
+      const error = 'S3 upload was aborted';
+      log.info(error);
+      reject(new Error(error));
     });
     req.addEventListener('error', () => {
-      log.error(`An error occurred uploading an attachment to S3`, {
+      const error = 'An error occurred uploading attachment to S3';
+      log.error(error, {
         data: {
           requestStatus: req.statusText,
           attachmentType: file.type,
@@ -49,7 +54,7 @@ export const uploadAttachment = (
           attachmentName: file.name,
         },
       });
-      reject();
+      reject(new Error(error));
     });
 
     if (progressCallback) {

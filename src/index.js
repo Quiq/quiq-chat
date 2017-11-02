@@ -85,6 +85,11 @@ class QuiqChatClient {
     return this;
   };
 
+  onMessageSendFailure = (callback: (messageId: string) => void): QuiqChatClient => {
+    this.callbacks.onMessageSendFailure = callback;
+    return this;
+  };
+
   onAgentTyping = (callback: (typing: boolean) => void): QuiqChatClient => {
     this.callbacks.onAgentTyping = callback;
     return this;
@@ -253,7 +258,6 @@ class QuiqChatClient {
     try {
       await S3.uploadAttachment(file, url, formEntries, progressCallback);
     } catch (e) {
-      // Remove temporary attachment message, since this upload failed
       log.error(`An error sending attachment message: ${e.message}`, {exception: e});
       throw e;
     }
@@ -406,6 +410,9 @@ class QuiqChatClient {
         case MessageTypes.ATTACHMENT:
           this._processNewMessages([message.data]);
           break;
+        case MessageTypes.FAILED:
+          this._handleMessageFailure(message.data.id);
+          break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
           this._processNewEvents([message.data]);
@@ -476,6 +483,19 @@ class QuiqChatClient {
 
     if (this.callbacks.onConnectionStatusChange) {
       this.callbacks.onConnectionStatusChange(true);
+    }
+  };
+
+  _handleMessageFailure = (failedMessageId: string) => {
+    // Remove failed message and fire onMessageFailure callback
+    const failedIdx = this.messages.findIndex(m => m.id === failedMessageId);
+    if (failedIdx > -1) {
+      // NOTE: splice mutates original array
+      this.messages.splice(failedIdx, 1);
+    }
+
+    if (this.callbacks.onMessageSendFailure) {
+      this.callbacks.onMessageSendFailure(failedMessageId);
     }
   };
 
