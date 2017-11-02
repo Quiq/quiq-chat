@@ -207,6 +207,11 @@ export type BurnItDownMessage = {
 };
 
 export type ChatMetadata = {
+  configs: {
+    [string]: {
+      enabled: boolean,
+    },
+  },
   registrationForm?: {
     headerText: string,
     fields: Array<{
