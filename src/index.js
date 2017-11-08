@@ -100,7 +100,7 @@ class QuiqChatClient {
     return this;
   };
 
-  onAgentEndedConversation = (callback: (type: Event) => void): QuiqChatClient => {
+  onAgentEndedConversation = (callback: (event: Event) => void): QuiqChatClient => {
     this.callbacks.onAgentEndedConversation = callback;
     return this;
   };
@@ -462,9 +462,9 @@ class QuiqChatClient {
     }
   };
 
-  _agentEndedConversation = (type: Event) => {
+  _agentEndedConversation = (event: Event) => {
     if (this.callbacks.onAgentEndedConversation) {
-      this.callbacks.onAgentEndedConversation(type);
+      this.callbacks.onAgentEndedConversation(event);
     }
   };
 
