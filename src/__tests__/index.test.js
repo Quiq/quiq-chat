@@ -5,6 +5,7 @@ jest.mock('../storage');
 jest.mock('store');
 jest.mock('../Utils/utils');
 jest.mock('../logging');
+jest.mock('../QuiqSockets/quiqSockets');
 
 import QuiqChatClient from '../index';
 import * as ApiCalls from '../apiCalls';
@@ -58,10 +59,12 @@ describe('QuiqChatClient', () => {
 
   beforeEach(() => {
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
-    API.fetchWebsocketInfo.mockReturnValue({
-      url: 'https://websocket.test',
-      protocol: 'atmosphere',
-    });
+    API.fetchWebsocketInfo.mockReturnValue(
+      Promise.resolve({
+        url: 'https://websocket.test',
+        protocol: 'atmosphere',
+      }),
+    );
     mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
     mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
     mockStore.getQuiqUserIsSubscribed.mockReturnValue(true);
@@ -203,6 +206,15 @@ describe('QuiqChatClient', () => {
   });
 
   describe('handling new session', () => {
+    beforeEach(() => {
+      API.fetchWebsocketInfo.mockReturnValue(
+        Promise.resolve({
+          url: 'https://websocket.test',
+          protocol: 'quiq',
+        }),
+      );
+    });
+
     describe('when no trackingId is defined, i.e., this is first session', () => {
       it('updates cached trackingId', () => {
         if (!QuiqChatClient) {
@@ -229,6 +241,13 @@ describe('QuiqChatClient', () => {
           throw new Error('Client should be defined');
         }
 
+        API.fetchWebsocketInfo.mockReturnValue(
+          Promise.resolve({
+            url: 'https://websocket.test',
+            protocol: 'quiq',
+          }),
+        );
+
         QuiqChatClient.trackingId = testTrackingId;
       });
 
@@ -254,10 +273,12 @@ describe('QuiqChatClient', () => {
     describe('when trackingId has changed, i.e. new conversation', () => {
       beforeEach(() => {
         jest.clearAllMocks();
-        API.fetchWebsocketInfo.mockReturnValue({
-          url: 'https://websocket.test',
-          protocol: 'atmosphere',
-        });
+        API.fetchWebsocketInfo.mockReturnValue(
+          Promise.resolve({
+            url: 'https://websocket.test',
+            protocol: 'quiq',
+          }),
+        );
         mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
         mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(true);
 

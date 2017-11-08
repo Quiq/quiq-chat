@@ -173,7 +173,7 @@ class QuiqChatClient {
 
       storage.setQuiqUserIsSubscribed(conversation.isSubscribed);
       if (conversation.isSubscribed) {
-        await this._establishWebSocketConnection();
+        await this._connectSocket();
       }
     } catch (err) {
       log.error(`Could not start QuiqChatClient: ${err.message}`, {exception: err});
@@ -223,12 +223,10 @@ class QuiqChatClient {
 
   sendTextMessage = async (text: string) => {
     if (!this.connected) {
-      this._establishWebSocketConnection(() => {
-        storage.setQuiqChatContainerVisible(true);
-        storage.setQuiqUserIsSubscribed(true);
-
-        return API.sendTextMessage(text);
-      });
+      await this._connectSocket();
+      storage.setQuiqChatContainerVisible(true);
+      storage.setQuiqUserIsSubscribed(true);
+      return API.sendTextMessage(text);
     } else {
       storage.setQuiqChatContainerVisible(true);
       storage.setQuiqUserIsSubscribed(true);
@@ -246,7 +244,7 @@ class QuiqChatClient {
     progressCallback: (progress: number) => void,
   ): Promise<string> => {
     if (!this.connected) {
-      await this._establishWebSocketConnection();
+      await this._connectSocket();
       storage.setQuiqChatContainerVisible(true);
       storage.setQuiqUserIsSubscribed(true);
     }
@@ -330,54 +328,58 @@ class QuiqChatClient {
     };
   };
 
-  _establishWebSocketConnection = async (connectedCallback: any) => {
-    this._disconnectSocket(); // Ensure we only have one websocket connection open
-    const wsInfo: {url: string, protocol: string} = await API.fetchWebsocketInfo();
-    this._connectSocket(wsInfo, connectedCallback);
-  };
+  _connectSocket = (): Promise<*> =>
+    API.fetchWebsocketInfo()
+      .then(({url, protocol}: {url: string, protocol: string}) => {
+        return new Promise(resolve => {
+          this.socketProtocol = protocol;
 
-  _connectSocket = (wsInfo: {url: string, protocol: string}, connectedCallback: any) => {
-    this.socketProtocol = wsInfo.protocol;
+          // Ensure we only have one websocket connection open
+          this._disconnectSocket();
 
-    // If we didn't get protocol, or it was an unsupported value, default to 'atmosphere'
-    if (!this.socketProtocol || !['atmosphere', 'quiq'].includes(this.socketProtocol)) {
-      log.warn(
-        `Unsupported socket protocol "${wsInfo.protocol}" received. Defaulting to "atmosphere"`,
-      );
-      this.socketProtocol = 'atmosphere';
-    }
+          // If we didn't get protocol, or it was an unsupported value, default to 'atmosphere'
+          if (!this.socketProtocol || !['atmosphere', 'quiq'].includes(this.socketProtocol)) {
+            log.warn(
+              `Unsupported socket protocol "${protocol}" received. Defaulting to "atmosphere"`,
+            );
+            this.socketProtocol = 'atmosphere';
+          }
 
-    log.info(`Using ${this.socketProtocol} protocol`);
+          log.info(`Using ${this.socketProtocol} protocol`);
 
-    const connectionEstablish = connectedCallback
-      ? () => {
-          this._handleConnectionEstablish();
-          connectedCallback();
-        }
-      : this._handleConnectionEstablish;
+          const connectionEstablish = () => {
+            resolve();
+            this._handleConnectionEstablish();
+          };
 
-    switch (this.socketProtocol) {
-      case 'quiq':
-        QuiqSocket.withURL(`wss://${wsInfo.url}`)
-          .onConnectionLoss(this._handleConnectionLoss)
-          .onConnectionEstablish(connectionEstablish)
-          .onMessage(this._handleWebsocketMessage)
-          .onFatalError(this._handleFatalSocketError)
-          .connect();
-        break;
-      case 'atmosphere':
-        connectAtmosphere({
-          socketUrl: wsInfo.url,
-          callbacks: {
-            onConnectionLoss: this._handleConnectionLoss,
-            onConnectionEstablish: connectionEstablish,
-            onMessage: this._handleWebsocketMessage,
-            onFatalError: this._handleFatalSocketError,
-          },
+          switch (this.socketProtocol) {
+            case 'quiq':
+              QuiqSocket.withURL(`wss://${url}`)
+                .onConnectionLoss(this._handleConnectionLoss)
+                .onConnectionEstablish(connectionEstablish)
+                .onMessage(this._handleWebsocketMessage)
+                .onFatalError(this._handleFatalSocketError)
+                .connect();
+              break;
+            case 'atmosphere':
+              connectAtmosphere({
+                socketUrl: url,
+                callbacks: {
+                  onConnectionLoss: this._handleConnectionLoss,
+                  onConnectionEstablish: connectionEstablish,
+                  onMessage: this._handleWebsocketMessage,
+                  onFatalError: this._handleFatalSocketError,
+                },
+              });
+              break;
+          }
         });
-        break;
-    }
-  };
+      })
+      .catch(e => {
+        log.info('Unable to establish websocket connection', {data: {e}});
+        if (this.callbacks.onError) this.callbacks.onError();
+        return Promise.reject(e);
+      });
 
   _disconnectSocket = () => {
     QuiqSocket.disconnect();
@@ -397,7 +399,7 @@ class QuiqChatClient {
 
       // Disconnect/reconnect websocket
       // (Connection establishment handler will refresh messages)
-      await this._establishWebSocketConnection();
+      await this._connectSocket();
     }
 
     this.trackingId = newTrackingId;
