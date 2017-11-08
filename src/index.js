@@ -100,8 +100,13 @@ class QuiqChatClient {
     return this;
   };
 
-  onAgentEndedConversation = (callback: () => void): QuiqChatClient => {
+  onAgentEndedConversation = (callback: (type: Event) => void): QuiqChatClient => {
     this.callbacks.onAgentEndedConversation = callback;
+    return this;
+  };
+
+  onChatMarkedAsSpam = (callback: () => void): QuiqChatClient => {
+    this.callbacks.onChatMarkedAsSpam = callback;
     return this;
   };
 
@@ -434,7 +439,11 @@ class QuiqChatClient {
           }
           break;
         case MessageTypes.ENDED:
-          this._agentEndedConversation();
+          this._agentEndedConversation(message.data);
+          break;
+        case MessageTypes.SPAM:
+          this._agentEndedConversation(message.data);
+          this._chatMarkedAsSpam();
           break;
         case MessageTypes.SEND_TRANSCRIPT:
           if (this.callbacks.onSendTranscript) {
@@ -453,9 +462,15 @@ class QuiqChatClient {
     }
   };
 
-  _agentEndedConversation = () => {
+  _agentEndedConversation = (type: Event) => {
     if (this.callbacks.onAgentEndedConversation) {
-      this.callbacks.onAgentEndedConversation();
+      this.callbacks.onAgentEndedConversation(type);
+    }
+  };
+
+  _chatMarkedAsSpam = () => {
+    if (this.callbacks.onChatMarkedAsSpam) {
+      this.callbacks.onChatMarkedAsSpam();
     }
   };
 
@@ -536,6 +551,10 @@ class QuiqChatClient {
         sendTranscriptEvents.forEach((e: Event) => {
           if (this.callbacks.onSendTranscript) this.callbacks.onSendTranscript(e);
         });
+      }
+
+      if (newFilteredEvents.find(e => e.type === MessageTypes.SPAM)) {
+        this._chatMarkedAsSpam();
       }
     }
   };
