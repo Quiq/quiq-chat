@@ -91,6 +91,12 @@ have the UI reset itself to an initial state
 #### onConnectionStatusChanged(connected: boolean) => [QuiqChatClient](#quiqchatclient)
 Called when a connection is established or terminated
 
+#### onAgentEndedConversation(event: Event) => [QuiqChatClient](#quiqchatclient)
+Called when the agent ends the conversation
+
+#### onChatMarkedAsSpam() => [QuiqChatClient](#quiqchatclient)
+Called when the agent ends the conversation as spam, or when the conversation is fetched and contains a new 'Spam' Event
+
 #### onBurn() => [QuiqChatClient](#quiqchatclient)
 Called when quiq-chat gets in a fatal state and page holding webchat needs to be refreshed
 

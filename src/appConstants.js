@@ -14,6 +14,7 @@ export const MessageTypes = {
   AGENT_TYPING: 'AgentTyping',
   UNSUBSCRIBE: 'Unsubscribe',
   ENDED: 'End',
+  SPAM: 'Spam',
 };
 
 export const SupportedWebchatUrls = [

@@ -6,7 +6,7 @@ export type QuiqChatSettings = {
   BURNED?: boolean,
 };
 
-export type EventType = 'Join' | 'Leave' | 'Register' | 'SendTranscript';
+export type EventType = 'Join' | 'Leave' | 'Register' | 'SendTranscript' | 'End' | 'Spam';
 export type AuthorType = 'Customer' | 'User' | 'System';
 export type TextMessageType = 'Text';
 export type AttachmentMessageType = 'Attachment';
@@ -49,7 +49,8 @@ export type QuiqChatCallbacks = {
   onSendTranscript?: (event: Event) => void,
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
-  onAgentEndedConversation?: () => void,
+  onAgentEndedConversation?: (type: Event) => void,
+  onChatMarkedAsSpam?: () => void,
   sentryMetadata?: () => Object,
 };
 
@@ -196,6 +197,7 @@ export type AttachmentMessage = {
 };
 
 export type Event = {
+  authorType?: AuthorType,
   id: string,
   timestamp: number,
   type: EventType,
