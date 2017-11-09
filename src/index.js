@@ -166,20 +166,7 @@ class QuiqChatClient {
       await API.login();
       onInit();
 
-      const conversation = await getConversation();
-
-      // Process initial messages, but do not send callback. We'll send all messages in callback next.
-      this._processConversationResult(conversation, false);
-
-      // Send all messages in initial newMessages callback
-      if (this.callbacks.onNewMessages && this.messages.length) {
-        this.callbacks.onNewMessages(this.messages);
-      }
-
-      storage.setQuiqUserIsSubscribed(conversation.isSubscribed);
-      if (conversation.isSubscribed) {
-        await this._connectSocket();
-      }
+      await this._getConversationAndConnect();
     } catch (err) {
       log.error(`Could not start QuiqChatClient: ${err.message}`, {exception: err});
       this._disconnectSocket();
@@ -300,6 +287,23 @@ class QuiqChatClient {
     return this.userIsRegistered;
   };
 
+  _getConversationAndConnect = async () => {
+    const conversation = await getConversation();
+
+    // Process initial messages, but do not send callback. We'll send all messages in callback next.
+    this._processConversationResult(conversation, false);
+
+    // Send all messages in initial newMessages callback
+    if (this.callbacks.onNewMessages && this.messages.length) {
+      this.callbacks.onNewMessages(this.messages);
+    }
+
+    storage.setQuiqUserIsSubscribed(conversation.isSubscribed);
+    if (conversation.isSubscribed) {
+      await this._connectSocket();
+    }
+  };
+
   _hasUserJoinedConversation = (): boolean => {
     if (!this.events) {
       return false;
@@ -402,9 +406,7 @@ class QuiqChatClient {
         this.callbacks.onNewSession();
       }
 
-      // Disconnect/reconnect websocket
-      // (Connection establishment handler will refresh messages)
-      await this._connectSocket();
+      await this._getConversationAndConnect();
     }
 
     this.trackingId = newTrackingId;

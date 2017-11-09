@@ -1076,12 +1076,6 @@ code-point-at@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/code-point-at/-/code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77"
 
-collections@^5.0.7:
-  version "5.0.7"
-  resolved "https://registry.yarnpkg.com/collections/-/collections-5.0.7.tgz#347e78bfe99d3e5a3864b6dfdc7bce4e401cbe54"
-  dependencies:
-    weak-map "~1.0.x"
-
 color-convert@^1.9.0:
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/color-convert/-/color-convert-1.9.0.tgz#1accf97dd739b983bf994d56fec8f95853641b7a"
@@ -4292,10 +4286,6 @@ walker@~1.0.5:
 watch@~0.10.0:
   version "0.10.0"
   resolved "https://registry.yarnpkg.com/watch/-/watch-0.10.0.tgz#77798b2da0f9910d595f1ace5b0c2258521f21dc"
-
-weak-map@~1.0.x:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/weak-map/-/weak-map-1.0.5.tgz#79691584d98607f5070bd3b70a40e6bb22e401eb"
 
 webidl-conversions@^3.0.0:
   version "3.0.1"
