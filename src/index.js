@@ -407,7 +407,21 @@ class QuiqChatClient {
       }
 
       this.trackingId = newTrackingId;
-      await this._getConversationAndConnect();
+
+      const conversation = await getConversation();
+
+      storage.setQuiqUserIsSubscribed(conversation.isSubscribed);
+      if (conversation.isSubscribed) {
+        await this._connectSocket();
+      } else {
+        this._disconnectSocket();
+
+        // Need to notify the client that we are not in a loading state at this point,
+        // otherwise the spinner will continue to show.
+        if (this.callbacks.onConnectionStatusChange) {
+          this.callbacks.onConnectionStatusChange(true);
+        }
+      }
     } else {
       this.trackingId = newTrackingId;
     }
