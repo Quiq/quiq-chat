@@ -406,10 +406,11 @@ class QuiqChatClient {
         this.callbacks.onNewSession();
       }
 
+      this.trackingId = newTrackingId;
       await this._getConversationAndConnect();
+    } else {
+      this.trackingId = newTrackingId;
     }
-
-    this.trackingId = newTrackingId;
   };
 
   _handleWebsocketMessage = (message: ConversationElement | BurnItDownMessage) => {
