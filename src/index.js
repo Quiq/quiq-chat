@@ -62,6 +62,7 @@ class QuiqChatClient {
   events: Array<Event> = [];
   connected: boolean = false;
   userIsRegistered: boolean = false;
+  agentIsConnected: boolean = false;
   trackingId: ?string = null;
   initialized: boolean = false;
 
@@ -118,6 +119,11 @@ class QuiqChatClient {
 
   onRegistration = (callback: () => void): QuiqChatClient => {
     this.callbacks.onRegistration = callback;
+    return this;
+  };
+
+  onAgentConnected = (callback: (connected: boolean) => void): QuiqChatClient => {
+    this.callbacks.onAgentConnected = callback;
     return this;
   };
 
@@ -219,12 +225,12 @@ class QuiqChatClient {
       storage.setQuiqChatContainerVisible(true);
       storage.setQuiqUserIsSubscribed(true);
       return API.sendTextMessage(text);
-    } else {
-      storage.setQuiqChatContainerVisible(true);
-      storage.setQuiqUserIsSubscribed(true);
-
-      return API.sendTextMessage(text);
     }
+
+    storage.setQuiqChatContainerVisible(true);
+    storage.setQuiqUserIsSubscribed(true);
+
+    return API.sendTextMessage(text);
   };
 
   emailTranscript = async (data: EmailTranscriptPayload) => {
@@ -287,8 +293,23 @@ class QuiqChatClient {
     return this.userIsRegistered;
   };
 
+  isAgentConnected = (): boolean => {
+    return this.agentIsConnected;
+  };
+
+  _processQueueDisposition = (queueDisposition: string) => {
+    this.agentIsConnected = queueDisposition === 'agentConnected';
+
+    if (this.callbacks.onAgentConnected) {
+      this.callbacks.onAgentConnected(this.agentIsConnected);
+    }
+  };
+
   _getConversationAndConnect = async () => {
+    this.agentIsConnected = false;
     const conversation = await getConversation();
+
+    this._processQueueDisposition(conversation.queueDisposition);
 
     // Process initial messages, but do not send callback. We'll send all messages in callback next.
     this._processConversationResult(conversation, false);
@@ -449,6 +470,9 @@ class QuiqChatClient {
               this.callbacks.onRegistration();
             }
           }
+          break;
+        case MessageTypes.QUEUE_DISPOSITION:
+          this._processQueueDisposition(message.data.queueDisposition);
           break;
         case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {

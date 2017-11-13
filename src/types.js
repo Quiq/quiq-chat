@@ -25,6 +25,11 @@ export type AgentTypingMessage = {
   typing: boolean,
 };
 
+export type QueueDispositionMessage = {
+  type: 'queueDisposition',
+  queueDisposition: string,
+};
+
 export type BurnItDownPayload = {
   before?: number,
   code: 466,
@@ -46,6 +51,7 @@ export type QuiqChatCallbacks = {
   onErrorResolved?: () => void,
   onConnectionStatusChange?: (connected: boolean) => void,
   onRegistration?: () => void,
+  onAgentConnected?: (connected: boolean) => void,
   onSendTranscript?: (event: Event) => void,
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
@@ -173,7 +179,7 @@ export type UploadDirective = {
 export type ConversationElement = {
   tenantId: string,
   messageType: 'ChatMessage',
-  data: Event | ConversationMessage | AgentTypingMessage,
+  data: Event | ConversationMessage | AgentTypingMessage | QueueDispositionMessage,
 };
 
 export type ConversationMessage = TextMessage | AttachmentMessage;

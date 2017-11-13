@@ -15,6 +15,7 @@ export const MessageTypes = {
   UNSUBSCRIBE: 'Unsubscribe',
   ENDED: 'End',
   SPAM: 'Spam',
+  QUEUE_DISPOSITION: 'queueDisposition',
 };
 
 export const SupportedWebchatUrls = [
