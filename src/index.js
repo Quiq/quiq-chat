@@ -50,6 +50,7 @@ const getConversation = async (): Promise<ConversationResult> => {
     events,
     isSubscribed: conversation.subscribed,
     isRegistered: conversation.registered,
+    queueDisposition: conversation.queueDisposition,
   };
 };
 
@@ -122,8 +123,8 @@ class QuiqChatClient {
     return this;
   };
 
-  onAgentConnected = (callback: (connected: boolean) => void): QuiqChatClient => {
-    this.callbacks.onAgentConnected = callback;
+  onAgentAssigned = (callback: (connected: boolean) => void): QuiqChatClient => {
+    this.callbacks.onAgentAssigned = callback;
     return this;
   };
 
@@ -300,8 +301,8 @@ class QuiqChatClient {
   _processQueueDisposition = (queueDisposition: string) => {
     this.agentIsAssigned = queueDisposition === 'assigned';
 
-    if (this.callbacks.onAgentConnected) {
-      this.callbacks.onAgentConnected(this.agentIsAssigned);
+    if (this.callbacks.onAgentAssigned) {
+      this.callbacks.onAgentAssigned(this.agentIsAssigned);
     }
   };
 
@@ -471,9 +472,6 @@ class QuiqChatClient {
             }
           }
           break;
-        case MessageTypes.QUEUE_DISPOSITION:
-          this._processQueueDisposition(message.data);
-          break;
         case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {
             this.callbacks.onAgentTyping(message.data.typing);
@@ -492,6 +490,10 @@ class QuiqChatClient {
           }
           break;
       }
+    }
+
+    if (message.messageType === MessageTypes.QUEUE_DISPOSITION) {
+      this._processQueueDisposition(message.data);
     }
 
     if (message.messageType === MessageTypes.BURN_IT_DOWN) {

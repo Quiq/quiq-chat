@@ -51,7 +51,7 @@ export type QuiqChatCallbacks = {
   onErrorResolved?: () => void,
   onConnectionStatusChange?: (connected: boolean) => void,
   onRegistration?: () => void,
-  onAgentConnected?: (connected: boolean) => void,
+  onAgentAssigned?: (connected: boolean) => void,
   onSendTranscript?: (event: Event) => void,
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
@@ -67,6 +67,7 @@ export type QuiqChatClientType = {
   messages: Array<TextMessage>,
   onNewMessages: (callback: (messages: Array<TextMessage>) => void) => QuiqChatClientType,
   onAgentTyping: (callback: (typing: boolean) => void) => QuiqChatClientType,
+  onAgentAssigned: (callback: (typing: boolean) => void) => QuiqChatClientType,
   onError: (callback: (error: ?ApiError) => void) => QuiqChatClientType,
   onErrorResolved: (callback: () => void) => QuiqChatClientType,
   onConnectionStatusChange: (callback: (connected: boolean) => void) => QuiqChatClientType,
@@ -86,6 +87,7 @@ export type Conversation = {
   id: string,
   subscribed: boolean,
   registered: boolean,
+  queueDisposition: string,
   messages: Array<TextMessage | Event>,
 };
 export type ConversationResult = {
