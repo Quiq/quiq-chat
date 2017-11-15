@@ -95,6 +95,7 @@ export type ConversationResult = {
   messages: Array<ConversationMessage>,
   isSubscribed: boolean,
   isRegistered: boolean,
+  queueDisposition: string,
 };
 export type AtmosphereTransportType =
   | 'websocket'

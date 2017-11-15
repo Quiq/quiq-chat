@@ -299,18 +299,16 @@ class QuiqChatClient {
   };
 
   _processQueueDisposition = (queueDisposition: string) => {
+    const wasAssigned = this.agentIsAssigned;
     this.agentIsAssigned = queueDisposition === 'assigned';
 
-    if (this.callbacks.onAgentAssigned) {
+    if (wasAssigned !== this.agentIsAssigned && this.callbacks.onAgentAssigned) {
       this.callbacks.onAgentAssigned(this.agentIsAssigned);
     }
   };
 
   _getConversationAndConnect = async () => {
-    this.agentIsAssigned = false;
     const conversation = await getConversation();
-
-    this._processQueueDisposition(conversation.queueDisposition);
 
     // Process initial messages, but do not send callback. We'll send all messages in callback next.
     this._processConversationResult(conversation, false);
@@ -606,6 +604,8 @@ class QuiqChatClient {
     conversation: ConversationResult,
     sendNewMessageCallback: boolean = true,
   ): void => {
+    this._processQueueDisposition(conversation.queueDisposition);
+
     if (conversation.messages.length) {
       this._processNewMessages(conversation.messages, sendNewMessageCallback);
     }
