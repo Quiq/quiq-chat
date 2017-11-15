@@ -617,7 +617,7 @@ class QuiqChatClient {
 
     if (queueInfo) {
       const newWaitTime = queueInfo.rawAssignedEst - new Date().getTime();
-      this.estimatedWaitTime = newWaitTime > 0 ? newWaitTime : undefined;
+      this.estimatedWaitTime = newWaitTime > 0 ? newWaitTime : 0;
     } else {
       this.estimatedWaitTime = undefined;
     }
