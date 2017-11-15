@@ -25,6 +25,11 @@ export type AgentTypingMessage = {
   typing: boolean,
 };
 
+export type QueueDispositionMessage = {
+  type: 'queueDisposition',
+  queueDisposition: string,
+};
+
 export type BurnItDownPayload = {
   before?: number,
   code: 466,
@@ -46,6 +51,7 @@ export type QuiqChatCallbacks = {
   onErrorResolved?: () => void,
   onConnectionStatusChange?: (connected: boolean) => void,
   onRegistration?: () => void,
+  onAgentAssigned?: (connected: boolean) => void,
   onSendTranscript?: (event: Event) => void,
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
@@ -61,6 +67,7 @@ export type QuiqChatClientType = {
   messages: Array<TextMessage>,
   onNewMessages: (callback: (messages: Array<TextMessage>) => void) => QuiqChatClientType,
   onAgentTyping: (callback: (typing: boolean) => void) => QuiqChatClientType,
+  onAgentAssigned: (callback: (typing: boolean) => void) => QuiqChatClientType,
   onError: (callback: (error: ?ApiError) => void) => QuiqChatClientType,
   onErrorResolved: (callback: () => void) => QuiqChatClientType,
   onConnectionStatusChange: (callback: (connected: boolean) => void) => QuiqChatClientType,
@@ -80,6 +87,7 @@ export type Conversation = {
   id: string,
   subscribed: boolean,
   registered: boolean,
+  queueDisposition: string,
   messages: Array<TextMessage | Event>,
 };
 export type ConversationResult = {
@@ -87,6 +95,7 @@ export type ConversationResult = {
   messages: Array<ConversationMessage>,
   isSubscribed: boolean,
   isRegistered: boolean,
+  queueDisposition: string,
 };
 export type AtmosphereTransportType =
   | 'websocket'
@@ -173,7 +182,7 @@ export type UploadDirective = {
 export type ConversationElement = {
   tenantId: string,
   messageType: 'ChatMessage',
-  data: Event | ConversationMessage | AgentTypingMessage,
+  data: Event | ConversationMessage | AgentTypingMessage | QueueDispositionMessage,
 };
 
 export type ConversationMessage = TextMessage | AttachmentMessage;

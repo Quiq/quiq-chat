@@ -50,6 +50,7 @@ const getConversation = async (): Promise<ConversationResult> => {
     events,
     isSubscribed: conversation.subscribed,
     isRegistered: conversation.registered,
+    queueDisposition: conversation.queueDisposition,
   };
 };
 
@@ -62,6 +63,7 @@ class QuiqChatClient {
   events: Array<Event> = [];
   connected: boolean = false;
   userIsRegistered: boolean = false;
+  agentIsAssigned: boolean = false;
   trackingId: ?string = null;
   initialized: boolean = false;
 
@@ -118,6 +120,11 @@ class QuiqChatClient {
 
   onRegistration = (callback: () => void): QuiqChatClient => {
     this.callbacks.onRegistration = callback;
+    return this;
+  };
+
+  onAgentAssigned = (callback: (connected: boolean) => void): QuiqChatClient => {
+    this.callbacks.onAgentAssigned = callback;
     return this;
   };
 
@@ -219,12 +226,12 @@ class QuiqChatClient {
       storage.setQuiqChatContainerVisible(true);
       storage.setQuiqUserIsSubscribed(true);
       return API.sendTextMessage(text);
-    } else {
-      storage.setQuiqChatContainerVisible(true);
-      storage.setQuiqUserIsSubscribed(true);
-
-      return API.sendTextMessage(text);
     }
+
+    storage.setQuiqChatContainerVisible(true);
+    storage.setQuiqUserIsSubscribed(true);
+
+    return API.sendTextMessage(text);
   };
 
   emailTranscript = async (data: EmailTranscriptPayload) => {
@@ -285,6 +292,19 @@ class QuiqChatClient {
 
   isRegistered = (): boolean => {
     return this.userIsRegistered;
+  };
+
+  isAgentAssigned = (): boolean => {
+    return this.agentIsAssigned;
+  };
+
+  _processQueueDisposition = (queueDisposition: string) => {
+    const wasAssigned = this.agentIsAssigned;
+    this.agentIsAssigned = queueDisposition === 'assigned';
+
+    if (wasAssigned !== this.agentIsAssigned && this.callbacks.onAgentAssigned) {
+      this.callbacks.onAgentAssigned(this.agentIsAssigned);
+    }
   };
 
   _getConversationAndConnect = async () => {
@@ -470,6 +490,10 @@ class QuiqChatClient {
       }
     }
 
+    if (message.messageType === MessageTypes.QUEUE_DISPOSITION) {
+      this._processQueueDisposition(message.data);
+    }
+
     if (message.messageType === MessageTypes.BURN_IT_DOWN) {
       burnItDown(message.data);
     }
@@ -580,6 +604,8 @@ class QuiqChatClient {
     conversation: ConversationResult,
     sendNewMessageCallback: boolean = true,
   ): void => {
+    this._processQueueDisposition(conversation.queueDisposition);
+
     if (conversation.messages.length) {
       this._processNewMessages(conversation.messages, sendNewMessageCallback);
     }
