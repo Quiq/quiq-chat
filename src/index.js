@@ -215,9 +215,9 @@ class QuiqChatClient {
     }
   };
 
-  leaveChat = () => {
+  leaveChat = (synchronous: boolean = false) => {
     storage.setQuiqChatContainerVisible(false);
-    return API.leaveChat();
+    return API.leaveChat(synchronous);
   };
 
   sendTextMessage = async (text: string) => {

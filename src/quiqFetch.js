@@ -3,23 +3,11 @@ import stubbornFetch from './stubbornFetch';
 import {checkRequiredSettings} from './globals';
 import {isStorageEnabled, getTrackingId} from './storage';
 import merge from 'lodash/merge';
-import {formatQueryParams} from './Utils/utils';
+import {formatQueryParams, createGuid} from './Utils/utils';
 import {version} from '../package.json';
 import logger from './logging';
 
 const log = logger('QuiqFetch');
-
-// This temporary code was borrowed from
-// http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-const createGuid = (): string => {
-  function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000)
-      .toString(16)
-      .substring(1);
-  }
-
-  return `${s4() + s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
-};
 
 const quiqFetch = (
   url: string,
