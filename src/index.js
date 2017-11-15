@@ -51,6 +51,7 @@ const getConversation = async (): Promise<ConversationResult> => {
     isSubscribed: conversation.subscribed,
     isRegistered: conversation.registered,
     queueDisposition: conversation.queueDisposition,
+    queueInfo: conversation.queueInfo,
   };
 };
 
@@ -66,6 +67,7 @@ class QuiqChatClient {
   agentIsAssigned: boolean = false;
   trackingId: ?string = null;
   initialized: boolean = false;
+  estimatedWaitTime: ?number;
 
   initialize = (host: string, contactPoint: string) => {
     this.host = host;
@@ -125,6 +127,11 @@ class QuiqChatClient {
 
   onAgentAssigned = (callback: (connected: boolean) => void): QuiqChatClient => {
     this.callbacks.onAgentAssigned = callback;
+    return this;
+  };
+
+  onEstimatedWaitTimeChanged = (callback: (estimatedWaitTime: ?number) => void): QuiqChatClient => {
+    this.callbacks.onEstimatedWaitTimeChanged = callback;
     return this;
   };
 
@@ -289,6 +296,7 @@ class QuiqChatClient {
   setChatVisible = (visible: boolean) => storage.setQuiqChatContainerVisible(visible);
   hasTakenMeaningfulAction = (): boolean => storage.getQuiqUserTakenMeaningfulAction();
   isUserSubscribed = (): boolean => storage.getQuiqUserIsSubscribed();
+  getEstimatedWaitTime = (): ?number => this.estimatedWaitTime;
 
   isRegistered = (): boolean => {
     return this.userIsRegistered;
@@ -304,6 +312,12 @@ class QuiqChatClient {
 
     if (wasAssigned !== this.agentIsAssigned && this.callbacks.onAgentAssigned) {
       this.callbacks.onAgentAssigned(this.agentIsAssigned);
+    }
+  };
+
+  _processEstimatedWaitTime = (estimatedWaitTime?: number) => {
+    if (this.callbacks.onEstimatedWaitTimeChanged) {
+      this.callbacks.onEstimatedWaitTimeChanged(estimatedWaitTime);
     }
   };
 
@@ -448,6 +462,7 @@ class QuiqChatClient {
   };
 
   _handleWebsocketMessage = (message: ConversationElement | BurnItDownMessage) => {
+    console.log('message %O', message);
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
       switch (message.data.type) {
         case MessageTypes.TEXT:
@@ -492,6 +507,10 @@ class QuiqChatClient {
 
     if (message.messageType === MessageTypes.QUEUE_DISPOSITION) {
       this._processQueueDisposition(message.data);
+    }
+
+    if (message.messageType === MessageTypes.ESTIMATED_WAIT_TIME) {
+      this._processQueueInfo(message.data);
     }
 
     if (message.messageType === MessageTypes.BURN_IT_DOWN) {
@@ -600,11 +619,27 @@ class QuiqChatClient {
     }
   };
 
+  _processQueueInfo = (queueInfo: any) => {
+    const previousWaitTime = this.estimatedWaitTime;
+
+    if (queueInfo) {
+      this.estimatedWaitTime = queueInfo.rawAssignedEst;
+    } else {
+      this.estimatedWaitTime = undefined;
+    }
+
+    if (previousWaitTime !== this.estimatedWaitTime) {
+      this._processEstimatedWaitTime(this.estimatedWaitTime);
+    }
+  };
+
   _processConversationResult = (
     conversation: ConversationResult,
     sendNewMessageCallback: boolean = true,
   ): void => {
     this._processQueueDisposition(conversation.queueDisposition);
+
+    this._processQueueInfo(conversation.queueInfo);
 
     if (conversation.messages.length) {
       this._processNewMessages(conversation.messages, sendNewMessageCallback);

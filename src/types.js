@@ -52,6 +52,7 @@ export type QuiqChatCallbacks = {
   onConnectionStatusChange?: (connected: boolean) => void,
   onRegistration?: () => void,
   onAgentAssigned?: (connected: boolean) => void,
+  onEstimatedWaitTimeChanged?: (estimatedWaitTime?: number) => void,
   onSendTranscript?: (event: Event) => void,
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
@@ -68,6 +69,9 @@ export type QuiqChatClientType = {
   onNewMessages: (callback: (messages: Array<TextMessage>) => void) => QuiqChatClientType,
   onAgentTyping: (callback: (typing: boolean) => void) => QuiqChatClientType,
   onAgentAssigned: (callback: (typing: boolean) => void) => QuiqChatClientType,
+  onEstimatedWaitTimeChanged: (
+    callback: (estimatedWaitTime?: number) => void,
+  ) => QuiqChatClientType,
   onError: (callback: (error: ?ApiError) => void) => QuiqChatClientType,
   onErrorResolved: (callback: () => void) => QuiqChatClientType,
   onConnectionStatusChange: (callback: (connected: boolean) => void) => QuiqChatClientType,
@@ -88,6 +92,7 @@ export type Conversation = {
   subscribed: boolean,
   registered: boolean,
   queueDisposition: string,
+  queueInfo: any,
   messages: Array<TextMessage | Event>,
 };
 export type ConversationResult = {
@@ -96,6 +101,7 @@ export type ConversationResult = {
   isSubscribed: boolean,
   isRegistered: boolean,
   queueDisposition: string,
+  queueInfo: any,
 };
 export type AtmosphereTransportType =
   | 'websocket'
