@@ -167,7 +167,7 @@ Returns whether the end user has triggered a registration event.  This happens w
 Returns whether the end user's chat has been taken up by an agent. This returns true when the agent sends their first message.
 
 #### getEstimatedWaitTime() => ?number
-Returns the estimate wait time in milliseconds. This is the amount of time we estimate it will take for the user's chat to be assigned to an agent. If this is unknown or null, then no ETA is currently available.
+Returns the estimate wait time in milliseconds. This is the amount of time we estimate it will take for the user's chat to be assigned to an agent. If this is undefined or null, then no ETA is currently available.
 
 ## Data types
 
