@@ -17,6 +17,7 @@ import {
   burnItDown,
   registerOnBurnCallback,
   isSupportedBrowser as supportedBrowser,
+  createGuid,
 } from './Utils/utils';
 import * as S3 from './services/S3';
 import type {
@@ -89,6 +90,11 @@ class QuiqChatClient {
     return this;
   };
 
+  onNewEvents = (callback: (events: Array<Event>) => void): QuiqChatClient => {
+    this.callbacks.onNewEvents = callback;
+    return this;
+  };
+
   onMessageSendFailure = (callback: (messageId: string) => void): QuiqChatClient => {
     this.callbacks.onMessageSendFailure = callback;
     return this;
@@ -96,21 +102,6 @@ class QuiqChatClient {
 
   onAgentTyping = (callback: (typing: boolean) => void): QuiqChatClient => {
     this.callbacks.onAgentTyping = callback;
-    return this;
-  };
-
-  onSendTranscript = (callback: (event: Event) => void): QuiqChatClient => {
-    this.callbacks.onSendTranscript = callback;
-    return this;
-  };
-
-  onAgentEndedConversation = (callback: (event: Event) => void): QuiqChatClient => {
-    this.callbacks.onAgentEndedConversation = callback;
-    return this;
-  };
-
-  onChatMarkedAsSpam = (callback: () => void): QuiqChatClient => {
-    this.callbacks.onChatMarkedAsSpam = callback;
     return this;
   };
 
@@ -242,7 +233,18 @@ class QuiqChatClient {
   };
 
   emailTranscript = async (data: EmailTranscriptPayload) => {
-    return API.emailTranscript(data);
+    await API.emailTranscript(data);
+    // If we're not currently subscribed, add an optimistic 'Send Transcript' event
+    if (!this.isUserSubscribed()) {
+      this._processNewEvents([
+        {
+          authorType: 'User',
+          id: createGuid(),
+          timestamp: Date.now(),
+          type: MessageTypes.SEND_TRANSCRIPT,
+        },
+      ]);
+    }
   };
 
   sendAttachmentMessage = async (
@@ -467,6 +469,9 @@ class QuiqChatClient {
           break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
+        case MessageTypes.ENDED:
+        case MessageTypes.SPAM:
+        case MessageTypes.SEND_TRANSCRIPT:
           this._processNewEvents([message.data]);
           break;
         case MessageTypes.REGISTER:
@@ -481,18 +486,6 @@ class QuiqChatClient {
         case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {
             this.callbacks.onAgentTyping(message.data.typing);
-          }
-          break;
-        case MessageTypes.ENDED:
-          this._agentEndedConversation(message.data);
-          break;
-        case MessageTypes.SPAM:
-          this._agentEndedConversation(message.data);
-          this._chatMarkedAsSpam();
-          break;
-        case MessageTypes.SEND_TRANSCRIPT:
-          if (this.callbacks.onSendTranscript) {
-            this.callbacks.onSendTranscript(message.data);
           }
           break;
       }
@@ -512,18 +505,6 @@ class QuiqChatClient {
 
     if (message.messageType === MessageTypes.UNSUBSCRIBE) {
       this._unsusbscribeFromChat();
-    }
-  };
-
-  _agentEndedConversation = (event: Event) => {
-    if (this.callbacks.onAgentEndedConversation) {
-      this.callbacks.onAgentEndedConversation(event);
-    }
-  };
-
-  _chatMarkedAsSpam = () => {
-    if (this.callbacks.onChatMarkedAsSpam) {
-      this.callbacks.onChatMarkedAsSpam();
     }
   };
 
@@ -579,36 +560,24 @@ class QuiqChatClient {
       'id',
     );
 
-    // If we found new messages, sort them, update cached textMessages, and send callback
-    if (newFilteredMessages.length > 0) {
-      this.messages = sortByTimestamp(unionBy(this.messages, newFilteredMessages, 'id'));
+    // Sort and update cached textMessages, and send callback
+    this.messages = sortByTimestamp(unionBy(this.messages, newFilteredMessages, 'id'));
 
-      if (this.callbacks.onNewMessages && sendNewMessageCallback) {
-        this.callbacks.onNewMessages(this.messages);
-      }
+    if (newFilteredMessages.length > 0 && this.callbacks.onNewMessages && sendNewMessageCallback) {
+      this.callbacks.onNewMessages(this.messages);
     }
   };
 
   _processNewEvents = (newEvents: Array<Event>): void => {
     const newFilteredEvents: Array<Event> = differenceBy(newEvents, this.events, 'id');
 
-    // If we found new events, sort them, update cached events, and check if a new registration event was received. Fire callback if so.
-    if (newFilteredEvents.length > 0) {
-      this.events = sortByTimestamp(unionBy(this.events, newEvents, 'id'));
+    // If we found new events, sort them, update cached events
+    // TODO: The union isn't needed here since we already know the set difference. But the union also buys us deduplication. At some point we can simplify this.
+    this.events = sortByTimestamp(unionBy(this.events, newFilteredEvents, 'id'));
 
-      const sendTranscriptEvents = newFilteredEvents.filter(
-        e => e.type === MessageTypes.SEND_TRANSCRIPT,
-      );
-
-      if (sendTranscriptEvents.length) {
-        sendTranscriptEvents.forEach((e: Event) => {
-          if (this.callbacks.onSendTranscript) this.callbacks.onSendTranscript(e);
-        });
-      }
-
-      if (newFilteredEvents.find(e => e.type === MessageTypes.SPAM)) {
-        this._chatMarkedAsSpam();
-      }
+    // If we found new events, fire callback
+    if (newFilteredEvents.length > 0 && this.callbacks.onNewEvents) {
+      this.callbacks.onNewEvents(this.events);
     }
   };
 

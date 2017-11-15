@@ -44,6 +44,7 @@ export type EmailTranscriptPayload = {
 
 export type QuiqChatCallbacks = {
   onNewMessages?: (messages: Array<ConversationMessage>) => void,
+  onNewEvents?: (events: Array<Event>) => void,
   onAgentTyping?: (typing: boolean) => void,
   onMessageSendFailure?: (messageId: string) => void,
   onError?: (error: ?ApiError) => void,
@@ -53,11 +54,8 @@ export type QuiqChatCallbacks = {
   onRegistration?: () => void,
   onAgentAssigned?: (connected: boolean) => void,
   onEstimatedWaitTimeChanged?: (estimatedWaitTime?: number) => void,
-  onSendTranscript?: (event: Event) => void,
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
-  onAgentEndedConversation?: (type: Event) => void,
-  onChatMarkedAsSpam?: () => void,
   sentryMetadata?: () => Object,
 };
 
