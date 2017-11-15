@@ -16,6 +16,7 @@ export const MessageTypes = {
   ENDED: 'End',
   SPAM: 'Spam',
   QUEUE_DISPOSITION: 'QueueDisposition',
+  ESTIMATED_WAIT_TIME: 'QueueInfo',
 };
 
 export const SupportedWebchatUrls = [

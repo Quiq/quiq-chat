@@ -88,6 +88,12 @@ Called when a transcript is requested either through a websocket message or as a
 Called when the end users previous session has expired and has begun a new session.  This is a good spot to
 have the UI reset itself to an initial state
 
+#### onAgentAssigned(agentAssigned: boolean) => [QuiqChatClient](#quiqchatclient)
+Called when the isAgentAssigned value changes.
+
+#### onEstimatedWaitTimeChanged(estimatedWaitTime: ?number) => [QuiqChatClient](#quiqchatclient)
+Called when the estimate wait time calculation changes.
+
 #### onConnectionStatusChanged(connected: boolean) => [QuiqChatClient](#quiqchatclient)
 Called when a connection is established or terminated
 
@@ -156,6 +162,12 @@ Sends a message to Quiq Messaging that the end user has closed the chat window
 
 #### isRegistered() => boolean
 Returns whether the end user has triggered a registration event.  This happens when the `sendRegistration` API is called, and the server has confirmed the registration was valid.
+
+#### isAgentAssigned() => boolean
+Returns whether the end user's chat has been taken up by an agent. This returns true when the agent sends their first message.
+
+#### getEstimatedWaitTime() => ?number
+Returns the estimate wait time in milliseconds. This is the amount of time we estimate it will take for the user's chat to be assigned to an agent. If this is unknown or null, then no ETA is currently available.
 
 ## Data types
 
