@@ -315,12 +315,6 @@ class QuiqChatClient {
     }
   };
 
-  _processEstimatedWaitTime = (estimatedWaitTime?: number) => {
-    if (this.callbacks.onEstimatedWaitTimeChanged) {
-      this.callbacks.onEstimatedWaitTimeChanged(estimatedWaitTime);
-    }
-  };
-
   _getConversationAndConnect = async () => {
     const conversation = await getConversation();
 
@@ -462,7 +456,6 @@ class QuiqChatClient {
   };
 
   _handleWebsocketMessage = (message: ConversationElement | BurnItDownMessage) => {
-    console.log('message %O', message);
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
       switch (message.data.type) {
         case MessageTypes.TEXT:
@@ -623,13 +616,16 @@ class QuiqChatClient {
     const previousWaitTime = this.estimatedWaitTime;
 
     if (queueInfo) {
-      this.estimatedWaitTime = queueInfo.rawAssignedEst;
+      const newWaitTime = queueInfo.rawAssignedEst - new Date().getTime();
+      this.estimatedWaitTime = newWaitTime > 0 ? newWaitTime : undefined;
     } else {
       this.estimatedWaitTime = undefined;
     }
 
     if (previousWaitTime !== this.estimatedWaitTime) {
-      this._processEstimatedWaitTime(this.estimatedWaitTime);
+      if (this.callbacks.onEstimatedWaitTimeChanged) {
+        this.callbacks.onEstimatedWaitTimeChanged(this.estimatedWaitTime);
+      }
     }
   };
 
