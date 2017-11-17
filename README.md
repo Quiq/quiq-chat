@@ -63,7 +63,10 @@ QuiqChat works with any browser that supports Local Storage, standard AJAX CORS 
 
 ### QuiqChatClient
 
-#### onNewMessages(messages: Array<[TextMessage](#TextMessage)>) => [QuiqChatClient](#quiqchatclient)
+#### onNewMessages(messages: Array<[ConversationMessage](#ConversationMessage)>) => [QuiqChatClient](#quiqchatclient)
+Called whenever new messages are received. `messages` is an array containing full transcript of the current chat
+
+#### onNewEvents(events: Array<[Event](#Event)>) => [QuiqChatClient](#quiqchatclient)
 Called whenever new messages are received. `messages` is an array containing full transcript of the current chat
 
 #### onAgentTyping(typing: boolean) => [QuiqChatClient](#quiqchatclient)
@@ -81,9 +84,6 @@ Called whenever any error from the API has been resolved
 #### onRegistration() => [QuiqChatClient](#quiqchatclient)
 Called when Register event is received through a websocket message
 
-#### onSendTranscript(event: [Event](#Event)) => [QuiqChatClient](#quiqchatclient)
-Called when a transcript is requested either through a websocket message or as a new event on the transcript
-
 #### onNewSession() => [QuiqChatClient](#quiqchatclient)
 Called when the end users previous session has expired and has begun a new session.  This is a good spot to
 have the UI reset itself to an initial state
@@ -97,26 +97,26 @@ Called when the estimate wait time calculation changes.
 #### onConnectionStatusChanged(connected: boolean) => [QuiqChatClient](#quiqchatclient)
 Called when a connection is established or terminated
 
-#### onAgentEndedConversation(event: Event) => [QuiqChatClient](#quiqchatclient)
-Called when the agent ends the conversation
-
-#### onChatMarkedAsSpam() => [QuiqChatClient](#quiqchatclient)
-Called when the agent ends the conversation as spam, or when the conversation is fetched and contains a new 'Spam' Event
-
 #### onBurn() => [QuiqChatClient](#quiqchatclient)
 Called when quiq-chat gets in a fatal state and page holding webchat needs to be refreshed
 
 #### onClientInactiveTimeout() => [QuiqChatClient](#quiqchatclient)
 Called when quiq-chat disconnects the websocket due to the chat client being inactive for a set amount of time
 
-#### getMessages(cache?: boolean = true) => Promise<Array<[TextMessage](#TextMessage)>>
+#### getMessages(cache?: boolean = true) => Promise<Array<[ConversationMessage](#ConversationMessage)>>
 Retrieve all messages for the current chat.  If `cache` is set to true, a hit to the API is not made, and only the messages currently in memory are returned.
+
+#### getEvents(cache?: boolean = true) => Promise<Array<[Event](#ConversationMessage)>>
+Retrieve all events for the current chat.  If `cache` is set to true, a hit to the API is not made, and only the events currently in memory are returned.
 
 #### emailTranscript(data: [EmailTranscriptPayload](#EmailTranscriptPayload)) => void
 Email a transcript of the current conversation to the specified e-mail.  If an agent has not yet responded to the conversation, a 400 will be returned.
 
 #### sendTextMessage(text: string) => void
 Send a text message from the customer.  Can be used to initiate a conversation if no messages have been sent.
+
+### sendAttachmentMessage(file: File, progressCallback: (progress: number) => void) => string
+Send an attachment message containing a File from the customer. Th type of this file must conform to the allowed file types set in your configuration. The method also accepts a `progressCallback` function which will be fired during upload of the file with values between 0 and 100, denoting percentage uploaded. Upon completion of upload, this method returns a string containing the `id` of the new message.
 
 #### start() => Promise<[QuiqChatClient](#quiqchatclient)>
 Establishes the connection to QuiqMessaging
@@ -171,22 +171,41 @@ Returns the estimate wait time in milliseconds. This is the amount of time we es
 
 ## Data types
 
+### ConversationMessage
+```javascript
+TextMessage | AttachmentMessage
+```
+
 ### TextMessage
 ```javascript
 {
-  authorType: 'Customer' | 'User' | 'System',
-  text: string,
-  id: string,
-  timestamp: number,
-  type: 'Text' | 'Join' | 'Leave',
+    authorType: 'Customer' | 'User',
+    text: string,
+    id: string,
+    timestamp: number,
+    type: 'Text',
 }
 ```
 
-### Conversation
+### AttachmentMessage 
 ```javascript
 {
   id: string,
-  messages: Array<TextMessage>,
+  timestamp: number,
+  type: 'Attachment',
+  authorType: 'Customer' | 'User',
+  url: string,
+  contentType: string,
+}
+```
+
+### Event 
+```javascript
+{
+  authorType?: 'Customer' | 'User',
+  id: string,
+  timestamp: number,
+  type: 'Join' | 'Leave' | 'Register' | 'SendTranscript' | 'End' | 'Spam',
 }
 ```
 

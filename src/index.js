@@ -197,6 +197,15 @@ class QuiqChatClient {
     return this.messages;
   };
 
+  getEvents = async (cache: boolean = true): Promise<Array<Event>> => {
+    if (!cache || !this.connected) {
+      const conversation = await getConversation();
+      this._processConversationResult(conversation);
+    }
+
+    return this.events;
+  };
+
   // This is specific to our chat client. Don't document it.
   getChatConfiguration = () => API.getChatConfiguration();
 
