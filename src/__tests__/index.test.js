@@ -357,6 +357,113 @@ describe('QuiqChatClient', () => {
     });
   });
 
+  describe('isAgentAssigned', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      mockStore.getQuiqChatContainerVisible.mockReturnValue(true);
+      mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValue(false);
+
+      QuiqChatClient.initialize(host, contactPoint);
+      QuiqChatClient.onNewMessages(onNewMessages);
+      QuiqChatClient.onAgentTyping(onAgentTyping);
+      QuiqChatClient.onError(onError);
+      QuiqChatClient.onErrorResolved(onErrorResolved);
+      QuiqChatClient.onConnectionStatusChange(onConnectionStatusChange);
+      QuiqChatClient.onRegistration(onRegistration);
+      QuiqChatClient.onNewSession(onNewSession);
+      QuiqChatClient.onBurn(onBurn);
+      QuiqChatClient.onClientInactiveTimeout(onClientInactiveTimeout);
+
+      QuiqChatClient.events = [];
+      QuiqChatClient.messages = [];
+    });
+
+    it('No conversation and no queueDisposition', () => {
+      expect(QuiqChatClient.isAgentAssigned()).toBe(false);
+    });
+
+    it('No conversation with a waiting queueDisposition', () => {
+      // $FlowIssue
+      QuiqChatClient._handleWebsocketMessage({
+        messageType: 'QueueDisposition',
+        data: 'waiting',
+      });
+      expect(QuiqChatClient.isAgentAssigned()).toBe(false);
+    });
+
+    it('No conversation with an assigned queueDisposition', () => {
+      // $FlowIssue
+      QuiqChatClient._handleWebsocketMessage({
+        messageType: 'QueueDisposition',
+        data: 'assigned',
+      });
+      expect(QuiqChatClient.isAgentAssigned()).toBe(true);
+    });
+
+    it('No queueDisposition but active convo', () => {
+      QuiqChatClient.messages = [
+        {
+          authorType: 'User',
+          text: 'message',
+          id: '1',
+          timestamp: 10,
+          type: 'Text',
+        },
+      ];
+      QuiqChatClient._processQueueDisposition('waiting');
+      expect(QuiqChatClient.isAgentAssigned()).toBe(true);
+    });
+
+    it('No queueDisposition and inactive convo', () => {
+      QuiqChatClient.messages = [
+        {
+          authorType: 'User',
+          text: 'message',
+          id: '1',
+          timestamp: 10,
+          type: 'Text',
+        },
+      ];
+      QuiqChatClient.events = [
+        {
+          id: '2',
+          timestamp: 11,
+          type: 'End',
+        },
+      ];
+      QuiqChatClient._processQueueDisposition('waiting');
+      expect(QuiqChatClient.isAgentAssigned()).toBe(false);
+    });
+
+    it('No queueDisposition and active convo with history', () => {
+      QuiqChatClient.messages = [
+        {
+          authorType: 'User',
+          text: 'message',
+          id: '1',
+          timestamp: 10,
+          type: 'Text',
+        },
+        {
+          authorType: 'User',
+          text: 'message',
+          id: '3',
+          timestamp: 12,
+          type: 'Text',
+        },
+      ];
+      QuiqChatClient.events = [
+        {
+          id: '2',
+          timestamp: 11,
+          type: 'End',
+        },
+      ];
+      QuiqChatClient._processQueueDisposition('waiting');
+      expect(QuiqChatClient.isAgentAssigned()).toBe(true);
+    });
+  });
+
   describe('API wrappers', () => {
     afterEach(() => {
       set.mockClear();
