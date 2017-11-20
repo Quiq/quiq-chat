@@ -319,7 +319,15 @@ class QuiqChatClient {
 
   _processQueueDisposition = (queueDisposition: string) => {
     const wasAssigned = this.agentIsAssigned;
-    this.agentIsAssigned = queueDisposition === 'assigned';
+    const agentEndedEvents = this.events.filter(event => event.type === 'End');
+    const agentMessages = this.messages.filter(message => message.authorType === 'User');
+
+    this.agentIsAssigned =
+      queueDisposition === 'assigned' ||
+      (agentMessages.length > 0 && agentEndedEvents.length === 0) ||
+      (agentMessages.length > 0 &&
+        agentMessages[agentMessages.length - 1].timestamp >
+          agentEndedEvents[agentEndedEvents.length - 1].timestamp);
 
     if (wasAssigned !== this.agentIsAssigned && this.callbacks.onAgentAssigned) {
       this.callbacks.onAgentAssigned(this.agentIsAssigned);
