@@ -231,12 +231,17 @@ export type ChatMetadata = {
   registrationForm?: {
     headerText: string,
     fields: Array<{
-      type: 'text' | 'number' | 'email' | 'tel' | 'textarea',
+      type: 'text' | 'number' | 'email' | 'tel' | 'textarea' | 'select',
       label: string,
       id: string,
       required?: boolean,
       rows?: number,
       isInitialMessage?: boolean,
+      additionalProperties: {
+        options?: string,
+        rows?: number,
+        isInitialMessage?: boolean,
+      },
     }>,
   },
 };
