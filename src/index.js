@@ -64,13 +64,11 @@ class QuiqChatClient {
   messages: Array<ConversationMessage> = [];
   events: Array<Event> = [];
   connected: boolean = false;
-  connectingDuringMessageSend: boolean = false;
   userIsRegistered: boolean = false;
   agentIsAssigned: boolean = false;
   trackingId: ?string = null;
   initialized: boolean = false;
   estimatedWaitTime: ?number;
-  pendingMessageSends: Array<() => void> = [];
 
   initialize = (host: string, contactPoint: string) => {
     this.host = host;
@@ -230,23 +228,17 @@ class QuiqChatClient {
   };
 
   sendTextMessage = async (text: string) => {
-    if (this.connectingDuringMessageSend) {
-      return this.pendingMessageSends.push(() => {
-        this._sendTextMessage(text);
-      });
-    }
-
     if (!this.connected) {
-      this.connectingDuringMessageSend = true;
-      try {
-        await this._connectSocket();
-      } finally {
-        this.connectingDuringMessageSend = false;
-      }
-      return this._sendTextMessage(text);
+      await this._connectSocket();
+      storage.setQuiqChatContainerVisible(true);
+      storage.setQuiqUserIsSubscribed(true);
+      return API.sendTextMessage(text);
     }
 
-    return this._sendTextMessage(text);
+    storage.setQuiqChatContainerVisible(true);
+    storage.setQuiqUserIsSubscribed(true);
+
+    return API.sendTextMessage(text);
   };
 
   emailTranscript = async (data: EmailTranscriptPayload) => {
@@ -323,13 +315,6 @@ class QuiqChatClient {
 
   isAgentAssigned = (): boolean => {
     return this.agentIsAssigned;
-  };
-
-  _sendTextMessage = (text: string) => {
-    storage.setQuiqChatContainerVisible(true);
-    storage.setQuiqUserIsSubscribed(true);
-
-    API.sendTextMessage(text);
   };
 
   _processQueueDisposition = (queueDisposition: string) => {
@@ -563,12 +548,6 @@ class QuiqChatClient {
     this._processConversationResult(conversation);
 
     this.connected = true;
-
-    const pendingMessages = this.pendingMessageSends;
-    this.pendingMessageSends = [];
-    pendingMessages.forEach(messageSend => {
-      messageSend();
-    });
 
     if (this.callbacks.onConnectionStatusChange) {
       this.callbacks.onConnectionStatusChange(true);
