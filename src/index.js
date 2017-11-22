@@ -228,17 +228,19 @@ class QuiqChatClient {
   };
 
   sendTextMessage = async (text: string) => {
-    if (!this.connected) {
-      await this._connectSocket();
-      storage.setQuiqChatContainerVisible(true);
-      storage.setQuiqUserIsSubscribed(true);
-      return API.sendTextMessage(text);
-    }
-
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserIsSubscribed(true);
 
-    return API.sendTextMessage(text);
+    // Send the message first, then it will get retrieved when the web socket
+    // is connected below. This prevents us from getting into race conditions
+    // where the message is sent right after the transcript is fetched.
+    const message = API.sendTextMessage(text);
+
+    if (!this.connected) {
+      await this._connectSocket();
+    }
+
+    return message;
   };
 
   emailTranscript = async (data: EmailTranscriptPayload) => {
