@@ -234,10 +234,10 @@ class QuiqChatClient {
     // Send the message first, then it will get retrieved when the web socket
     // is connected below. This prevents us from getting into race conditions
     // where the message is sent right after the transcript is fetched.
-    const message = API.sendTextMessage(text);
+    const message = await API.sendTextMessage(text);
 
     if (!this.connected) {
-      await this._connectSocket();
+      this._connectSocket();
     }
 
     return message;
