@@ -476,7 +476,14 @@ class QuiqChatClient {
     }
   };
 
-  _handleWebsocketMessage = (message: ConversationElement | BurnItDownMessage) => {
+  _handleWebsocketMessage = (
+    message:
+      | ConversationElement
+      | BurnItDownMessage
+      | {messageType: 'Unsubscribe'}
+      | {messageType: 'QueueDisposition', data: string}
+      | {messageType: 'QueueInfo', data: any},
+  ) => {
     if (message.messageType === MessageTypes.CHAT_MESSAGE) {
       switch (message.data.type) {
         case MessageTypes.TEXT:
