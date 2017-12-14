@@ -33,6 +33,7 @@ import type {
 import * as storage from './storage';
 import logger from './logging';
 import * as Senty from './sentry';
+import Raven from 'raven-js';
 
 Senty.init();
 
@@ -318,6 +319,13 @@ class QuiqChatClient {
   isAgentAssigned = (): boolean => {
     return this.agentIsAssigned;
   };
+
+  _logToSentry = (level: string, message: string, data: Object = {}) =>
+    Raven.captureMessage(message, {
+      level,
+      logger: 'Chat',
+      extra: data,
+    });
 
   _processQueueDisposition = (queueDisposition: string) => {
     const wasAssigned = this.agentIsAssigned;
