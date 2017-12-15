@@ -42,6 +42,14 @@ export type EmailTranscriptPayload = {
   timezone?: string,
 };
 
+export type PersistentData = {
+  accessToken?: string,
+  chatContainerVisible?: boolean,
+  subscribed?: boolean,
+  hasTakenMeaningfulAction?: boolean,
+  [string]: any,
+};
+
 export type QuiqChatCallbacks = {
   onNewMessages?: (messages: Array<ConversationMessage>) => void,
   onNewEvents?: (events: Array<Event>) => void,
@@ -56,6 +64,7 @@ export type QuiqChatCallbacks = {
   onEstimatedWaitTimeChanged?: (estimatedWaitTime?: number) => void,
   onNewSession?: () => void,
   onClientInactiveTimeout?: () => void,
+  onPersistentDataChange?: (data: PersistentData) => void,
   sentryMetadata?: () => Object,
 };
 
