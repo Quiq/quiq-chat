@@ -4014,9 +4014,9 @@ querystringify@0.0.x:
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/querystringify/-/querystringify-0.0.4.tgz#0cf7f84f9463ff0ae51c4c4b142d95be37724d9c"
 
-"quiq-scripts@git+ssh://git@gitlab.quiq.sh/development/quiq-scripts.git#4eb851bb4e6d86a6f5e0b6fe558e63b489475c48":
+quiq-scripts@0.0.1:
   version "0.0.1"
-  resolved "git+ssh://git@gitlab.quiq.sh/development/quiq-scripts.git#4eb851bb4e6d86a6f5e0b6fe558e63b489475c48"
+  resolved "https://registry.yarnpkg.com/quiq-scripts/-/quiq-scripts-0.0.1.tgz#56abf067b6738bce1f27d7c8f169d2c0013bb704"
   dependencies:
     babel-core "^6.26.0"
     babel-eslint "^8.0.3"
