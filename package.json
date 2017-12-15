@@ -1,13 +1,15 @@
 {
   "name": "quiq-chat",
   "version": "1.39.0",
-  "description": "Library to help with network requests to create a webchat client for Quiq Messaging",
+  "description":
+    "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
     "start": "./node_modules/.bin/nodemon --watch src -e js,sass --exec npm run build",
     "lint": "node ./node_modules/eslint/bin/eslint.js src/",
-    "test": "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
+    "test":
+      "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
     "flow": "flow",
     "jest": "jest --watch --env=jsdom",
     "build": "rollup -c",
@@ -15,29 +17,20 @@
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "src/**/*.js": [
-      "prettier --write",
-      "git add"
-    ]
+    "src/**/*.js": ["prettier --write", "git add"]
   },
   "jest": {
-    "modulePaths": [
-      "src",
-      "node_modules"
-    ],
+    "modulePaths": ["src", "node_modules"],
     "rootDir": ".",
-    "setupFiles": [
-      "./jest.setup.js"
-    ],
+    "setupFiles": ["./jest.setup.js"],
     "notify": true
   },
-  "keywords": [
-    "quiq"
-  ],
+  "keywords": ["quiq"],
   "author": "nate.norberg@goquiq.com",
   "license": "MIT",
   "dependencies": {
-    "atmosphere.js": "https://github.com/Quiq/atmosphere-js/tarball/cf35c913143cf2c391b6bcb694ae8a47794a1b88",
+    "atmosphere.js":
+      "https://github.com/Quiq/atmosphere-js/tarball/cf35c913143cf2c391b6bcb694ae8a47794a1b88",
     "isomorphic-fetch": "2.2.1",
     "jwt-decode": "2.2.0",
     "lodash": "4.17.4",
@@ -52,11 +45,11 @@
     "babel-jest": "21.0.2",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "flow-bin": "0.60.1",
     "jest": "21.0.2",
     "jsdom": "^11.0.0",
     "nodemon": "^1.11.0",
-    "quiq-scripts": "git+ssh://git@gitlab.quiq.sh/development/quiq-scripts.git#2bb56326f9a79628f7c27866d161c2db47c48813",
+    "quiq-scripts":
+      "git+ssh://git@gitlab.quiq.sh/development/quiq-scripts.git#e767509837be8ead52b680a41900e49702b25097",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-flow": "^1.1.1",
