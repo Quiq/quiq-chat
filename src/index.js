@@ -7,7 +7,7 @@ import {
 } from './websockets';
 import QuiqSocket from './QuiqSockets/quiqSockets';
 import {MessageTypes} from './appConstants';
-import {registerCallbacks, onInit, setClientInactive} from './stubbornFetch';
+import * as StubbornFetch from './stubbornFetch';
 import differenceBy from 'lodash/differenceBy';
 import unionBy from 'lodash/unionBy';
 import partition from 'lodash/partition';
@@ -29,6 +29,7 @@ import type {
   QuiqChatCallbacks,
   ConversationResult,
   EmailTranscriptPayload,
+  PersistentData,
 } from './types';
 import * as storage from './storage';
 import logger from './logging';
@@ -108,7 +109,7 @@ class QuiqChatClient {
 
   onError = (callback: (error: ?ApiError) => void): QuiqChatClient => {
     this.callbacks.onError = callback;
-    registerCallbacks({onError: callback});
+    StubbornFetch.registerCallbacks({onError: callback});
     return this;
   };
 
@@ -129,13 +130,13 @@ class QuiqChatClient {
 
   onRetryableError = (callback: (error: ?ApiError) => void): QuiqChatClient => {
     this.callbacks.onRetryableError = callback;
-    registerCallbacks({onRetryableError: callback});
+    StubbornFetch.registerCallbacks({onRetryableError: callback});
     return this;
   };
 
   onErrorResolved = (callback: () => void): QuiqChatClient => {
     this.callbacks.onErrorResolved = callback;
-    registerCallbacks({onErrorResolved: callback});
+    StubbornFetch.registerCallbacks({onErrorResolved: callback});
     return this;
   };
 
@@ -156,6 +157,13 @@ class QuiqChatClient {
 
   onClientInactiveTimeout = (callback: () => void): QuiqChatClient => {
     this.callbacks.onClientInactiveTimeout = callback;
+
+    return this;
+  };
+
+  onPersistentDataChange = (callback: (data: PersistentData) => void): QuiqChatClient => {
+    storage.registerCallbacks({onPersistentDataChange: callback});
+    this.callbacks.onPersistentDataChange = callback;
     return this;
   };
 
@@ -165,12 +173,12 @@ class QuiqChatClient {
 
     try {
       this.initialized = true;
-      setClientInactive(false);
+      StubbornFetch.setClientInactive(false);
 
       // Order Matters here.  Ensure we successfully complete this fetchConversation request before connecting to
       // the websocket below!
       await API.login();
-      onInit();
+      StubbornFetch.onInit();
 
       await this._getConversationAndConnect();
     } catch (err) {
@@ -188,6 +196,11 @@ class QuiqChatClient {
     this.initialized = false;
     this.connected = false;
   };
+
+  getPersistentData = (): PersistentData => storage.getData();
+
+  setCustomPersistentData = (key: string, value: any) =>
+    storage.setCustomPersistentData(key, value);
 
   getMessages = async (cache: boolean = true): Promise<Array<ConversationMessage>> => {
     if (!cache || !this.connected) {

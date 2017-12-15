@@ -4,6 +4,11 @@ import expirePlugin from 'store/plugins/expire';
 import modifiedTimestampPlugin from './modifiedTimestampPlugin';
 import contactPointNamespacePlugin from './contactPointNamespacePlugin';
 import jwt_decode from 'jwt-decode';
+import type {PersistentData} from 'types';
+
+type StorageCallbacks = {
+  onPersistentDataChange?: (data: PersistentData) => void,
+};
 
 // NOTE: These plugins must be applied in exactly this order, to ensure that contact point namespacing
 // works for the expiration and modification plugins as well.
@@ -11,23 +16,49 @@ store.addPlugin(expirePlugin);
 store.addPlugin(modifiedTimestampPlugin);
 store.addPlugin(contactPointNamespacePlugin);
 
+const key = 'quiq-data';
+const ttl = 365;
+let callbacks: StorageCallbacks = {};
+
 const expireInDays = (numberOfDays: number) =>
   new Date().getTime() + numberOfDays * 1000 * 60 * 60 * 24;
 
-export const setQuiqChatContainerVisible = (visible: boolean) => {
-  store.set('quiq-chat-container-visible', visible, expireInDays(1));
+export const getData = (): PersistentData => store.get(key) || {};
+
+export const updateData = (newData: PersistentData) => {
+  const currentData = getData();
+  const mergedData = Object.assign({}, currentData, newData);
+  store.set(key, mergedData, expireInDays(ttl));
+
+  if (callbacks.onPersistentDataChange) {
+    callbacks.onPersistentDataChange(mergedData);
+  }
 };
-export const setQuiqUserIsSubscribed = (visible: boolean) => {
-  store.set('quiq-user-subscribed', visible, expireInDays(365));
+
+export const registerCallbacks = (newCallbacks: StorageCallbacks) => {
+  callbacks = Object.assign({}, callbacks, newCallbacks);
 };
-export const setAccessToken = (token: string) => {
-  store.set('X-Quiq-Access-Token', token, expireInDays(365));
+
+export const setQuiqChatContainerVisible = (chatContainerVisible: boolean) => {
+  updateData({chatContainerVisible});
 };
-export const getQuiqChatContainerVisible = () => store.get('quiq-chat-container-visible') === true;
-export const getQuiqUserTakenMeaningfulAction = () =>
-  store.get('quiq-user-taken-meaningful-action') === true;
-export const getQuiqUserIsSubscribed = () => store.get('quiq-user-subscribed') === true;
-export const getAccessToken = () => store.get('X-Quiq-Access-Token');
+
+export const setQuiqUserIsSubscribed = (subscribed: boolean) => {
+  updateData({subscribed});
+};
+
+export const setAccessToken = (accessToken: string) => {
+  updateData({accessToken});
+};
+
+export const getQuiqChatContainerVisible = () => getData().chatContainerVisible === true;
+
+export const getQuiqUserTakenMeaningfulAction = () => getData().hasTakenMeaningfulAction === true;
+
+export const getQuiqUserIsSubscribed = () => getData().subscribed === true;
+
+export const getAccessToken = () => getData().accessToken;
+
 export const getTrackingId = () => {
   const accessToken = getAccessToken();
 
@@ -38,6 +69,8 @@ export const getTrackingId = () => {
 
   return null;
 };
+
+export const setCustomPersistentData = (key: string, value: any) => updateData({[key]: value});
 
 let storageEnabled;
 export const isStorageEnabled = () => {
