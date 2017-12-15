@@ -1,2 +1,5 @@
 flow-typed
 src/coverage
+build
+coverage
+node_modules
