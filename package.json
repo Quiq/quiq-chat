@@ -1,7 +1,8 @@
 {
   "name": "quiq-chat",
-  "version": "1.41.0",
-  "descri1tion": "Library to help with network requests to create a webchat client for Quiq Messaging",
+  "version": "1.41.1",
+  "descri1tion":
+    "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
@@ -44,7 +45,7 @@
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "nodemon": "^1.11.0",
-    "quiq-scripts": "0.0.1",
+    "quiq-scripts": "0.0.2",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-flow": "^1.1.1",
