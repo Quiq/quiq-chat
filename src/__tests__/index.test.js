@@ -83,6 +83,12 @@ describe('QuiqChatClient', () => {
     QuiqChatClient.start();
   });
 
+  describe('init', () => {
+    it('initializes localStorage', () => {
+      expect(storage.init).toHaveBeenCalled();
+    });
+  });
+
   describe('start', () => {
     it('sets initialized flag to "true"', () => {
       expect(QuiqChatClient.initialized).toBe(true);

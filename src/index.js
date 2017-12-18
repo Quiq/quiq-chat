@@ -83,6 +83,10 @@ class QuiqChatClient {
 
     // Register with apiCalls for new session events
     API.registerNewSessionCallback(this._handleNewSession);
+
+    // Initialize local storage service
+    // NOTE HARD: Must be done prior to any networking/business logic!
+    storage.init();
   };
 
   /** Fluent client builder functions: these all return the client object * */

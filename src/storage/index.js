@@ -3,12 +3,15 @@ import store from 'store/dist/store.modern.min';
 import expirePlugin from 'store/plugins/expire';
 import modifiedTimestampPlugin from './modifiedTimestampPlugin';
 import contactPointNamespacePlugin from './contactPointNamespacePlugin';
+import logger from '../logging';
 import jwt_decode from 'jwt-decode';
 import type {PersistentData} from 'types';
 
 type StorageCallbacks = {
   onPersistentDataChange?: (data: PersistentData) => void,
 };
+
+const log = logger('Storage');
 
 // NOTE: These plugins must be applied in exactly this order, to ensure that contact point namespacing
 // works for the expiration and modification plugins as well.
@@ -22,6 +25,35 @@ let callbacks: StorageCallbacks = {};
 
 const expireInDays = (numberOfDays: number) =>
   new Date().getTime() + numberOfDays * 1000 * 60 * 60 * 24;
+
+const processLegacyKeys = () => {
+  const legacyKeys = [
+    'X-Quiq-Access-Token',
+    'quiq-chat-container-visible',
+    'quiq-tracking-id',
+    'quiq-user-taken-meaningful-action',
+    'quiq-user-subscribed',
+    'quiq_mute_sounds',
+  ];
+
+  const quiqData = {};
+  legacyKeys.forEach(k => {
+    const value = store.get(k);
+    if (value) {
+      quiqData[k] = value;
+      store.remove(k);
+    }
+  });
+
+  store.set(key, quiqData, expireInDays(ttl));
+};
+
+export const init = () => {
+  if (!store.get(key)) {
+    log.info('Processing legacy local storage keys into quiq-data');
+    processLegacyKeys();
+  }
+};
 
 export const getData = (): PersistentData => store.get(key) || {};
 
