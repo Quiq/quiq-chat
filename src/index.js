@@ -249,16 +249,11 @@ class QuiqChatClient {
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserIsSubscribed(true);
 
-    // Send the message first, then it will get retrieved when the web socket
-    // is connected below. This prevents us from getting into race conditions
-    // where the message is sent right after the transcript is fetched.
-    const message = await API.sendTextMessage(text);
-
     if (!this.connected) {
-      this._connectSocket();
+      await this._connectSocket();
     }
 
-    return message;
+    return await API.sendTextMessage(text);
   };
 
   emailTranscript = async (data: EmailTranscriptPayload) => {
@@ -280,10 +275,11 @@ class QuiqChatClient {
     file: File,
     progressCallback: (progress: number) => void,
   ): Promise<string> => {
+    storage.setQuiqChatContainerVisible(true);
+    storage.setQuiqUserIsSubscribed(true);
+
     if (!this.connected) {
       await this._connectSocket();
-      storage.setQuiqChatContainerVisible(true);
-      storage.setQuiqUserIsSubscribed(true);
     }
 
     // Returns an array of directives, but we'll always be asking for only 1 here
