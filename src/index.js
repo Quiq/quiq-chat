@@ -253,7 +253,7 @@ class QuiqChatClient {
       await this._connectSocket();
     }
 
-    return await API.sendTextMessage(text);
+    return API.sendTextMessage(text);
   };
 
   emailTranscript = async (data: EmailTranscriptPayload) => {
