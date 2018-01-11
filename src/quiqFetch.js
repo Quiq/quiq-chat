@@ -38,7 +38,6 @@ const quiqFetch = (
         trackingId: getTrackingId() || 'noAssociatedTrackingId',
         quiqVersion: version,
       });
-  parsedUrl = `${parsedUrl}#correlationId=${correlationId}`;
 
   let request: RequestOptions = {
     // Leave this as cors even though we are on same origin for default webchat case.
@@ -52,6 +51,7 @@ const quiqFetch = (
       'X-Quiq-Client-Version': version,
       'x-centricient-correlation-id': correlationId,
     },
+    correlationId,
   };
 
   let headers = {};
