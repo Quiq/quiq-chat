@@ -312,7 +312,9 @@ class QuiqChatClient {
     return result;
   };
 
-  getHandle = throttle((host?: string) => storage.getTrackingId() || API.login(host), 10000, {
+  getHandle = () => storage.getTrackingId();
+
+  login = throttle((host?: string) => API.login(host), 10000, {
     trailing: false,
   });
 
@@ -331,6 +333,12 @@ class QuiqChatClient {
 
   isAgentAssigned = (): boolean => {
     return this.agentIsAssigned;
+  };
+
+  _deepGetUserSubscribed = async (): Promise<boolean> => {
+    const conversation = await getConversation();
+    storage.setQuiqUserIsSubscribed(conversation.isSubscribed);
+    return conversation.isSubscribed;
   };
 
   _logToSentry = (level: string, message: string, data: Object = {}) =>
