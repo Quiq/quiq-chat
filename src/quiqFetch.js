@@ -32,7 +32,7 @@ const quiqFetch = (
 
   const correlationId = createGuid();
   // Only append this data to a non-cached endpoint so we don't cache bust.
-  let parsedUrl = options.cached
+  const parsedUrl = options.cached
     ? url
     : formatQueryParams(url, {
         trackingId: getTrackingId() || 'noAssociatedTrackingId',
