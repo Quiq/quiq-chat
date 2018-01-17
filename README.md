@@ -145,8 +145,11 @@ Submits a map of custom `(key, value)` pairs to be included in the data for the 
 Method accepts a single parameter, a JavaScript object with values of type `String`.
 `key` is limited to 80 characters and must be unique; `value` is limited to 1000 characters.
 
-#### getHandle() => Promise<handle: string>
-Fetches a unique handle to track the session through.  If a session already exists for the current user, a network request is skipped and that value is instead returned.  The value of this call is cached for 10 seconds.
+#### getHandle() => Promise<handle?: string>
+Returns the unique identifier for this session. If the user is not logged in, returns `undefined`.
+
+#### login() => Promise<handle: string>
+Creates a session for the current user, if one does not already exist. Returns the unique identifier for the new or existing session.
 
 #### checkForAgents() => Promise<{available: boolean}>
 Fetches whether or not there are agents available for the contact point the webchat is connected to.  The value of this call is cached for 10 seconds.
