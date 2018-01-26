@@ -2,7 +2,6 @@
 import {UAParser} from 'ua-parser-js';
 import {setBurned} from 'globals';
 import QuiqSocket from 'QuiqSockets/quiqSockets';
-import {disconnectSocket} from 'websockets';
 import qs from 'qs';
 import logger from 'logging';
 import type {BrowserNames, BurnItDownResponse} from 'types';
@@ -58,7 +57,6 @@ export const burnItDown = (message?: BurnItDownResponse) => {
     setTimeout(() => {
       setBurned();
       QuiqSocket.disconnect();
-      disconnectSocket();
 
       if (_onBurn) _onBurn();
       log.error('Webchat has been burned down.');
@@ -89,4 +87,30 @@ export const createGuid = (): string => {
   }
 
   return `${s4() + s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
+};
+
+/**
+ * Creates a function that is restricted to allow only one invocation at a time. That is, if a function f is called while
+ * a previous call to f is already running, the return value of the first invocation will be used as the return value for the second as well.
+ * This is similar to throttling, except that we don't care about time between calls, only that the function never runs simultaneously.
+ * @param f
+ */
+export const onceAtATime = <A, T>(f: A => Promise<T>): (A => Promise<T>) => {
+  let currentPromise: Promise<T> | null = null;
+  let promisePending = false;
+  return (...args) => {
+    if (promisePending && currentPromise) {
+      return currentPromise;
+    }
+    currentPromise = f.apply(this, args);
+    promisePending = true;
+    currentPromise
+      .then(() => {
+        promisePending = false;
+      })
+      .catch(() => {
+        promisePending = false;
+      });
+    return currentPromise;
+  };
 };

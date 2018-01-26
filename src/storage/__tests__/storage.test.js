@@ -1,4 +1,5 @@
 jest.mock('../../logging');
+jest.mock('../../Utils/utils.js');
 
 import {isStorageEnabled} from '../index';
 

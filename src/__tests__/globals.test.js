@@ -1,6 +1,7 @@
 // @flow
 
 jest.mock('../logging');
+jest.mock('../Utils/utils.js');
 
 import * as Globals from '../globals';
 

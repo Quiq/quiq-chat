@@ -7,3 +7,4 @@ export const registerOnBurnCallback = jest.fn();
 export const inLocalDevelopment = () => true;
 export const getTenantFromHostname = () => 'tester';
 export const createGuid = () => 'imALittleGuidShortAndStout';
+export const onceAtATime = f => f;

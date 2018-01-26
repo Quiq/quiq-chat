@@ -1,5 +1,5 @@
 // @flow
-import {formatQueryParams, burnItDown, createGuid} from './Utils/utils';
+import {formatQueryParams, burnItDown, createGuid, onceAtATime} from './Utils/utils';
 import {
   getUrlForContactPoint,
   getPublicApiUrl,
@@ -125,10 +125,12 @@ export const emailTranscript = (data: EmailTranscriptPayload) =>
 
 /**
  * Creates a new session and tracking ID
+ * NOTE: We ensure that this function is never invoked simultaneously, so as to prevent multiple trackingID related race conditions
+ *
  * @param host - Host against which to call /generate
  * @param sessionChange - Indicates whether this is being called to replace old session. Results in newSession callback being fired.
  */
-export const login = (host?: string) =>
+export const login = onceAtATime((host?: string) =>
   quiqFetch(
     getGenerateUrl(host),
     {
@@ -160,6 +162,7 @@ export const login = (host?: string) =>
     log.info(`Login successful. trackingId: ${trackingId || 'unknown'}`);
 
     return trackingId;
-  });
+  }),
+);
 
 export const logout = () => quiqFetch(getSessionApiUrl(), {method: 'DELETE'});

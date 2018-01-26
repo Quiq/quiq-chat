@@ -68,4 +68,46 @@ describe('Utils', () => {
       expect(burnCallback).toBeCalled();
     });
   });
+
+  describe('onceAtATime', () => {
+    const f = jest.fn(
+      (n: number) => new Promise(resolve => setTimeout(resolve(`Seahawks ${n}`), 2000)),
+    );
+    const f1 = Utils.onceAtATime(f);
+
+    afterEach(() => {
+      f.mockClear();
+    });
+
+    it('only runs the fucntions once at a time', () => {
+      f1();
+      f1();
+      f1();
+      f1();
+      expect(f.mock.calls.length).toBe(1);
+    });
+
+    it('only returns the result of the original call to all subsequent calls made while original is running', async () => {
+      expect.assertions(4);
+      const values = await Promise.all([f1(1), f1(2), f1(3)]);
+      values.forEach(v => {
+        expect(v).toBe('Seahawks 1');
+      });
+      expect(f.mock.calls.length).toBe(1);
+    });
+
+    it('invokes the function again once first invocation is completed', async () => {
+      expect.assertions(7);
+      let values = await Promise.all([f1(1), f1(2), f1(3)]);
+      values.forEach(v => {
+        expect(v).toBe('Seahawks 1');
+      });
+
+      values = await Promise.all([f1(3), f1(4), f1(5)]);
+      values.forEach(v => {
+        expect(v).toBe('Seahawks 3');
+      });
+      expect(f.mock.calls.length).toBe(2);
+    });
+  });
 });
