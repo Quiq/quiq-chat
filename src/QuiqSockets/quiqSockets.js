@@ -67,7 +67,7 @@ class QuiqSocket {
     heartbeatFrequency: 50 * 1000,
 
     // Initiate reconnect if pong is not received in this time
-    heartBeatTimeout: 20 * 1000,
+    heartbeatTimeout: 20 * 1000,
   };
 
   // Internal WebSocket instance
@@ -95,7 +95,7 @@ class QuiqSocket {
 
   constructor() {
     // Option validation
-    if (this.options.heartBeatTimeout >= this.options.heartbeatFrequency) {
+    if (this.options.heartbeatTimeout >= this.options.heartbeatFrequency) {
       log.error('Heartbeat timeout must be less than heartbeat interval');
     }
 
@@ -358,7 +358,7 @@ class QuiqSocket {
     }
 
     if (this.timers.heartbeat.timeout) {
-      clearInterval(this.timers.heartbeat.timeout);
+      clearTimeout(this.timers.heartbeat.timeout);
       this.timers.heartbeat.timeout = null;
       log.info('Invalidated heartbeat timeout');
     }
@@ -501,7 +501,7 @@ class QuiqSocket {
         }
         this._reset();
         this.connect();
-      }, this.options.heartBeatTimeout);
+      }, this.options.heartbeatTimeout);
 
       // Verify we have a socket connection
       if (!this.socket) {
