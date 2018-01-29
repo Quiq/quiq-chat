@@ -30,6 +30,15 @@ import type {Interval, Timeout} from 'types';
 
 const log = logger('QuiqSocket');
 
+type Timers = {
+  connectionTimeout: ?Timeout, // Timeout for connection/handshake attempt
+  retryTimeout: ?Timeout, // Timeout for backoff on retry attempts
+  heartbeat: {
+    interval: ?Interval, // Interval for sending of heartbeat
+    timeout: ?Timeout, // Timeout for receiving a pong back from the server
+  },
+};
+
 class QuiqSocket {
   // Socket endpoint
   url: ?string;
@@ -41,7 +50,7 @@ class QuiqSocket {
   fatalErrorHandler: ?() => any;
 
   // Websocket options
-  options: {[string]: any} = {
+  options = {
     // Number of times to attempt reconnecting on a single connection
     maxRetriesOnConnectionLoss: 100,
 
@@ -56,6 +65,9 @@ class QuiqSocket {
 
     // Frequency to send ping across websocket
     heartbeatFrequency: 50 * 1000,
+
+    // Initiate reconnect if pong is not received in this time
+    heartBeatTimeout: 20 * 1000,
   };
 
   // Internal WebSocket instance
@@ -66,9 +78,14 @@ class QuiqSocket {
   connectionCount: number = 0;
 
   // Timers and intervals
-  connectionTimeout: ?Timeout; // Timeout for connection/handshake attempt
-  retryTiemout: ?Timeout; // Timeout for backoff on retry attempts
-  heartbeatInterval: ?Interval; // Interval for sending of heartbeat
+  timers: Timers = {
+    connectionTimeout: null,
+    retryTimeout: null,
+    heartbeat: {
+      interval: null,
+      timeout: null,
+    },
+  };
 
   // Connection state
   lastPongReceivedTimestamp: number;
@@ -77,6 +94,11 @@ class QuiqSocket {
   waitingForOnlineToReconnect: boolean = false;
 
   constructor() {
+    // Option validation
+    if (this.options.heartBeatTimeout >= this.options.heartbeatFrequency) {
+      log.error('Heartbeat timeout must be less than heartbeat interval');
+    }
+
     // NOTE: We use 'waitingForOnlineToReconnect' as a flag for whether to attempt reconnecting after an 'online' event.
     // In other words, QuiqSocket must have recorded an 'offline' event prior to the 'online' event if it's going to reconnect.
     window.addEventListener('online', () => {
@@ -171,6 +193,7 @@ class QuiqSocket {
 
   /**
    * Connect the websocket. `withURL()` must be called prior to calling this method.
+   * If a WS connection is currently open, it is closed and a new one is created.
    * @returns {QuiqSocket} This instance of QuiqSocket, to allow for chaining
    */
   connect = (): QuiqSocket => {
@@ -196,10 +219,10 @@ class QuiqSocket {
       return this;
     }
 
-    log.info('Connecting socket...');
-
     // Reset connection and tiemout state
     this._reset();
+
+    log.info('Connecting socket...');
 
     // Retrieve auth token from local storage
     const accessToken = getAccessToken();
@@ -220,6 +243,13 @@ class QuiqSocket {
       quiqVersion: version,
     });
 
+    // Set tiemout to trigger reconnect if _onOpen isn't called quiqly enough
+    this.timers.connectionTimeout = setTimeout(() => {
+      log.warn('Connection attempt timed out.');
+      this._retryConnection();
+    }, this.options.connectionAttemptTimeout);
+
+    // Make connection
     try {
       this.socket = new WebSocket(parsedUrl, accessToken);
     } catch (e) {
@@ -238,12 +268,6 @@ class QuiqSocket {
 
     // Increment "global" connection count
     this.connectionCount++;
-
-    // Set tiemout to trigger reconnect if _onOpen isn't called quiqly enough
-    this.connectionTimeout = setTimeout(() => {
-      log.warn('Connection attempt timed out.');
-      this._retryConnection();
-    }, this.options.connectionAttemptTimeout);
 
     return this;
   };
@@ -315,22 +339,28 @@ class QuiqSocket {
       log.info('Closed existing connection and removed event handlers.');
     }
 
-    if (this.retryTiemout) {
-      clearTimeout(this.retryTiemout);
-      this.retryTiemout = null;
+    if (this.timers.retryTimeout) {
+      clearTimeout(this.timers.retryTimeout);
+      this.timers.retryTimeout = null;
       log.info('Invalidated retry delay timeout');
     }
 
-    if (this.connectionTimeout) {
-      clearTimeout(this.connectionTimeout);
-      this.connectionTimeout = null;
+    if (this.timers.connectionTimeout) {
+      clearTimeout(this.timers.connectionTimeout);
+      this.timers.connectionTimeout = null;
       log.info('Invalidated connection open timeout');
     }
 
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
+    if (this.timers.heartbeat.interval) {
+      clearInterval(this.timers.heartbeat.interval);
+      this.timers.heartbeat.interval = null;
       log.info('Invalidated heartbeat interval');
+    }
+
+    if (this.timers.heartbeat.timeout) {
+      clearInterval(this.timers.heartbeat.timeout);
+      this.timers.heartbeat.timeout = null;
+      log.info('Invalidated heartbeat timeout');
     }
   };
 
@@ -340,9 +370,13 @@ class QuiqSocket {
    * @private
    */
   _handleMessage = (e: MessageEvent) => {
-    // If this is a pong, update pong timestamp and bail out
+    // If this is a pong, update pong timestamp and clear heartbeat timeout
     if (e.data && e.data === 'X') {
       this.lastPongReceivedTimestamp = Date.now();
+      if (this.timers.heartbeat.timeout) {
+        clearTimeout(this.timers.heartbeat.timeout);
+        this.timers.heartbeat.timeout = null;
+      }
       return;
     }
 
@@ -378,9 +412,9 @@ class QuiqSocket {
     log.info(`Socket opened to ${this.socket.url}`);
 
     // Clear timeout
-    if (this.connectionTimeout) {
-      clearTimeout(this.connectionTimeout);
-      this.connectionTimeout = null;
+    if (this.timers.connectionTimeout) {
+      clearTimeout(this.timers.connectionTimeout);
+      this.timers.connectionTimeout = null;
     }
 
     // Reset retry count
@@ -447,18 +481,35 @@ class QuiqSocket {
    * @private
    */
   _startHeartbeat = () => {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
+    if (this.timers.heartbeat.interval) {
+      clearInterval(this.timers.heartbeat.interval);
     }
 
-    // Reset pong time
+    // Update pong time
     this.lastPongReceivedTimestamp = Date.now();
 
-    this.heartbeatInterval = setInterval(() => {
+    this.timers.heartbeat.interval = setInterval(() => {
+      // Initiate heartbeat timeout--we must receive a pong back within this time frame.
+      // This will be cleared when we receive an 'X'
+      if (this.timers.heartbeat.timeout) {
+        clearTimeout(this.timers.heartbeat.timeout);
+      }
+      this.timers.heartbeat.timeout = setTimeout(() => {
+        log.warn('Heartbeat pong not received back in time. Reconnecting.');
+        if (this.connectionLossHandler) {
+          this.connectionLossHandler(0, 'Heartbeat timeout');
+        }
+        this._reset();
+        this.connect();
+      }, this.options.heartBeatTimeout);
+
+      // Verify we have a socket connection
       if (!this.socket) {
         log.error('Trying to send heartbeat, but no socket connection exists.');
         return;
       }
+
+      // Send ping
       this.socket.send('X');
     }, this.options.heartbeatFrequency);
   };

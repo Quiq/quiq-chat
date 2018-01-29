@@ -31,7 +31,7 @@ const errorLogger = (rawMethod, level, loggerName) => (
   message,
   {data = {}, exception = null} = {},
 ) => {
-  const extra = Object.assign({}, QuiqChatClient._getState(), data);
+  const extra = Object.assign({}, QuiqChatClient && QuiqChatClient._getState(), data);
   if (exception) {
     Raven.captureException(exception, {
       level,
