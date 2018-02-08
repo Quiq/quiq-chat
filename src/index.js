@@ -301,9 +301,9 @@ class QuiqChatClient {
     return API.updateTypingIndicator(text, typing);
   };
 
-  sendRegistration = async (fields: {[string]: string}) => {
+  sendRegistration = async (fields: {[string]: string}, formVersionId?: string) => {
     storage.setQuiqChatContainerVisible(true);
-    const result = await API.sendRegistration(fields);
+    const result = await API.sendRegistration(fields, formVersionId);
 
     if (this.callbacks.onRegistration) {
       this.callbacks.onRegistration();

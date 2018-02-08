@@ -101,10 +101,10 @@ export const updateTypingIndicator = (text: string, typing: boolean) =>
     body: JSON.stringify({text, typing}),
   });
 
-export const sendRegistration = (fields: {[string]: string}) =>
+export const sendRegistration = (fields: {[string]: string}, formVersionId?: string) =>
   quiqFetch(`${getUrlForContactPoint()}/register`, {
     method: 'POST',
-    body: JSON.stringify({form: fields}),
+    body: JSON.stringify({form: fields, formVersionId}),
   });
 
 export const checkForAgents = (): Promise<{available: boolean}> =>

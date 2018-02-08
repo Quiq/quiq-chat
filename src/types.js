@@ -88,7 +88,7 @@ export type QuiqChatClientType = {
   leaveChat: () => void,
   sendTextMessage: (text: string) => void,
   updateMessagePreview: (text: string, typing: boolean) => void,
-  sendRegistration: (fields: {[string]: string}) => void,
+  sendRegistration: (fields: {[string]: string}, formVersionId?: string) => void,
   checkForAgents: () => Promise<{available: boolean}>,
   isChatVisible: () => boolean,
   hasTakenMeaningfulAction: () => boolean,
@@ -253,6 +253,7 @@ export type ChatMetadata = {
       },
     }>,
   },
+  registrationFormVersionId?: string,
 };
 
 export type WebsocketCallbacks = {
