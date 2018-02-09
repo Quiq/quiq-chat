@@ -58,9 +58,11 @@ const logRequest = (logData: Object) => {
     delete dataCopy.fetchRequest.headers['X-Quiq-Access-Token'];
   }
 
-  const statusCode =
-    dataCopy.statusCode || (dataCopy.responses[0] && dataCopy.responses[0].statusCode);
-  const reason = dataCopy.reason || (dataCopy.responses[0] && dataCopy.responses[0].statusText);
+  const lastResponse =
+    dataCopy.responses.length && dataCopy.responses[dataCopy.responses.length - 1];
+
+  const statusCode = dataCopy.statusCode || (lastResponse && lastResponse.statusCode);
+  const reason = dataCopy.reason || (lastResponse && lastResponse.statusText);
   log.debug(`[${statusCode}] (${reason}) ${dataCopy.url}`, {data: dataCopy, capture: true});
 };
 

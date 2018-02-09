@@ -594,21 +594,22 @@ describe('QuiqChatClient', () => {
 
     describe('sendRegistration', () => {
       const data = {firstName: 'SpongeBob', lastName: 'SquarePants'};
+      const versionId = 'bleh';
 
       beforeEach(() => {
         if (!QuiqChatClient) {
           throw new Error('Client undefined');
         }
 
-        QuiqChatClient.sendRegistration(data);
+        QuiqChatClient.sendRegistration(data, versionId);
       });
 
       it('proxies call', () => {
-        expect(API.sendRegistration).toBeCalledWith(data);
+        expect(API.sendRegistration).toHaveBeenCalledWith(data, versionId);
       });
 
       it('calls storage.setQuiqChatContainerVisible', () => {
-        expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(true);
+        expect(mockStore.setQuiqChatContainerVisible).toHaveBeenCalled();
       });
     });
   });
