@@ -1,5 +1,5 @@
 // @flow
-import {formatQueryParams, burnItDown, createGuid, onceAtATime} from './Utils/utils';
+import {formatQueryParams, burnItDown, onceAtATime} from './Utils/utils';
 import {
   getUrlForContactPoint,
   getPublicApiUrl,
@@ -7,7 +7,6 @@ import {
   getSessionApiUrl,
   getGenerateUrl,
 } from './globals';
-import {version} from '../package.json';
 import quiqFetch from './quiqFetch';
 import {setAccessToken, getAccessToken, getTrackingId} from './storage';
 import type {Conversation, ChatMetadata, UploadDirective, EmailTranscriptPayload} from 'types';
@@ -23,28 +22,6 @@ export const registerNewSessionCallback = (callback: (newTrackingId: string) => 
 };
 
 export const keepAlive = () => quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {method: 'POST'});
-
-export const joinChat = () => quiqFetch(`${getUrlForContactPoint()}/join`, {method: 'POST'});
-
-export const leaveChat = (synchronous: boolean): Promise<*> => {
-  if (!synchronous) {
-    return quiqFetch(`${getUrlForContactPoint()}/leave`, {method: 'POST'});
-  }
-
-  // This terrible synchronous networking is a temporary fix for calling leave chat
-  // when the window closes in undocked-only mode
-  const request = new window.XMLHttpRequest();
-  request.open('POST', `${getUrlForContactPoint()}/leave`, false); // `false` makes the request synchronous
-  request.setRequestHeader('X-Quiq-Line', '2');
-  request.setRequestHeader('X-Quiq-Client-Id', 'Quiq-Chat-Client');
-  request.setRequestHeader('X-Quiq-Client-Version', version);
-  request.setRequestHeader('X-Quiq-Access-Token', getAccessToken());
-  request.setRequestHeader('X-Centricient-Correlation-Id', createGuid());
-
-  request.send();
-
-  return Promise.resolve();
-};
 
 export const getChatConfiguration = (): Promise<ChatMetadata> =>
   quiqFetch(`${getUrlForContactPoint()}/configuration`, undefined, {responseType: 'JSON'});

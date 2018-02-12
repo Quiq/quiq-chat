@@ -84,8 +84,6 @@ export type QuiqChatClientType = {
   onConnectionStatusChange: (callback: (connected: boolean) => void) => QuiqChatClientType,
   onBurn: (callback: () => void) => QuiqChatClientType,
   stop: () => void,
-  joinChat: () => void,
-  leaveChat: () => void,
   sendTextMessage: (text: string) => void,
   updateMessagePreview: (text: string, typing: boolean) => void,
   sendRegistration: (fields: {[string]: string}, formVersionId?: string) => void,

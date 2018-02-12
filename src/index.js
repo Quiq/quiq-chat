@@ -227,24 +227,6 @@ class QuiqChatClient {
   // This is specific to our chat client. Don't document it.
   getChatConfiguration = () => API.getChatConfiguration();
 
-  /** API wrappers: these return Promises around the API response * */
-  joinChat = async () => {
-    await this.getMessages();
-
-    // These events are going to be managed entirely by the server in the near future.
-    // For now, we have this logic in place to prevent multiple join events from showing
-    // up on page turns.
-    if (!this._hasUserJoinedConversation()) {
-      storage.setQuiqChatContainerVisible(true);
-      return API.joinChat();
-    }
-  };
-
-  leaveChat = (synchronous: boolean = false) => {
-    storage.setQuiqChatContainerVisible(false);
-    return API.leaveChat(synchronous);
-  };
-
   sendTextMessage = async (text: string) => {
     storage.setQuiqChatContainerVisible(true);
     storage.setQuiqUserIsSubscribed(true);

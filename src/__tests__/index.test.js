@@ -475,24 +475,6 @@ describe('QuiqChatClient', () => {
       set.mockClear();
     });
 
-    describe('joinChat', () => {
-      beforeEach(() => {
-        if (!QuiqChatClient) {
-          throw new Error('Client undefined');
-        }
-
-        QuiqChatClient.joinChat();
-      });
-
-      it('proxies call', () => {
-        expect(API.joinChat).toBeCalled();
-      });
-
-      it('sets the quiq-chat-container-visible value to true', () => {
-        expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(true);
-      });
-    });
-
     describe('isChatVisible', () => {
       it('returns the value of the quiq-chat-container-visible value value', () => {
         if (!QuiqChatClient) {
@@ -518,24 +500,6 @@ describe('QuiqChatClient', () => {
 
         mockStore.getQuiqUserTakenMeaningfulAction.mockReturnValueOnce(false);
         expect(QuiqChatClient.hasTakenMeaningfulAction()).toBe(false);
-      });
-    });
-
-    describe('leaveChat', () => {
-      beforeEach(() => {
-        if (!QuiqChatClient) {
-          throw new Error('Client undefined');
-        }
-
-        QuiqChatClient.leaveChat();
-      });
-
-      it('proxies call', () => {
-        expect(API.leaveChat).toBeCalled();
-      });
-
-      it('sets the quiq-chat-container-visible value to false', () => {
-        expect(mockStore.setQuiqChatContainerVisible).toBeCalledWith(false);
       });
     });
 
