@@ -37,6 +37,7 @@ type Timers = {
     interval: ?Interval, // Interval for sending of heartbeat
     timeout: ?Timeout, // Timeout for receiving a pong back from the server
   },
+  gracePeriod: ?Timeout,
 };
 
 class QuiqSocket {
@@ -68,6 +69,9 @@ class QuiqSocket {
 
     // Initiate reconnect if pong is not received in this time
     heartbeatTimeout: 20 * 1000,
+
+    // Upon unexpected disconnect, try to reconnect for this long before admitting there's an error.
+    gracePeriod: 10 * 1000,
   };
 
   // Internal WebSocket instance
@@ -85,6 +89,7 @@ class QuiqSocket {
       interval: null,
       timeout: null,
     },
+    gracePeriod: null,
   };
 
   // Connection state
@@ -92,6 +97,7 @@ class QuiqSocket {
 
   // Status flags
   waitingForOnlineToReconnect: boolean = false;
+  reconnecting: boolean = false;
 
   constructor() {
     // Option validation
@@ -244,6 +250,7 @@ class QuiqSocket {
     });
 
     // Set tiemout to trigger reconnect if _onOpen isn't called quiqly enough
+    // This catches all cases where we fail to even open the socket--even if construction fails in the try/catch below.
     this.timers.connectionTimeout = setTimeout(() => {
       log.warn('Connection attempt timed out.');
       this._retryConnection();
@@ -304,6 +311,8 @@ class QuiqSocket {
     log.info(
       `Initiating retry attempt ${this.retries + 1} of ${this.options.maxRetriesOnConnectionLoss}`,
     );
+
+    this.reconnecting = true;
 
     const delay = this.options.backoffFunction.call(this, this.retries);
 
@@ -417,8 +426,17 @@ class QuiqSocket {
       this.timers.connectionTimeout = null;
     }
 
+    // Clear grace period
+    if (this.timers.gracePeriod) {
+      clearTimeout(this.timers.gracePeriod);
+      this.timers.gracePeriod = null;
+    }
+
     // Reset retry count
     this.retries = 0;
+
+    // We're obviously not trying to reconnect anymore
+    this.reconnecting = false;
 
     // Begin heartbeats
     this._startHeartbeat();
@@ -441,16 +459,20 @@ class QuiqSocket {
     // TODO: handle code 1015 (TCP 1.1 not supported)
     // TODO: Investigate other status codes to handle specifically
 
-    // Reset state
-    this._reset();
+    // Fire callback after grace period, but only if this is the close event that STARTS a reconnect cycle.
+    // (We only want one grace period per disconnect/retry cycle)
+    if (!this.reconnecting) {
+      this.timers.gracePeriod = setTimeout(() => {
+        this.timers.gracePeriod = null;
+        log.info('Grace period expired');
+        if (this.connectionLossHandler) {
+          this.connectionLossHandler(e.code, e.reason);
+        }
+      }, this.options.gracePeriod);
 
-    // Fire callback
-    if (this.connectionLossHandler) {
-      this.connectionLossHandler(e.code, e.reason);
+      // Initiate retry procedure
+      this._retryConnection();
     }
-
-    // Initiate retry procedure
-    this._retryConnection();
   };
 
   /**
