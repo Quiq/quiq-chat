@@ -20,10 +20,16 @@ export type IsomorphicFetchNetworkError = {
   status?: number, // We manually append this, it is not normally present on the object.
 };
 
+export type Author = {
+  authorType: AuthorType,
+  authorDisplayName?: string,
+  authorProfilePicture?: string,
+};
+
 export type AgentTypingMessage = {
   type: 'AgentTyping',
   typing: boolean,
-};
+} & Author;
 
 export type QueueDispositionMessage = {
   type: 'queueDisposition',
@@ -53,7 +59,7 @@ export type PersistentData = {
 export type QuiqChatCallbacks = {
   onNewMessages?: (messages: Array<ConversationMessage>) => void,
   onNewEvents?: (events: Array<Event>) => void,
-  onAgentTyping?: (typing: boolean) => void,
+  onAgentTyping?: (typing: boolean, author: Author) => void,
   onMessageSendFailure?: (messageId: string) => void,
   onError?: (error: ?ApiError) => void,
   onRetryableError?: (error: ?ApiError) => void,
@@ -199,22 +205,20 @@ export type ConversationElement = {
 export type ConversationMessage = TextMessage | AttachmentMessage;
 
 export type TextMessage = {
-  authorType: AuthorType,
   text: string,
   id: string,
   timestamp: number,
   type: TextMessageType,
-};
+} & Author;
 
 export type AttachmentMessage = {
   id: string,
   timestamp: number,
   type: AttachmentMessageType,
-  authorType: AuthorType,
   url: string,
   contentType: string,
   status?: MessageStatusType,
-};
+} & Author;
 
 export type Event = {
   authorType?: AuthorType,

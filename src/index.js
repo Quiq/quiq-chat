@@ -30,6 +30,7 @@ import type {
   ConversationResult,
   EmailTranscriptPayload,
   PersistentData,
+  Author,
 } from './types';
 import * as storage from './storage';
 import logger from './logging';
@@ -106,7 +107,7 @@ class QuiqChatClient {
     return this;
   };
 
-  onAgentTyping = (callback: (typing: boolean) => void): QuiqChatClient => {
+  onAgentTyping = (callback: (typing: boolean, author: Author) => void): QuiqChatClient => {
     this.callbacks.onAgentTyping = callback;
     return this;
   };
@@ -522,7 +523,11 @@ class QuiqChatClient {
           break;
         case MessageTypes.AGENT_TYPING:
           if (this.callbacks.onAgentTyping) {
-            this.callbacks.onAgentTyping(message.data.typing);
+            this.callbacks.onAgentTyping(message.data.typing, {
+              authorType: message.data.authorType,
+              authorDisplayName: message.data.authorDisplayName,
+              authorProfilePicture: message.data.authorProfilePicture,
+            });
           }
           break;
       }

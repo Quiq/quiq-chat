@@ -354,12 +354,22 @@ describe('QuiqChatClient', () => {
       QuiqChatClient._handleWebsocketMessage({
         messageType: 'ChatMessage',
         tenantId: 'test',
-        data: {type: 'AgentTyping', typing: true},
+        data: {
+          type: 'AgentTyping',
+          typing: true,
+          authorType: 'User',
+          authorProfilePicture: 'testUrl',
+          authorDisplayName: 'Homer',
+        },
       });
     });
 
     it('calls onAgentTyping', () => {
-      expect(onAgentTyping).toBeCalledWith(true);
+      expect(onAgentTyping).toBeCalledWith(true, {
+        authorType: 'User',
+        authorProfilePicture: 'testUrl',
+        authorDisplayName: 'Homer',
+      });
     });
   });
 
