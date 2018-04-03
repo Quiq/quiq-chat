@@ -73,6 +73,14 @@ class QuiqChatClient {
   initialized: boolean = false;
   estimatedWaitTime: ?number;
 
+  _resetState = () => {
+    this.messages = [];
+    this.events = [];
+    this.userIsRegistered = false;
+    this.agentIsAssigned = false;
+    this.estimatedWaitTime = null;
+  };
+
   initialize = (host: string, contactPoint: string) => {
     this.host = host;
     this.contactPoint = contactPoint;
@@ -199,7 +207,7 @@ class QuiqChatClient {
   stop = () => {
     this._disconnectSocket();
     this.initialized = false;
-    this.connected = false;
+    this._resetState();
   };
 
   getPersistentData = (): PersistentData => storage.getData();
@@ -297,7 +305,7 @@ class QuiqChatClient {
 
   getHandle = () => storage.getTrackingId();
 
-  login = throttle((host?: string) => API.login(host), 10000, {
+  login = throttle(async (host?: string) => (await API.login(host)).trackingId, 10000, {
     trailing: false,
   });
 
@@ -452,40 +460,21 @@ class QuiqChatClient {
       });
 
   _disconnectSocket = () => {
+    this.connected = false;
     QuiqSocket.disconnect();
     disconnectAtmosphere();
   };
 
   _handleNewSession = async (newTrackingId: string) => {
     if (this.trackingId && newTrackingId !== this.trackingId) {
-      // Clear message and events caches (tracking ID is different now, so we essentially have a new Conversation)
-      this.messages = [];
-      this.events = [];
-      this.userIsRegistered = false;
+      this.stop();
 
       if (this.callbacks.onNewSession) {
         this.callbacks.onNewSession();
       }
-
-      this.trackingId = newTrackingId;
-
-      const conversation = await getConversation();
-
-      storage.setQuiqUserIsSubscribed(conversation.isSubscribed);
-      if (conversation.isSubscribed) {
-        await this._connectSocket();
-      } else {
-        this._disconnectSocket();
-
-        // Need to notify the client that we are not in a loading state at this point,
-        // otherwise the spinner will continue to show.
-        if (this.callbacks.onConnectionStatusChange) {
-          this.callbacks.onConnectionStatusChange(true);
-        }
-      }
-    } else {
-      this.trackingId = newTrackingId;
     }
+
+    this.trackingId = newTrackingId;
   };
 
   _handleWebsocketMessage = (

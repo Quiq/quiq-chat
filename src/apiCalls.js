@@ -117,8 +117,11 @@ export const login = onceAtATime((host?: string) =>
       responseType: 'JSON',
     },
   ).then((res: {accessToken: string, tokenId: string}) => {
+    const oldTrackingId = getTrackingId();
     setAccessToken(res.accessToken);
+    const newTrackingId = getTrackingId();
 
+    // Ensure we were able to store access token properly
     if (getAccessToken() !== res.accessToken) {
       burnItDown();
       return Promise.reject();
@@ -128,17 +131,15 @@ export const login = onceAtATime((host?: string) =>
       _onNewSession(res.tokenId);
     }
 
-    const trackingId = getTrackingId();
-
     // Tell sentry about the new trackingId
     // This will let us track logs by trackingId
     Raven.setUserContext({
-      id: trackingId,
+      id: newTrackingId,
     });
 
-    log.info(`Login successful. trackingId: ${trackingId || 'unknown'}`);
+    log.info(`Login successful. trackingId: ${newTrackingId || 'unknown'}`);
 
-    return trackingId;
+    return {trackingId: newTrackingId, oldTrackingId};
   }),
 );
 

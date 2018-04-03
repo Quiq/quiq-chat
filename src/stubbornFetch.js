@@ -169,7 +169,17 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
 
               if (callbacks.onRetryableError) callbacks.onRetryableError();
               errorCount++;
-              return login().then(request);
+              return login().then(({trackingId, oldTrackingId}) => {
+                // Do NOT retry if tid changed--this is a new session, and any call we might be making was intended for old session
+                if (oldTrackingId && trackingId !== oldTrackingId) {
+                  log.warn('Tracking ID changed, not retrying after login.');
+                  if (timerId) {
+                    clearTimeout(timerId);
+                  }
+                  return reject(new Error(response));
+                }
+                request();
+              });
             }
 
             // Retry
