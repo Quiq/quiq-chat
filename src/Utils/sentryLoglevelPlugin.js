@@ -30,20 +30,23 @@ const sentryPlugin = {
 const errorLogger = (rawMethod, level, loggerName) => (
   message,
   {data = {}, exception = null} = {},
+  shouldCapture = true,
 ) => {
   const extra = Object.assign({}, QuiqChatClient && QuiqChatClient._getState(), data);
-  if (exception) {
-    Raven.captureException(exception, {
-      level,
-      logger: loggerName,
-      extra,
-    });
-  } else {
-    Raven.captureMessage(message, {
-      level,
-      logger: loggerName,
-      extra,
-    });
+  if (shouldCapture) {
+    if (exception) {
+      Raven.captureException(exception, {
+        level,
+        logger: loggerName,
+        extra,
+      });
+    } else {
+      Raven.captureMessage(message, {
+        level,
+        logger: loggerName,
+        extra,
+      });
+    }
   }
   rawMethod(message);
 };

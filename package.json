@@ -1,6 +1,6 @@
 {
   "name": "quiq-chat",
-  "version": "1.53.0",
+  "version": "1.54.0",
   "descri1tion":
     "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
@@ -39,6 +39,7 @@
     "qs": "6.5.0",
     "raven-js": "3.17.0",
     "store": "2.0.12",
+    "stubborn-fetch": "^0.0.4",
     "ua-parser-js": "0.7.12"
   },
   "devDependencies": {

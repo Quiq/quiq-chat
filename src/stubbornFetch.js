@@ -19,19 +19,16 @@ const messages = {
   burnedFromServer: 'Received 466 response code from server. Blocking any further API Calls.',
   totalErrorsExceeded:
     'Client has exceeded maximum number of errors for a single session. Aborting session.',
-  clientInactive: 'The client has been inactive for 30 minutes.  Blocking any further API Calls.',
 };
 
 type FetchCallbacks = {
   onError?: (error: ?ApiError) => void,
-  onRetryableError?: (error: ?ApiError) => void,
   onErrorResolved?: () => void,
 };
 
 const bypassUrls = ['/generate', '/agents-available', '/chat'];
 let callbacks: FetchCallbacks = {};
 let initialized = false;
-let clientInactive = false;
 let errorCount = 0;
 
 export const registerCallbacks = (cbs: FetchCallbacks = {}) => {
@@ -40,10 +37,6 @@ export const registerCallbacks = (cbs: FetchCallbacks = {}) => {
 
 export const onInit = () => {
   initialized = true;
-};
-
-export const setClientInactive = (isInactive: boolean) => {
-  clientInactive = isInactive;
 };
 
 const logRequest = (logData: Object) => {
@@ -108,12 +101,6 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
     const request = () => {
       logData.retries++;
 
-      if (clientInactive) {
-        logData.statusCode = -1;
-        logData.reason = 'Request blocked because client is inactive';
-        logRequest(logData);
-        return reject(new Error(messages.clientInactive));
-      }
       if (!bypassUrls.find(u => url.includes(u)) && !initialized) {
         log.warn(`Request to ${url} blocked because client is not yet initialized`, {
           data: logData,
@@ -167,7 +154,6 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
                 return reject(new Error(response));
               }
 
-              if (callbacks.onRetryableError) callbacks.onRetryableError();
               errorCount++;
               return login().then(({trackingId, oldTrackingId}) => {
                 // Do NOT retry if tid changed--this is a new session, and any call we might be making was intended for old session
@@ -184,7 +170,6 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
 
             // Retry
             if (!timedOut && response.status >= 402 && response.status !== 422 && retryCount < 4) {
-              if (callbacks.onRetryableError) callbacks.onRetryableError();
               errorCount++;
               retryCount++;
               return request();
@@ -216,7 +201,6 @@ export default (url: string, fetchRequest: RequestOptions): Promise<*> => {
             // We aren't given a status code in this code path.  If we didn't get here from an auth call,
             // try re-authing
             if (!timedOut && retryCount < 4) {
-              if (callbacks.onRetryableError) callbacks.onRetryableError();
               errorCount++;
               retryCount++;
               return request();

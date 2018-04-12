@@ -12,7 +12,6 @@ import * as ApiCalls from '../apiCalls';
 import * as storage from '../storage';
 import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'store';
-import * as stubbornFetch from '../stubbornFetch';
 import * as Utils from '../Utils/utils';
 import log from 'loglevel';
 
@@ -50,12 +49,10 @@ describe('QuiqChatClient', () => {
   const onConnectionStatusChange = jest.fn();
   const onBurn = jest.fn();
   const onRegistration = jest.fn();
-  const onClientInactiveTimeout = jest.fn();
   const host = 'https://test.goquiq.fake';
   const contactPoint = 'test';
   const API = (ApiCalls: Object);
   const mockStore = (storage: any);
-  const setClientInactive = jest.spyOn(stubbornFetch, 'setClientInactive');
 
   beforeEach(() => {
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
@@ -78,7 +75,6 @@ describe('QuiqChatClient', () => {
     QuiqChatClient.onRegistration(onRegistration);
     QuiqChatClient.onNewSession(onNewSession);
     QuiqChatClient.onBurn(onBurn);
-    QuiqChatClient.onClientInactiveTimeout(onClientInactiveTimeout);
 
     QuiqChatClient.start();
   });
@@ -112,10 +108,6 @@ describe('QuiqChatClient', () => {
 
     it('calls onConnectionStatusChange', () => {
       expect(onConnectionStatusChange).not.toBeCalled();
-    });
-
-    it('calls setClientInactive with false', () => {
-      expect(setClientInactive).toBeCalledWith(false);
     });
   });
 
@@ -156,10 +148,6 @@ describe('QuiqChatClient', () => {
 
     it('does not call onConnectionStatusChange', () => {
       expect(onConnectionStatusChange).not.toBeCalled();
-    });
-
-    it('does not call setClientInactive', () => {
-      expect(setClientInactive).not.toBeCalled();
     });
   });
 
@@ -297,7 +285,6 @@ describe('QuiqChatClient', () => {
         QuiqChatClient.onRegistration(onRegistration);
         QuiqChatClient.onNewSession(onNewSession);
         QuiqChatClient.onBurn(onBurn);
-        QuiqChatClient.onClientInactiveTimeout(onClientInactiveTimeout);
 
         if (!QuiqChatClient) {
           throw new Error('Client should be defined');
@@ -388,7 +375,6 @@ describe('QuiqChatClient', () => {
       QuiqChatClient.onRegistration(onRegistration);
       QuiqChatClient.onNewSession(onNewSession);
       QuiqChatClient.onBurn(onBurn);
-      QuiqChatClient.onClientInactiveTimeout(onClientInactiveTimeout);
 
       QuiqChatClient.events = [];
       QuiqChatClient.messages = [];
@@ -532,7 +518,6 @@ describe('QuiqChatClient', () => {
         QuiqChatClient.onRegistration(onRegistration);
         QuiqChatClient.onNewSession(onNewSession);
         QuiqChatClient.onBurn(onBurn);
-        QuiqChatClient.onClientInactiveTimeout(onClientInactiveTimeout);
 
         if (!QuiqChatClient) {
           throw new Error('Client undefined');

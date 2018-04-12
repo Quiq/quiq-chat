@@ -32,6 +32,7 @@ import type {
   PersistentData,
   Author,
 } from './types';
+import {setFetchMode} from 'quiqFetch';
 import * as storage from './storage';
 import logger from './logging';
 import * as Senty from './sentry';
@@ -141,12 +142,6 @@ class QuiqChatClient {
     return this;
   };
 
-  onRetryableError = (callback: (error: ?ApiError) => void): QuiqChatClient => {
-    this.callbacks.onRetryableError = callback;
-    StubbornFetch.registerCallbacks({onRetryableError: callback});
-    return this;
-  };
-
   onErrorResolved = (callback: () => void): QuiqChatClient => {
     this.callbacks.onErrorResolved = callback;
     StubbornFetch.registerCallbacks({onErrorResolved: callback});
@@ -168,12 +163,6 @@ class QuiqChatClient {
     return this;
   };
 
-  onClientInactiveTimeout = (callback: () => void): QuiqChatClient => {
-    this.callbacks.onClientInactiveTimeout = callback;
-
-    return this;
-  };
-
   onPersistentDataChange = (callback: (data: PersistentData) => void): QuiqChatClient => {
     storage.registerCallbacks({onPersistentDataChange: callback});
     this.callbacks.onPersistentDataChange = callback;
@@ -186,7 +175,6 @@ class QuiqChatClient {
 
     try {
       this.initialized = true;
-      StubbornFetch.setClientInactive(false);
 
       // Order Matters here.  Ensure we successfully complete this fetchConversation request before connecting to
       // the websocket below!
@@ -392,6 +380,8 @@ class QuiqChatClient {
   _withSentryMetadataCallback = (callback: () => Object) => {
     this.callbacks.sentryMetadata = callback;
   };
+
+  _setFetchMode = setFetchMode;
 
   /**
    * Returns an object of state information, useful for logging errors.

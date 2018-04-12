@@ -40,9 +40,7 @@ QuiqChatClient.onConnectionStatusChange(connected => {
 QuiqChatClient.onError(error => {
   // Show some error message
 });
-QuiqChatClient.onRetryableError(error => {
-  // Show some error message
-}).QuiqChatClient.onErrorResolved(() => {
+QuiqChatClient.onErrorResolved(() => {
   // Remove the error message
 });
 QuiqChatClient.start().then(client => {
@@ -82,10 +80,6 @@ Called whenever the support agent starts or stops typing
 
 Called whenever there is a non-retryable error or an error that has exceeded the maximum number of retries from the API.
 
-#### onRetryableError(error: ?ApiError) => [QuiqChatClient](#quiqchatclient)
-
-Called whenever there is a retryable error from the API
-
 #### onErrorResolved() => [QuiqChatClient](#quiqchatclient)
 
 Called whenever any error from the API has been resolved
@@ -114,10 +108,6 @@ Called when a connection is established or terminated
 #### onBurn() => [QuiqChatClient](#quiqchatclient)
 
 Called when quiq-chat gets in a fatal state and page holding webchat needs to be refreshed
-
-#### onClientInactiveTimeout() => [QuiqChatClient](#quiqchatclient)
-
-Called when quiq-chat disconnects the websocket due to the chat client being inactive for a set amount of time
 
 #### getMessages(cache?: boolean = true) => Promise<Array<[ConversationMessage](#ConversationMessage)>>
 
