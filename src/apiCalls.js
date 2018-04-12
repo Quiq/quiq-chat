@@ -115,6 +115,7 @@ export const login = onceAtATime((host?: string) =>
     },
     {
       responseType: 'JSON',
+      requestType: 'JSON',
     },
   ).then((res: {accessToken: string, tokenId: string}) => {
     const oldTrackingId = getTrackingId();
