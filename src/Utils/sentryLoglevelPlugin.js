@@ -27,6 +27,12 @@ const sentryPlugin = {
   },
 };
 
+/**
+ * Any strings added to the blacklist below will not be logged to sentry if any of the following include the string
+ * 1. Message logged to sentry
+ * 2. Message in exception
+ * 3. Stack trace in exception
+ */
 const logIsBlacklisted = (message?: string, ex?: any) => {
   try {
     const blackList = ['post-robot', 'no handler found for post message'].map(m =>
