@@ -17,14 +17,8 @@ describe('Globals module', () => {
   describe('after globals have been set', () => {
     describe('checkRequiredSettings', () => {
       it('does not throw an error', () => {
-        Globals.setGlobals({HOST: 'testhost', CONTACT_POINT: 'test'});
+        Globals.setGlobals({HOST: 'https://testhost.goquiq.com', CONTACT_POINT: 'test'});
         expect(Globals.checkRequiredSettings).not.toThrowError();
-      });
-    });
-
-    describe('getHost', () => {
-      it('returns the host', () => {
-        expect(Globals.getHost()).toBe('testhost');
       });
     });
 
@@ -36,13 +30,13 @@ describe('Globals module', () => {
 
     describe('getPublicApiUrl', () => {
       it('returns the base url for the public api', () => {
-        expect(Globals.getPublicApiUrl()).toBe('testhost/api/v1/messaging');
+        expect(Globals.getPublicApiUrl()).toMatchSnapshot();
       });
     });
 
     describe('getUrlForContactPoint', () => {
       it('returns the url for the api for the current contact point', () => {
-        expect(Globals.getUrlForContactPoint()).toBe('testhost/api/v1/messaging/chat/test');
+        expect(Globals.getUrlForContactPoint()).toMatchSnapshot();
       });
     });
   });

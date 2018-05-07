@@ -41,22 +41,32 @@ export const checkRequiredSettings = () => {
   }
 };
 
-export const getHost = () => quiqChatSettings && quiqChatSettings.HOST;
-
 export const getContactPoint = () => quiqChatSettings && quiqChatSettings.CONTACT_POINT;
 
-export const getPublicApiUrl = () =>
-  quiqChatSettings && `${quiqChatSettings.HOST}/api/v1/messaging`;
+const getHost = (cached: boolean) => {
+  if (
+    quiqChatSettings.HOST.includes('goquiq.com') ||
+    quiqChatSettings.HOST.includes('quiq.dev') ||
+    (quiqChatSettings.HOST.includes('quiq-api') && cached)
+  ) {
+    return quiqChatSettings.HOST;
+  }
 
-export const getUrlForContactPoint = () =>
-  quiqChatSettings &&
-  `${quiqChatSettings.HOST}/api/v1/messaging/chat/${quiqChatSettings.CONTACT_POINT}`;
+  try {
+    const vanityName = quiqChatSettings.HOST.split('.')[0].split('https://')[1];
+    return `https://${vanityName}.goquiq.com`;
+  } catch (e) {
+    return quiqChatSettings.HOST;
+  }
+};
 
-export const getSessionApiUrl = (host?: string) =>
-  quiqChatSettings && `${host || quiqChatSettings.HOST}/session/web`;
+export const getPublicApiUrl = (cached?: boolean = false) => `${getHost(cached)}/api/v1/messaging`;
 
-export const getTokenApiUrl = (host?: string) =>
-  quiqChatSettings && `${host || quiqChatSettings.HOST}/api/v1/token`;
+export const getUrlForContactPoint = (cached?: boolean = false) =>
+  `${getHost(cached)}/api/v1/messaging/chat/${quiqChatSettings.CONTACT_POINT}`;
 
-export const getGenerateUrl = (host?: string) =>
-  quiqChatSettings && `${getTokenApiUrl(host || quiqChatSettings.HOST)}/generate`;
+export const getSessionApiUrl = (cached?: boolean = false) => `${getHost(cached)}/session/web`;
+
+export const getGenerateUrl = (cached?: boolean = false) => {
+  return `${getHost(cached)}/api/v1/token/generate`;
+};

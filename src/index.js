@@ -293,7 +293,7 @@ class QuiqChatClient {
 
   getHandle = () => storage.getTrackingId();
 
-  login = throttle(async (host?: string) => (await API.login(host)).trackingId, 10000, {
+  login = throttle(async () => (await API.login()).trackingId, 10000, {
     trailing: false,
   });
 

@@ -24,7 +24,7 @@ export const registerNewSessionCallback = (callback: (newTrackingId: string) => 
 export const keepAlive = () => quiqFetch(`${getUrlForContactPoint()}/keep-alive`, {method: 'POST'});
 
 export const getChatConfiguration = (): Promise<ChatMetadata> =>
-  quiqFetch(`${getUrlForContactPoint()}/configuration`, undefined, {responseType: 'JSON'});
+  quiqFetch(`${getUrlForContactPoint(true)}/configuration`, undefined, {responseType: 'JSON'});
 
 export const sendTextMessage = (text: string) =>
   quiqFetch(`${getUrlForContactPoint()}/send-message`, {
@@ -86,7 +86,7 @@ export const sendRegistration = (fields: {[string]: string}, formVersionId?: str
 
 export const checkForAgents = (): Promise<{available: boolean}> =>
   quiqFetch(
-    formatQueryParams(`${getPublicApiUrl()}/agents-available`, {
+    formatQueryParams(`${getPublicApiUrl(true)}/agents-available`, {
       platform: 'Chat',
       contactPoint: getContactPoint(),
     }),
@@ -104,12 +104,11 @@ export const emailTranscript = (data: EmailTranscriptPayload) =>
  * Creates a new session and tracking ID
  * NOTE: We ensure that this function is never invoked simultaneously, so as to prevent multiple trackingID related race conditions
  *
- * @param host - Host against which to call /generate
  * @param sessionChange - Indicates whether this is being called to replace old session. Results in newSession callback being fired.
  */
-export const login = onceAtATime((host?: string) =>
+export const login = onceAtATime(() =>
   quiqFetch(
-    getGenerateUrl(host),
+    getGenerateUrl(),
     {
       method: 'POST',
     },
