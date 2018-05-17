@@ -97,6 +97,8 @@ class QuiqChatClient {
     // Initialize local storage service
     // NOTE HARD: Must be done prior to any networking/business logic!
     storage.init();
+
+    return this;
   };
 
   /** Fluent client builder functions: these all return the client object * */

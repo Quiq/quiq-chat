@@ -1,6 +1,6 @@
 # quiq-chat [![Build Status](https://travis-ci.org/Quiq/quiq-chat.svg?branch=master)](https://travis-ci.org/Quiq/quiq-chat) [![npm version](https://badge.fury.io/js/quiq-chat.svg)](https://badge.fury.io/js/quiq-chat) [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
-Library to handle the communication with Quiq Messaging APIs to build a web chat app
+A high-level JavaScript Library to handle the communication with Quiq Messaging APIs when building a web chat app
 
 ## Installation
 
@@ -16,53 +16,79 @@ or
 yarn add quiq-chat
 ```
 
-## Usage
+### Promise Polyfill
+quiq-chat leverages Promises for asynchronous operations, including the relatively new `Promise.finally()` method.
+Unless your target browsers support this natively (only Chrome >= 63 and Firefox >= 58) you'll need to include a Promise polyfill on your page.
+If you aren't already using a polyfill which includes Promise support, we recommend the lightweight <https://github.com/taylorhakes/promise-polyfill>. 
 
-The default export of `quiq-chat` is the `QuiqChatClient` singleton class which will fetch information about the current webchat, initialize a websocket connection, and allow you to register callbacks so that you can keep your app's UI in sync with the webchat state.
+Install with
 
-All the functions to register callbacks return the `QuiqChatClient` object so that you can chain them together. You also need to call `start()` to connect to Quiq Messaging. You will need to call the `initialize(host, contactPoint)` function before calling start. The `start` method returns a promise that resolves to the `QuiqChatClient`, so you can add a callback that will be executed after the connection is opened;
-
-```javascript
-import QuiqChatClient from 'quiq-chat';
-
-QuiqChatClient.onNewMessages(messages => {
-  // Update your app with the new array of messages
-});
-QuiqChatClient.onAgentTyping(typing => {
-  // Show or hide the typing indicator
-});
-QuiqChatClient.onRegistration(() => {
-  // Hide form, or show main app
-});
-QuiqChatClient.onConnectionStatusChange(connected => {
-  // Show the connection status of the app
-});
-QuiqChatClient.onError(error => {
-  // Show some error message
-});
-QuiqChatClient.onErrorResolved(() => {
-  // Remove the error message
-});
-QuiqChatClient.start().then(client => {
-  // Run some code after the webchat app is connected
-});
+```
+npm install --save promise-polyfill
 ```
 
-## Documentation
+or
 
-### Supported Browsers
+```
+yarn add promise-polyfill
+```
 
-QuiqChat works with any browser that supports Local Storage, standard AJAX CORS requests. The standard implementation of the Chat client supports a subset of these browsers, and we recommend any custom implementations support the same browsers. The `isSupportedBrowser` utility function can be used to determine if the end-user is using a browser supported by Quiq. The following browsers with versions greater than or equal to the following are supported.
+Then include at the top of your module like so:
 
-* Chrome 43
-* Firefox 48.0
-* Safari 6.1
-* Internet Explorer 10
-* Internet Explorer 11
-* Microsoft Edge 12
-* Mobile devices
+```
+import 'promise-polyfill/src/polyfill';
+```
 
-### QuiqChatClient
+Note that this will add a Promise prototype to the global environment.
+
+## Usage
+The quiq-chat library exports a QuiqChatClient, which is a singleton. 
+This means that you can import it as many times as you want, in as many modules as you want, and always get back the same instance of the client.
+
+Import it like so:
+
+```
+import QuiqChatClient from 'quiq-chat';
+```
+
+`QuiqChatClient` exposes a fluent API for client setup, allowing you to chain calls together. 
+First, we call `initialize(host, contactPoint)`. We then register our own handler functions to respond to different chat events. Finally, we call `start()`.
+The `start` method returns a promise that resolves once the client is fully initialized and ready to send and receive messages.
+
+Below we show a simple setup, with handler functions for new message and agent typing events. 
+
+```javascript
+QuiqChatClient
+    .initialize('tenant.goquiq.com', 'default')
+    .onNewMessages(messages => {
+        messages.forEach(msg => console.log(msg)
+    })
+    .onAgentTyping(isTyping => {
+        if (isTyping) {
+            console.log("The agent started typing!")
+        } else {
+            console.log("The agent stopped typing!")
+        }
+    })
+    // Connect that chat client
+    .start()
+    .then(() => {
+        console.log("The chat client is connected and ready to send and receive messages");
+    });
+```
+
+## Starting and stopping the client
+#### start() => Promise<[QuiqChatClient](#quiqchatclient)>
+
+Begins the chat session, allowing the client to send and receive messages. Should be called immediately after initializing and registering event handlers.
+The returned Promise is resolved once the session is active and everything is ready to go.
+
+#### stop() => void
+
+Ends the chat session. The client will no longer receive messages.
+
+## Handling events
+Register your event handling functions prior calling `QuiqChatClient.start()`. All of these methods can be chained together.
 
 #### onNewMessages(messages: Array<[ConversationMessage](#ConversationMessage)>) => [QuiqChatClient](#quiqchatclient)
 
@@ -84,6 +110,10 @@ Called whenever there is a non-retryable error or an error that has exceeded the
 
 Called whenever any error from the API has been resolved
 
+#### onMessageSendFailure = (callback: (messageId: string) => void) => [QuiqChatClient](#quiqchatclient)
+
+Called when a text or attachment message could not be delivered to the agent.
+
 #### onRegistration() => [QuiqChatClient](#quiqchatclient)
 
 Called when Register event is received through a websocket message
@@ -103,12 +133,17 @@ Called when the estimate wait time calculation changes.
 
 #### onConnectionStatusChanged(connected: boolean) => [QuiqChatClient](#quiqchatclient)
 
-Called when a connection is established or terminated
+Called when the connection to Quiq is established or terminated. This can be used for showing a "we're trying to reconnect you" message or similar.
 
 #### onBurn() => [QuiqChatClient](#quiqchatclient)
 
-Called when quiq-chat gets in a fatal state and page holding webchat needs to be refreshed
+Called when quiq-chat gets in a fatal state and page holding webchat needs to be refreshed.
 
+#### onPersistentDataChange(callback: (data: [PersistentData](#PersistentData)) => void) => [QuiqChatClient](#quiqchatclient)
+
+Called whenever Quiq-related data stored in the browser's localStorage changes.
+
+## Retrieve messages and conversation events
 #### getMessages(cache?: boolean = true) => Promise<Array<[ConversationMessage](#ConversationMessage)>>
 
 Retrieve all messages for the current chat. If `cache` is set to true, a hit to the API is not made, and only the messages currently in memory are returned.
@@ -117,30 +152,53 @@ Retrieve all messages for the current chat. If `cache` is set to true, a hit to 
 
 Retrieve all events for the current chat. If `cache` is set to true, a hit to the API is not made, and only the events currently in memory are returned.
 
-#### emailTranscript(data: [EmailTranscriptPayload](#EmailTranscriptPayload)) => void
-
-Email a transcript of the current conversation to the specified e-mail. If an agent has not yet responded to the conversation, a 400 will be returned.
-
+## Sending messages
 #### sendTextMessage(text: string) => void
 
-Send a text message from the customer. Can be used to initiate a conversation if no messages have been sent.
+Send a text message from the customer. The first message sent from the client will initialize (start) a conversation.
 
-### sendAttachmentMessage(file: File, progressCallback: (progress: number) => void) => string
+#### sendAttachmentMessage(file: File, prog#ressCallback: (progress: number) => void) => Promise<string>
 
-Send an attachment message containing a File from the customer. Th type of this file must conform to the allowed file types set in your configuration. The method also accepts a `progressCallback` function which will be fired during upload of the file with values between 0 and 100, denoting percentage uploaded. Upon completion of upload, this method returns a string containing the `id` of the new message.
+Send an attachment message containing a File from the customer. The type of this file must conform to the allowed file types set in your configuration. The method also accepts a `progressCallback` function which will be fired during upload of the file with values between 0 and 100, denoting percentage uploaded. Upon completion of upload, this method returns a string containing the `id` of the new message.
 
-#### start() => Promise<[QuiqChatClient](#quiqchatclient)>
+## User Registration
+#### isRegistered() => boolean
 
-Establishes the connection to QuiqMessaging
+Returns whether the end user has triggered a registration event. This happens when the `sendRegistration` API is called, and the server has confirmed the registration was valid.
 
-#### stop() => void
+## Session
+#### getHandle() => Promise<handle?: string>
 
-Disconnects the websocket from Quiq
+Returns the unique identifier for this session. If the user is not logged in, returns `undefined`.
 
+#### login() => Promise<handle: string>
+
+Creates a session for the current user, if one does not already exist. Returns the unique identifier (handle) for the new or existing session.
+
+#### checkForAgents() => Promise<{available: boolean}>
+
+Fetches whether or not there are agents available for the contact point the webchat is connected to. The value of this call is cached for 10 seconds.
+
+#### updateTypingIndicator(text:string, typing:boolean) => void
+
+Sends a message to Quiq Messaging that the end user is typing and what they've typed in the message field
+
+#### isAgentAssigned() => boolean
+
+Returns whether the end user's chat has been taken up by an agent. This returns true when the agent sends their first message.
+
+#### getEstimatedWaitTime() => ?number
+
+Returns the estimate wait time in milliseconds. This is the amount of time we estimate it will take for the user's chat to be assigned to an agent. If this is undefined or null, then no ETA is currently available.
+
+## Email the conversation transcript
+#### emailTranscript(data: [EmailTranscriptPayload](#EmailTranscriptPayload)) => void
+Email a transcript of the current conversation to the specified e-mail. If an agent has not yet responded to the conversation, a 400 will be returned.
+
+## Utilities
 #### isStorageEnabled() => boolean
 
-Utility function to tell the client if quiq-chat has the capability to set its required data in a
-persistent way. If this returns false, quiq-chat will cease to function, and will block all requests.
+Utility function to tell the client if quiq-chat has the capability to set its required data in a persistent way.
 
 #### isSupportedBrowser() => boolean
 
@@ -156,39 +214,13 @@ submitting the Welcome Form, or sending a message to the agent.
 Returns the last state of chat's visibility. Can be used to re-open webchat on page turns if the user had chat
 previously open. Defaults to false if user has taken no actions.
 
-#### sendRegistration(data: {[string]: string}) => Promise<void>
+#### getPersistentData() => [PersistentData](#PersistentData)
 
-Submits a map of custom `(key, value)` pairs to be included in the data for the current chat.
-Method accepts a single parameter, a JavaScript object with values of type `String`.
-`key` is limited to 80 characters and must be unique; `value` is limited to 1000 characters.
+Returns all Quiq-related data stored locally in the browser's localStorage. Includes any custom data set using the `setCustomPersistentData()` method.
 
-#### getHandle() => Promise<handle?: string>
+#### setCustomPersistentData(key: string, value: any) => void
 
-Returns the unique identifier for this session. If the user is not logged in, returns `undefined`.
-
-#### login() => Promise<handle: string>
-
-Creates a session for the current user, if one does not already exist. Returns the unique identifier for the new or existing session.
-
-#### checkForAgents() => Promise<{available: boolean}>
-
-Fetches whether or not there are agents available for the contact point the webchat is connected to. The value of this call is cached for 10 seconds.
-
-#### updateTypingIndicator(text:string, typing:boolean) => void
-
-Sends a message to Quiq Messaging that the end user is typing and what they've typed in the message field
-
-#### isRegistered() => boolean
-
-Returns whether the end user has triggered a registration event. This happens when the `sendRegistration` API is called, and the server has confirmed the registration was valid.
-
-#### isAgentAssigned() => boolean
-
-Returns whether the end user's chat has been taken up by an agent. This returns true when the agent sends their first message.
-
-#### getEstimatedWaitTime() => ?number
-
-Returns the estimate wait time in milliseconds. This is the amount of time we estimate it will take for the user's chat to be assigned to an agent. If this is undefined or null, then no ETA is currently available.
+Stores a key/value pair in persistent storage (available between refreshes and browser closes). Can be retrieved using the `getPersistentData()` method.
 
 ## Data types
 
@@ -269,3 +301,26 @@ TextMessage | AttachmentMessage;
     type: string,
   };
 ```
+
+### PersistentData
+
+```javascript
+    {
+      accessToken?: string,
+      chatContainerVisible?: boolean,
+      subscribed?: boolean,
+      hasTakenMeaningfulAction?: boolean,
+      [string]: any,
+    };
+```
+
+## Supported Browsers
+
+QuiqChat works with any browser that supports Local Storage, and CORS requests. The `isSupportedBrowser` utility function can be used to determine if the end-user is using a browser supported by Quiq. The following browsers and versions are supported:
+
+* Chrome 43
+* Firefox 48.0
+* Safari 6.1
+* Internet Explorer 10
+* Internet Explorer 11
+* Microsoft Edge 12
