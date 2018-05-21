@@ -2217,6 +2217,10 @@ extend@~3.0.0, extend@~3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/extend/-/extend-3.0.1.tgz#a755ea7bc1adfcc5a31ce7e762dbaadc5e636444"
 
+extendable-error-class@0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/extendable-error-class/-/extendable-error-class-0.1.1.tgz#d75a3e7c23141da6ff91016a357e56e5cce0e334"
+
 external-editor@^2.0.4:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/external-editor/-/external-editor-2.2.0.tgz#045511cfd8d133f3846673d1047c154e214ad3d5"
@@ -5236,10 +5240,11 @@ strip-json-comments@~2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
 
-stubborn-fetch@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/stubborn-fetch/-/stubborn-fetch-0.0.4.tgz#1de65ba6d89b8ace906ca851bde3886f8eb07a6a"
+stubborn-fetch@0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/stubborn-fetch/-/stubborn-fetch-0.0.5.tgz#bb24d13a1b8b90bbe3048682fe2c0c9c0b00cf44"
   dependencies:
+    extendable-error-class "0.1.1"
     isomorphic-fetch "2.2.1"
 
 supports-color@^2.0.0:
