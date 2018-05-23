@@ -1,6 +1,6 @@
 {
   "name": "quiq-chat",
-  "version": "1.58.0",
+  "version": "1.58.1",
   "descri1tion":
     "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
@@ -33,14 +33,14 @@
       "https://github.com/Quiq/atmosphere-js/tarball/cf35c913143cf2c391b6bcb694ae8a47794a1b88",
     "isomorphic-fetch": "2.2.1",
     "jwt-decode": "2.2.0",
-    "lodash": "4.17.4",
+    "lodash": "4.17.10",
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",
     "qs": "6.5.0",
     "raven-js": "3.17.0",
     "store": "2.0.12",
     "stubborn-fetch": "0.0.5",
-    "ua-parser-js": "0.7.12"
+    "ua-parser-js": "0.7.18"
   },
   "devDependencies": {
     "babel-plugin-external-helpers": "^6.22.0",
