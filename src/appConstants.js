@@ -32,4 +32,12 @@ export const SupportedWebchatUrls = [
 
 export const MAX_SOCKET_CONNECTION_ATTEMPTS = 20;
 
-export const noAgentsAvailableClass = 'noAgentsAvailable';
+export const MessageFailureCodes = {
+  /* eslint-disable no-useless-computed-key */ // Flow can't have numeric keys, so we have to compute these
+  [11001]: 'UNKNOWN',
+  [11002]: 'INFECTED_UPLOAD',
+  [11003]: 'CONTENT_TYPE_NOT_ALLOWED',
+  [11004]: 'UPLOAD_NOT_FOUND',
+  [11005]: 'EMPTY_UPLOAD',
+  /* eslint-enable no-useless-computed-key */
+};

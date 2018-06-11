@@ -31,12 +31,14 @@ import type {
   EmailTranscriptPayload,
   PersistentData,
   Author,
+  MessageFailureData,
 } from './types';
 import {setFetchMode} from 'quiqFetch';
 import * as storage from './storage';
 import logger from './logging';
 import * as Senty from './sentry';
 import Raven from 'raven-js';
+import {MessageFailureCodes} from 'appConstants';
 
 Senty.init();
 
@@ -113,7 +115,9 @@ class QuiqChatClient {
     return this;
   };
 
-  onMessageSendFailure = (callback: (messageId: string) => void): QuiqChatClient => {
+  onMessageSendFailure = (
+    callback: (messageId: string, data: MessageFailureData) => void,
+  ): QuiqChatClient => {
     this.callbacks.onMessageSendFailure = callback;
     return this;
   };
@@ -270,7 +274,7 @@ class QuiqChatClient {
     try {
       await S3.uploadAttachment(file, url, formEntries, progressCallback);
     } catch (e) {
-      log.error(`An error sending attachment message: ${e.message}`, {exception: e});
+      log.error(`An occurred error sending attachment message: ${e.message}`, {exception: e});
       throw e;
     }
     const {id} = await API.sendAttachmentMessage(uploadDirective.uploadId);
@@ -484,7 +488,7 @@ class QuiqChatClient {
           this._processNewMessages([message.data]);
           break;
         case MessageTypes.FAILED:
-          this._handleMessageFailure(message.data.id);
+          this._handleMessageFailure(message.data.id, message.data.errorCode);
           break;
         case MessageTypes.JOIN:
         case MessageTypes.LEAVE:
@@ -560,7 +564,7 @@ class QuiqChatClient {
     }
   };
 
-  _handleMessageFailure = (failedMessageId: string) => {
+  _handleMessageFailure = (failedMessageId: string, code: number) => {
     // Remove failed message and fire onMessageFailure callback
     const failedIdx = this.messages.findIndex(m => m.id === failedMessageId);
     if (failedIdx > -1) {
@@ -569,7 +573,9 @@ class QuiqChatClient {
     }
 
     if (this.callbacks.onMessageSendFailure) {
-      this.callbacks.onMessageSendFailure(failedMessageId);
+      this.callbacks.onMessageSendFailure(failedMessageId, {
+        reason: MessageFailureCodes[code] || 'UNKNOWN',
+      });
     }
   };
 

@@ -56,11 +56,15 @@ export type PersistentData = {
   [string]: any,
 };
 
+export type MessageFailureData = {
+  reason: string,
+};
+
 export type QuiqChatCallbacks = {
   onNewMessages?: (messages: Array<ConversationMessage>) => void,
   onNewEvents?: (events: Array<Event>) => void,
   onAgentTyping?: (typing: boolean, author: Author) => void,
-  onMessageSendFailure?: (messageId: string) => void,
+  onMessageSendFailure?: (messageId: string, data: MessageFailureData) => void,
   onError?: (error: ?ApiError) => void,
   onErrorResolved?: () => void,
   onConnectionStatusChange?: (connected: boolean) => void,
