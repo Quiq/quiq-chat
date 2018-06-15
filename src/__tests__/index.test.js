@@ -1,19 +1,18 @@
 // @flow
 jest.mock('../apiCalls');
-jest.mock('../websockets');
 jest.mock('../storage');
 jest.mock('store');
 jest.mock('../Utils/utils');
 jest.mock('../logging');
-jest.mock('../QuiqSockets/quiqSockets');
+jest.mock('../services/QuiqSocketSingleton');
 
 import QuiqChatClient from '../index';
 import * as ApiCalls from '../apiCalls';
 import * as storage from '../storage';
-import {connectSocket, disconnectSocket} from '../websockets';
 import {set} from 'store';
 import * as Utils from '../Utils/utils';
 import log from 'loglevel';
+import QuiqSocketSingleton from '../services/QuiqSocketSingleton';
 
 log.setLevel('debug');
 
@@ -99,15 +98,11 @@ describe('QuiqChatClient', () => {
     });
 
     it('tries to disconnect the websocket before making a new connection', () => {
-      expect(disconnectSocket).toBeCalled();
+      expect(QuiqSocketSingleton.disconnect).toBeCalled();
     });
 
-    it('connects the websocket', () => {
-      expect(connectSocket).toBeCalled();
-    });
-
-    it('calls onConnectionStatusChange', () => {
-      expect(onConnectionStatusChange).not.toBeCalled();
+    it('does NOT connect the websocket', () => {
+      expect(QuiqSocketSingleton.connect).not.toBeCalled();
     });
   });
 
@@ -139,15 +134,11 @@ describe('QuiqChatClient', () => {
     });
 
     it('does not try to disconnect the websocket before making a new connection', () => {
-      expect(disconnectSocket).not.toBeCalled();
+      expect(QuiqSocketSingleton.disconnect).not.toBeCalled();
     });
 
     it('does not connect the websocket', () => {
-      expect(connectSocket).not.toBeCalled();
-    });
-
-    it('does not call onConnectionStatusChange', () => {
-      expect(onConnectionStatusChange).not.toBeCalled();
+      expect(QuiqSocketSingleton.connect).not.toBeCalled();
     });
   });
 
@@ -161,7 +152,7 @@ describe('QuiqChatClient', () => {
     });
 
     it('disconnects the websocket', () => {
-      expect(disconnectSocket).toBeCalled();
+      expect(QuiqSocketSingleton.disconnect).toBeCalled();
     });
 
     it('sets initialzed flag to false', () => {
@@ -630,7 +621,7 @@ describe('QuiqChatClient', () => {
     });
 
     it('calls disconnectSocket', () => {
-      expect(disconnectSocket).toBeCalled();
+      expect(QuiqSocketSingleton.disconnect).toBeCalled();
       expect(onError).not.toBeCalledWith({status: 405});
     });
   });
@@ -652,7 +643,7 @@ describe('QuiqChatClient', () => {
     });
 
     it('calls disconnectSocket', () => {
-      expect(disconnectSocket).toBeCalled();
+      expect(QuiqSocketSingleton.disconnect).toBeCalled();
     });
 
     it('calls onError', () => {

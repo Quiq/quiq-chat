@@ -29,15 +29,12 @@
   "author": "nate.norberg@goquiq.com",
   "license": "MIT",
   "dependencies": {
-    "atmosphere.js":
-      "https://github.com/Quiq/atmosphere-js/tarball/cf35c913143cf2c391b6bcb694ae8a47794a1b88",
     "isomorphic-fetch": "2.2.1",
     "jwt-decode": "2.2.0",
     "lodash": "4.17.10",
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",
-    "qs": "6.5.0",
-    "quiq-socket": "0.0.1",
+    "quiq-socket": "0.0.3",
     "raven-js": "3.17.0",
     "store": "2.0.12",
     "stubborn-fetch": "0.0.5",

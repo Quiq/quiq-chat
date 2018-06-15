@@ -1,10 +1,6 @@
 // @flow
 import * as API from './apiCalls';
 import {getBurned, setGlobals} from './globals';
-import {
-  connectSocket as connectAtmosphere,
-  disconnectSocket as disconnectAtmosphere,
-} from './websockets';
 import QuiqSocket from './services/QuiqSocketSingleton';
 import {Events as QuiqSocketEvents} from 'quiq-socket';
 import {MessageTypes} from './appConstants';
@@ -441,25 +437,13 @@ class QuiqChatClient {
                   }),
                 })
                 .addEventListener(QuiqSocketEvents.CONNECTION_LOSS, this._handleConnectionLoss)
-                .addEventListener(
-                  QuiqSocketEvents.CONNECTION_ESTABLISH,
-                  this._handleConnectionEstablish,
-                )
+                .addEventListener(QuiqSocketEvents.CONNECTION_ESTABLISH, connectionEstablish)
                 .addEventListener(QuiqSocketEvents.MESSAGE, this._handleWebsocketMessage)
                 .addEventListener(QuiqSocketEvents.FATAL_ERROR, this._handleFatalSocketError)
                 .connect();
               break;
-            case 'atmosphere':
-              connectAtmosphere({
-                socketUrl: url,
-                callbacks: {
-                  onConnectionLoss: this._handleConnectionLoss,
-                  onConnectionEstablish: connectionEstablish,
-                  onMessage: this._handleWebsocketMessage,
-                  onFatalError: this._handleFatalSocketError,
-                },
-              });
-              break;
+            default:
+              log.error(`Received unknown socket protocol "${this.socketProtocol || 'unknown'}"`);
           }
         });
       })
@@ -472,7 +456,6 @@ class QuiqChatClient {
   _disconnectSocket = () => {
     this.connected = false;
     QuiqSocket.disconnect();
-    disconnectAtmosphere();
   };
 
   _handleNewSession = async (newTrackingId: string) => {

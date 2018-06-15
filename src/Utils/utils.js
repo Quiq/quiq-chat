@@ -1,7 +1,7 @@
 // @flow
 import {UAParser} from 'ua-parser-js';
 import {setBurned} from 'globals';
-import QuiqSocket from 'QuiqSockets/quiqSockets';
+import QuiqSocket from '../services/QuiqSocketSingleton';
 import qs from 'qs';
 import logger from 'logging';
 import type {BrowserNames, BurnItDownResponse} from 'types';
