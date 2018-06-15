@@ -1,11 +1,12 @@
 // @flow
 import * as API from './apiCalls';
-import {setGlobals} from './globals';
+import {getBurned, setGlobals} from './globals';
 import {
   connectSocket as connectAtmosphere,
   disconnectSocket as disconnectAtmosphere,
 } from './websockets';
-import QuiqSocket from './QuiqSockets/quiqSockets';
+import QuiqSocket from './services/QuiqSocketSingleton';
+import {Events as QuiqSocketEvents} from 'quiq-socket';
 import {MessageTypes} from './appConstants';
 import * as StubbornFetch from './stubbornFetch';
 import differenceBy from 'lodash/differenceBy';
@@ -39,6 +40,7 @@ import logger from './logging';
 import * as Senty from './sentry';
 import Raven from 'raven-js';
 import {MessageFailureCodes} from 'appConstants';
+import {version} from '../package';
 
 Senty.init();
 
@@ -429,10 +431,22 @@ class QuiqChatClient {
           switch (this.socketProtocol) {
             case 'quiq':
               QuiqSocket.withURL(`wss://${url}`)
-                .onConnectionLoss(this._handleConnectionLoss)
-                .onConnectionEstablish(connectionEstablish)
-                .onMessage(this._handleWebsocketMessage)
-                .onFatalError(this._handleFatalSocketError)
+                .withLogger(log)
+                .withOptions({
+                  connectionGuardHook: () => !getBurned(),
+                  protocolHook: () => storage.getAccessToken(),
+                  queryArgHook: () => ({
+                    trackingId: storage.getTrackingId() || 'noAssociatedTrackingId',
+                    quiqVersion: version,
+                  }),
+                })
+                .addEventListener(QuiqSocketEvents.CONNECTION_LOSS, this._handleConnectionLoss)
+                .addEventListener(
+                  QuiqSocketEvents.CONNECTION_ESTABLISH,
+                  this._handleConnectionEstablish,
+                )
+                .addEventListener(QuiqSocketEvents.MESSAGE, this._handleWebsocketMessage)
+                .addEventListener(QuiqSocketEvents.FATAL_ERROR, this._handleFatalSocketError)
                 .connect();
               break;
             case 'atmosphere':

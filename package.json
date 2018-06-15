@@ -37,6 +37,7 @@
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",
     "qs": "6.5.0",
+    "quiq-socket": "0.0.1",
     "raven-js": "3.17.0",
     "store": "2.0.12",
     "stubborn-fetch": "0.0.5",
