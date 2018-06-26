@@ -1,15 +1,13 @@
 {
   "name": "quiq-chat",
-  "version": "1.61.0",
-  "descri1tion":
-    "Library to help with network requests to create a webchat client for Quiq Messaging",
+  "version": "1.61.1",
+  "descri1tion": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
     "start": "./node_modules/.bin/nodemon --watch src -e js,sass --exec npm run build",
     "lint": "node ./node_modules/eslint/bin/eslint.js src/",
-    "test":
-      "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
+    "test": "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
     "flow": "flow",
     "jest": "jest --watch --env=jsdom",
     "build": "rollup -c",
@@ -17,15 +15,25 @@
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "src/**/*.js": ["prettier --write", "git add"]
+    "src/**/*.js": [
+      "prettier --write",
+      "git add"
+    ]
   },
   "jest": {
-    "modulePaths": ["src", "node_modules"],
+    "modulePaths": [
+      "src",
+      "node_modules"
+    ],
     "rootDir": ".",
-    "setupFiles": ["./jest.setup.js"],
+    "setupFiles": [
+      "./jest.setup.js"
+    ],
     "notify": true
   },
-  "keywords": ["quiq"],
+  "keywords": [
+    "quiq"
+  ],
   "author": "nate.norberg@goquiq.com",
   "license": "MIT",
   "dependencies": {
