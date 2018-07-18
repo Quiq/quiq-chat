@@ -63,6 +63,7 @@ const getConversation = async (): Promise<ConversationResult> => {
 class QuiqChatClient {
   host: string;
   contactPoint: string;
+  devMode: boolean = false;
   socketProtocol: ?string;
   callbacks: QuiqChatCallbacks = {};
   messages: Array<ConversationMessage> = [];
@@ -82,9 +83,10 @@ class QuiqChatClient {
     this.estimatedWaitTime = null;
   };
 
-  initialize = (host: string, contactPoint: string) => {
+  initialize = (host: string, contactPoint: string, devMode?: boolean = false) => {
     this.host = host;
     this.contactPoint = contactPoint;
+    this.devMode = devMode;
 
     setGlobals({
       HOST: this.host,
@@ -324,12 +326,17 @@ class QuiqChatClient {
     return conversation.isSubscribed;
   };
 
-  _logToSentry = (level: string, message: string, data: Object = {}) =>
-    Raven.captureMessage(message, {
-      level,
-      logger: 'Chat',
-      extra: data,
-    });
+  _logToSentry = (level: string, message: string, data: Object = {}) => {
+    if (this.devMode) {
+      (console[level] || console.error)(`(via _logToSentry) ${message}`, data);
+    } else {
+      Raven.captureMessage(message, {
+        level,
+        logger: 'Chat',
+        extra: data,
+      });
+    }
+  };
 
   _processQueueDisposition = (queueDisposition: string) => {
     const wasAssigned = this.agentIsAssigned;
