@@ -5216,9 +5216,9 @@ strip-json-comments@~2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
 
-stubborn-fetch@0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/stubborn-fetch/-/stubborn-fetch-0.0.5.tgz#bb24d13a1b8b90bbe3048682fe2c0c9c0b00cf44"
+stubborn-fetch@0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/stubborn-fetch/-/stubborn-fetch-0.1.0.tgz#331d4f77d75ca7c13ab499b469457104b7b1e991"
   dependencies:
     extendable-error-class "0.1.1"
     isomorphic-fetch "2.2.1"

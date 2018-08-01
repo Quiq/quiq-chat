@@ -1,5 +1,5 @@
 // @flow
-import oldStubbornFetch from './stubbornFetch';
+import oldStubbornFetch, {registerCallbacks as oldRegisterCallbacks} from './stubbornFetch';
 import StubbornFetch, {StubbornFetchError} from 'stubborn-fetch';
 import {checkRequiredSettings, getSessionApiUrl, getGenerateUrl, getBurned} from './globals';
 import {isStorageEnabled, getTrackingId, getAccessToken} from './storage';
@@ -8,6 +8,12 @@ import merge from 'lodash/merge';
 import {burnItDown, formatQueryParams, createGuid} from './Utils/utils';
 import {version} from '../package.json';
 import logging from './logging';
+import type {ApiError} from './types';
+
+type FetchCallbacks = {
+  onError?: (error: ?ApiError | ?StubbornFetchError) => void,
+  onErrorResolved?: () => void,
+};
 
 const messages = {
   burned: 'Client in bad state. Aborting call.',
@@ -19,27 +25,56 @@ const messages = {
 };
 
 const quiqFetchLog = logging('QuiqFetch');
+
+const scrubRequest = (req: Object): Object => {
+  const reqCopy = Object.assign({}, req);
+  // Redact access token
+  if (reqCopy.headers && reqCopy.headers['X-Quiq-Access-Token']) {
+    reqCopy.headers['X-Quiq-Access-Token'] = '<redacted>';
+  }
+  return reqCopy;
+};
+
+const scrubError = (e: StubbornFetchError): StubbornFetchError => {
+  const dataCopy = Object.assign({}, e.data);
+  if (dataCopy.request) {
+    dataCopy.request = scrubRequest(dataCopy.request);
+  }
+
+  return {...e, data: dataCopy};
+};
+
 const logger = {
   log: quiqFetchLog.log,
+  debug: quiqFetchLog.debug,
   info: quiqFetchLog.info,
   warn: quiqFetchLog.warn,
-  error: (msg: string, e: StubbornFetchError) =>
+  error: (msg: string, data: Object) => {
     quiqFetchLog.error(
       msg,
-      e,
-      e &&
-        e.error &&
-        e.error.data &&
-        e.error.data.response &&
-        e.error.data.response.status &&
-        e.error.data.response.status >= 400 &&
-        e.error.data.response.status < 500,
-    ),
+      data.error && scrubError(data.error),
+      data &&
+        data.error &&
+        data.error.data &&
+        data.error.data.response &&
+        data.error.data.response.status &&
+        data.error.data.response.status === 401,
+    );
+  },
 };
 
 let fetchMode;
+let callbacks: FetchCallbacks = {};
+
 export const setFetchMode = (mode?: 'edge' | 'legacy') => {
   fetchMode = mode;
+};
+
+export const registerCallbacks = (cbs: FetchCallbacks) => {
+  callbacks = Object.assign({}, callbacks, cbs);
+
+  // Assign these callbacks to old school stubborn fetch, until we remove it
+  oldRegisterCallbacks(cbs);
 };
 
 const quiqFetch = (
@@ -107,6 +142,7 @@ const quiqFetch = (
     request = merge(request, overrides);
   }
 
+  /******** Old Stubborn Fetch *********/
   if (!fetchMode || fetchMode === 'legacy') {
     return oldStubbornFetch(parsedUrl, request)
       .then((res: Promise<Response> | Response): any => {
@@ -129,7 +165,15 @@ const quiqFetch = (
       });
   }
 
+  /******** New Stubborn Fetch *********/
+  const failures = [];
+
   const onError = (e: StubbornFetchError) => {
+    failures.push({
+      statusCode: e.data && e.data.response && e.data.response.status,
+      errorType: e.type,
+    });
+
     if (e.data && e.data.response && e.data.response.status) {
       const {status} = e.data.response;
 
@@ -159,10 +203,23 @@ const quiqFetch = (
     totalRequestTimeLimit: 30000,
     onError,
     logger,
-    minimumStatusCodeForRetry: 402,
+    minimumStatusCodeForRetry: 500,
   })
     .send()
-    .then((res: Promise<Response> | Response): any => {
+    .then((res: Response): any => {
+      // Log this request to sentry
+      const data = {
+        statusCode: res.status,
+        reason: res.statusText,
+        request: scrubRequest(request),
+        url: parsedUrl,
+        failures,
+      };
+      quiqFetchLog.debug(`[${data.statusCode}] (${data.reason}) ${data.url}`, {
+        data,
+        capture: true,
+      });
+
       if (options.responseType === 'JSON' && res && res.json) {
         return ((res: any): Response)
           .json()
@@ -181,6 +238,7 @@ const quiqFetch = (
       if (!error) return Promise.reject(new Error(messages.unknownError(parsedUrl)));
 
       if (onError(error)) {
+        if (callbacks.onError) callbacks.onError(error);
         return Promise.reject(new Error(messages.burned));
       }
 
@@ -204,6 +262,7 @@ const quiqFetch = (
           .catch(err => Promise.reject(err));
       }
 
+      if (callbacks.onError) callbacks.onError(error);
       return Promise.reject(error);
     });
 };

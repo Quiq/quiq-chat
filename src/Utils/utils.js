@@ -4,6 +4,7 @@ import {setBurned} from 'globals';
 import QuiqSocket from '../services/QuiqSocketSingleton';
 import qs from 'qs';
 import logger from 'logging';
+import StubbornFetch from 'stubborn-fetch';
 import type {BrowserNames, BurnItDownResponse} from 'types';
 
 const log = logger('Utils');
@@ -57,6 +58,7 @@ export const burnItDown = (message?: BurnItDownResponse) => {
     setTimeout(() => {
       setBurned();
       QuiqSocket.disconnect();
+      StubbornFetch.disable();
 
       if (_onBurn) _onBurn();
       log.error('Webchat has been burned down.');

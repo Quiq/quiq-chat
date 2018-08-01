@@ -37,6 +37,7 @@ import * as Senty from './sentry';
 import Raven from 'raven-js';
 import {MessageFailureCodes} from 'appConstants';
 import {version} from '../package';
+import {registerCallbacks as registerQuiqFetchCallbacks} from './quiqFetch';
 
 Senty.init();
 
@@ -129,7 +130,7 @@ class QuiqChatClient {
 
   onError = (callback: (error: ?ApiError) => void): QuiqChatClient => {
     this.callbacks.onError = callback;
-    StubbornFetch.registerCallbacks({onError: callback});
+    registerQuiqFetchCallbacks({onError: callback});
     return this;
   };
 
