@@ -48,17 +48,22 @@ const logger = {
   log: quiqFetchLog.log,
   debug: quiqFetchLog.debug,
   info: quiqFetchLog.info,
-  warn: quiqFetchLog.warn,
+  warn: (msg: string, data: Object) => {
+    // We don't care about 401's in chat
+    quiqFetchLog.warn(msg, data, !(data && data.response && data.response.status === 401));
+  },
   error: (msg: string, data: Object) => {
     quiqFetchLog.error(
       msg,
       data.error && scrubError(data.error),
-      data &&
+      !(
+        data &&
         data.error &&
         data.error.data &&
         data.error.data.response &&
         data.error.data.response.status &&
-        data.error.data.response.status === 401,
+        data.error.data.response.status === 401
+      ),
     );
   },
 };
