@@ -4473,9 +4473,9 @@ quiq-scripts@0.0.2:
     react-addons-test-utils "^15.6.2"
     react-test-renderer "^16.2.0"
 
-quiq-socket@0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/quiq-socket/-/quiq-socket-0.0.3.tgz#173f56972e94117ddb8d27aba12161ff4d8c50a3"
+quiq-socket@0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/quiq-socket/-/quiq-socket-0.0.4.tgz#bd5c52187fee6f7958376dc305311783030d8864"
   dependencies:
     extendable-error-class "0.1.1"
     lodash "4.17.10"

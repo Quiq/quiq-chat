@@ -1,6 +1,6 @@
 {
   "name": "quiq-chat",
-  "version": "1.64.0",
+  "version": "1.64.1",
   "descri1tion": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "build/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
@@ -42,7 +42,7 @@
     "lodash": "4.17.10",
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",
-    "quiq-socket": "0.0.3",
+    "quiq-socket": "0.0.4",
     "raven-js": "3.17.0",
     "store": "2.0.12",
     "stubborn-fetch": "0.1.0",
