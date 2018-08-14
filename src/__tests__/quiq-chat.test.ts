@@ -63,7 +63,6 @@ describe('QuiqChatClient', () => {
   const onRegistration = jest.fn();
   const host = 'https://test.goquiq.fake';
   const contactPoint = 'test';
-  const mockStore = <any>storage;
   const API = <any>ApiCalls;
 
   beforeEach(() => {
