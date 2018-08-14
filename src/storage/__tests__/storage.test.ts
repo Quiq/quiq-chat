@@ -5,6 +5,7 @@ import {isStorageEnabled} from '../index';
 
 describe('isStorageEnabled', () => {
   it('fails if localStorage is disabled', () => {
+    // @ts-ignore
     window.localStorage = {
       getItem: () => {
         throw new Error('getItem');
