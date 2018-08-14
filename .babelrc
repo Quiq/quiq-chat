@@ -2,8 +2,7 @@
   "presets": [ ["env", {"modules": false}], "stage-0" ],
   "env": {
     "test": {
-      "presets": [ "env", "stage-0" ],
-      "plugins": ["transform-flow-strip-types"]
+      "presets": [ "env", "stage-0" ]
     }
   }
 }

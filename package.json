@@ -2,17 +2,18 @@
   "name": "quiq-chat",
   "version": "1.64.1",
   "descri1tion": "Library to help with network requests to create a webchat client for Quiq Messaging",
-  "main": "build/quiq-chat.js",
+  "main": "dist/quiq-chat.js",
+  "module": "lib/quiq-chat.js",
   "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
-    "start": "./node_modules/.bin/nodemon --watch src -e js,sass --exec npm run build",
-    "lint": "node ./node_modules/eslint/bin/eslint.js src/",
-    "test": "flow && jest --env=jsdom --coverage && node ./node_modules/eslint/bin/eslint.js src/ --quiet",
-    "flow": "flow",
+    "start": "tsc --watch",
+    "lint": "tslint --config tslint.json --project tsconfig.json 'src/**/*.ts'",
+    "test": "jest --env=jsdom --coverage && yarn run lint",
     "jest": "jest --watch --env=jsdom",
-    "build": "rollup -c",
-    "prepublish": "rollup -c",
-    "precommit": "lint-staged"
+    "build": "rimraf ./lib ./dist && tsc && rollup -c",
+    "prepublish": "yarn build",
+    "precommit": "lint-staged",
+    "prettier": "prettier --write src/**/*.ts src/*.ts"
   },
   "lint-staged": {
     "src/**/*.js": [
@@ -29,7 +30,28 @@
     "setupFiles": [
       "./jest.setup.js"
     ],
-    "notify": true
+    "notify": true,
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "transform": {
+      "^.+\\.(t|j)sx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "tsconfig.jest.json",
+        "useBabelrc": true
+      }
+    }
   },
   "keywords": [
     "quiq"
@@ -39,24 +61,36 @@
   "dependencies": {
     "isomorphic-fetch": "2.2.1",
     "jwt-decode": "2.2.0",
-    "lodash": "4.17.10",
+    "lodash": "^4.14.0",
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",
     "quiq-socket": "0.0.4",
-    "raven-js": "3.17.0",
+    "raven-js": "3.26.4",
     "store": "2.0.12",
     "stubborn-fetch": "0.1.0",
     "ua-parser-js": "0.7.18"
   },
   "devDependencies": {
-    "babel-plugin-external-helpers": "^6.22.0",
-    "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "nodemon": "^1.11.0",
+    "@types/isomorphic-fetch": "0.0.34",
+    "@types/jest": "23.3.1",
+    "@types/jwt-decode": "^2.2.1",
+    "@types/lodash": "^4.14.116",
+    "@types/loglevel": "^1.5.3",
+    "@types/qs": "^6.5.1",
+    "@types/storejs": "^2.0.3",
+    "@types/ua-parser-js": "^0.7.32",
+    "babel-jest": "23.4.2",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-polyfill": "^6.26.0",
     "quiq-scripts": "0.0.2",
-    "rollup": "^0.41.6",
-    "rollup-plugin-babel": "^2.7.1",
-    "rollup-plugin-flow": "^1.1.1",
-    "rollup-plugin-includepaths": "^0.2.2",
-    "rollup-plugin-json": "^2.3.0"
+    "rollup": "^0.64.1",
+    "rollup-plugin-babel": "^3.0.7",
+    "rollup-plugin-includepaths": "^0.2.3",
+    "rollup-plugin-json": "^3.0.0",
+    "ts-jest": "^23.1.3",
+    "tslint": "^5.11.0",
+    "tslint-config-airbnb-base": "^0.2.0",
+    "tslint-config-prettier": "^1.14.0",
+    "typescript": "2.9.2"
   }
 }

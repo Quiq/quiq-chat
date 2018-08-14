@@ -1,0 +1,10 @@
+export const formatQueryParams = (url: string) => url;
+export const getBrowserName = () => 'Chrome';
+export const getMajor = () => '53';
+export const sortByTimestamp = (arr: Array<Object>): Array<Object> => arr;
+export const burnItDown = jest.fn();
+export const registerOnBurnCallback = jest.fn();
+export const inLocalDevelopment = () => true;
+export const getTenantFromHostname = () => 'tester';
+export const createGuid = () => 'imALittleGuidShortAndStout';
+export const onceAtATime = (f: Function) => f;

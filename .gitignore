@@ -3,7 +3,11 @@
 *.iml
 node_modules
 dist
-build
+lib
 *.log*
 npm-debug.log
 coverage
+src/**/*.js
+src/*.js
+.cache
+.rpt2_cache

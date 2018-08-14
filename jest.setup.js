@@ -1,3 +1,5 @@
+require.requireActual('babel-polyfill');
+
 // This file is run before each test. Use it for any global configuration we want to add to Jest
 const blackListedStrings = [
   'Using atmosphere protocol',
@@ -9,7 +11,7 @@ const includesString = s => blackListedStrings.find(b => s.indexOf(b) !== -1);
 
 const warn = console.warn;
 console.warn = jest.fn(w => {
-  if (!includesString(w)) {
+  if (typeof w !== 'string' || !includesString(w)) {
     return warn(w);
   }
 
@@ -18,7 +20,7 @@ console.warn = jest.fn(w => {
 
 const err = console.error;
 console.error = jest.fn(e => {
-  if (!includesString(e)) {
+  if (typeof w !== 'string' || !includesString(e)) {
     return err(e);
   }
 
@@ -27,7 +29,7 @@ console.error = jest.fn(e => {
 
 const log = console.log;
 console.log = jest.fn(l => {
-  if (!includesString(l)) {
+  if (typeof w !== 'string' || !includesString(l)) {
     return log(l);
   }
 
@@ -36,7 +38,7 @@ console.log = jest.fn(l => {
 
 const info = console.info;
 console.info = jest.fn(i => {
-  if (!includesString(i)) {
+  if (typeof w !== 'string' || !includesString(i)) {
     return info(i);
   }
 

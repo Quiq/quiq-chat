@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`Globals module after globals have been set getPublicApiUrl returns the base url for the public api 1`] = `"https://testhost.goquiq.com/api/v1/messaging"`;
-
-exports[`Globals module after globals have been set getUrlForContactPoint returns the url for the api for the current contact point 1`] = `"https://testhost.goquiq.com/api/v1/messaging/chat/test"`;

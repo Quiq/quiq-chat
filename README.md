@@ -16,30 +16,29 @@ or
 yarn add quiq-chat
 ```
 
-### Promise Polyfill
-quiq-chat leverages Promises for asynchronous operations, including the relatively new `Promise.finally()` method.
-Unless your target browsers support this natively (only Chrome >= 63 and Firefox >= 58) you'll need to include a Promise polyfill on your page.
-If you aren't already using a polyfill which includes Promise support, we recommend the lightweight <https://github.com/taylorhakes/promise-polyfill>. 
+### ES6 Polyfill
+This library is built for modern browsers, and expects access to ES6 prototype methods. 
+If you need to target older browsers, you'll need to include a polyfill. We recommend babel-polyfill:
 
 Install with
 
 ```
-npm install --save promise-polyfill
+npm install --save babel-polyfill
 ```
 
 or
 
 ```
-yarn add promise-polyfill
+yarn add babel-polyfill
 ```
 
 Then include at the top of your module like so:
 
 ```
-import 'promise-polyfill/src/polyfill';
+import 'babel-polyfill';
 ```
 
-Note that this will add a Promise prototype to the global environment.
+Note that this will modify the prototypes of global objects such as Array and Object, as well as add a Promise prototype.
 
 ## Usage
 The quiq-chat library exports a QuiqChatClient, which is a singleton. 
@@ -55,12 +54,13 @@ import QuiqChatClient from 'quiq-chat';
 First, we call `initialize(host, contactPoint)`. We then register our own handler functions to respond to different chat events. Finally, we call `start()`.
 The `start` method returns a promise that resolves once the client is fully initialized and ready to send and receive messages.
 
-Below we show a simple setup, with handler functions for new message and agent typing events. 
+Below we show a simple setup, with handler functions for new transcript elements and agent typing events. 
 
 ```javascript
 QuiqChatClient
     .initialize('tenant.goquiq.com', 'default')
-    .onNewMessages(messages => {
+    .onTranscriptChange(messages => {
+        // Will log out messages and events (such as user registration and transcript email)
         messages.forEach(msg => console.log(msg)
     })
     .onAgentTyping(isTyping => {
@@ -90,13 +90,9 @@ Ends the chat session. The client will no longer receive messages.
 ## Handling events
 Register your event handling functions prior calling `QuiqChatClient.start()`. All of these methods can be chained together.
 
-#### onNewMessages(messages: Array<[ConversationMessage](#ConversationMessage)>) => [QuiqChatClient](#quiqchatclient)
+#### onTranscriptChange(transcriptItems: Array<[ConversationMessage](#ConversationMessage) | [Event](#Event)>) => [QuiqChatClient](#quiqchatclient)
 
-Called whenever new messages are received. `messages` is an array containing full transcript of the current chat
-
-#### onNewEvents(events: Array<[Event](#Event)>) => [QuiqChatClient](#quiqchatclient)
-
-Called whenever new messages are received. `messages` is an array containing full transcript of the current chat
+Called whenever new messages are received. `transcriptItems` is an array containing full transcript (messages and events) of the current chat.
 
 #### onAgentTyping(typing: boolean) => [QuiqChatClient](#quiqchatclient)
 
@@ -131,9 +127,9 @@ Called when the isAgentAssigned value changes.
 
 Called when the estimate wait time calculation changes.
 
-#### onConnectionStatusChanged(connected: boolean) => [QuiqChatClient](#quiqchatclient)
+#### onReconnect(reconnecting: boolean) => [QuiqChatClient](#quiqchatclient)
 
-Called when the connection to Quiq is established or terminated. This can be used for showing a "we're trying to reconnect you" message or similar.
+Called when chat is trying to reconnect with Quiq's servers (`reconnecting === true`), or has finished reconnecting (`reconnecting === false`). This can be used for showing a "we're trying to reconnect you" message or similar.
 
 #### onBurn() => [QuiqChatClient](#quiqchatclient)
 
@@ -144,13 +140,9 @@ Called when quiq-chat gets in a fatal state and page holding webchat needs to be
 Called whenever Quiq-related data stored in the browser's localStorage changes.
 
 ## Retrieve messages and conversation events
-#### getMessages(cache?: boolean = true) => Promise<Array<[ConversationMessage](#ConversationMessage)>>
+#### getTranscript(cache?: boolean = true) => Promise<Array<[ConversationMessage](#ConversationMessage) | [Event](#Event)>>
 
-Retrieve all messages for the current chat. If `cache` is set to true, a hit to the API is not made, and only the messages currently in memory are returned.
-
-#### getEvents(cache?: boolean = true) => Promise<Array<[Event](#ConversationMessage)>>
-
-Retrieve all events for the current chat. If `cache` is set to true, a hit to the API is not made, and only the events currently in memory are returned.
+Retrieve all messages and events for the current chat. If `cache` is set to true, a hit to the API is not made, and only the messages currently in memory are returned.
 
 ## Sending messages
 #### sendTextMessage(text: string) => void

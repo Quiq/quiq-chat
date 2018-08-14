@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "target": "es2017",
+    "lib": ["es7", "dom", "dom.iterable", "scripthost"],
+    "moduleResolution": "node",
+    "strictNullChecks": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "sourceRoot": "./src",
+    "sourceMap": true
+  },
+  "exclude": ["node_modules"]
+}

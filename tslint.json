@@ -1,0 +1,28 @@
+{
+  "defaultSeverity": "error",
+  "extends": [
+    "tslint-config-airbnb-base",
+    "tslint-config-prettier"
+  ],
+  "jsRules": {},
+  "rules": {
+    "no-magic-numbers": false,
+    "variable-name": [
+      true,
+      "check-format",
+      "allow-leading-underscore"
+    ],
+    "no-use-before-declare": false,
+    "no-unused-variable": false
+  },
+  "rulesDirectory": [],
+  "linterOptions": {
+    "exclude": [
+      "src/coverage",
+      "dist",
+      "lib",
+      "coverage",
+      "node_modules"
+    ]
+  }
+}
