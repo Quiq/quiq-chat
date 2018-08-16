@@ -58,10 +58,10 @@ export const registerNewSessionCallback = (callback: (newTrackingId: string) => 
 export const getChatConfiguration = (): Promise<ChatMetadata> =>
   quiqFetch(`${getUrlForContactPoint(true)}/configuration`, undefined, { responseType: 'JSON' });
 
-export const sendTextMessage = (text: string) =>
+export const sendMessage = (text?: string, richInteraction?: {replyResponse: Object}) =>
   quiqFetch(`${getUrlForContactPoint()}/send-message`, {
     method: 'POST',
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, richInteraction }),
   });
 
 export const sendAttachmentMessage = (uploadId: string): Promise<{ id: string }> =>

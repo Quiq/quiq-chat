@@ -20,12 +20,11 @@ import {
 
 import QuiqChatClient from '../quiq-chat';
 import * as ApiCalls from '../apiCalls';
-import * as storage from '../storage/index';
 import { set } from 'store';
 import * as Utils from '../Utils/utils';
 import * as log from 'loglevel';
 import QuiqSocketSingleton from '../services/QuiqSocketSingleton';
-import ChatState from '../State';
+import ChatState, {reset as ResetState} from '../State';
 
 log.setLevel('debug');
 
@@ -66,6 +65,7 @@ describe('QuiqChatClient', () => {
   const API = <any>ApiCalls;
 
   beforeEach(() => {
+    ResetState();
     API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
     API.fetchWebsocketInfo.mockReturnValue(
       Promise.resolve({
@@ -546,7 +546,7 @@ describe('QuiqChatClient', () => {
       });
 
       it('proxies call on send message', () => {
-        expect(API.sendTextMessage).toBeCalledWith('text');
+        expect(API.sendMessage).lastCalledWith('text');
       });
 
       it('sets container visibility to `true`', () => {
@@ -557,6 +557,52 @@ describe('QuiqChatClient', () => {
         expect(ChatState.hasTakenMeaningfulAction).toBe(true);
       });
     });
+
+      describe('replyToRichMessage', () => {
+          const replyResponse = {test: 'value'};
+
+          beforeEach(() => {
+              jest.clearAllMocks();
+              API.fetchWebsocketInfo.mockReturnValue({
+                  url: 'https://websocket.test',
+                  protocol: 'atmosphere',
+              });
+
+              ChatState.chatIsVisible = true;
+              ChatState.hasTakenMeaningfulAction = true;
+
+              QuiqChatClient.initialize(host, contactPoint);
+              QuiqChatClient.onTranscriptChange(onTranscriptChange);
+              QuiqChatClient.onAgentTyping(onAgentTyping);
+              QuiqChatClient.onError(onError);
+              QuiqChatClient.onErrorResolution(onErrorResolution);
+              QuiqChatClient.onReconnect(onReconnect);
+              QuiqChatClient.onRegistration(onRegistration);
+              QuiqChatClient.onNewSession(onNewSession);
+              QuiqChatClient.onBurn(onBurn);
+
+              if (!QuiqChatClient) {
+                  throw new Error('Client undefined');
+              }
+              
+              ChatState.connected = true;
+              QuiqChatClient.replyToRichMessage(replyResponse);
+          });
+
+          it('proxies call on send message', () => {
+              expect(API.sendMessage).toBeCalledWith(undefined, {
+                  replyResponse
+              });
+          });
+
+          it('sets container visibility to `true`', () => {
+              expect(ChatState.chatIsVisible).toBe(true);
+          });
+
+          it('sets hasTakenMeaningfulAction to `true`', () => {
+              expect(ChatState.hasTakenMeaningfulAction).toBe(true);
+          });
+      })
 
     describe('updateTypingIndicator', () => {
       it('proxies call', () => {

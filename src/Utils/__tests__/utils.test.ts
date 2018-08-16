@@ -67,6 +67,26 @@ describe('Utils', () => {
       expect(burnCallback).toBeCalled();
     });
   });
+  
+  describe('sortByTimestamp', () => {
+    const items = [
+        {timestamp: 4},
+        {timestamp: 5},
+        {timestamp: 2},
+        {timestamp: 1},
+        {timestamp: 3}
+    ];
+    
+    it('sorts by timestamp', () => {
+      expect(Utils.sortByTimestamp(items)).toEqual([
+          {timestamp: 1},
+          {timestamp: 2},
+          {timestamp: 3},
+          {timestamp: 4},
+          {timestamp: 5}
+      ]);
+    });
+  });
 
   describe('onceAtATime', () => {
     const f = jest.fn(

@@ -42,6 +42,7 @@ export enum AuthorType {
 export enum ConversationMessageType {
   TEXT = 'Text',
   ATTACHMENT = 'Attachment',
+  RICH = 'Rich',
   AGENT_TYPING = 'AgentTyping',
 }
 
@@ -206,6 +207,11 @@ export interface TextMessage extends BaseTranscriptItem, Author {
   text: string;
 }
 
+export interface RichMessage extends BaseTranscriptItem, Author {
+    type: ConversationMessageType.RICH;
+    text: string;
+}
+
 export interface AttachmentMessage extends BaseTranscriptItem, Author {
   type: ConversationMessageType.ATTACHMENT;
   url: string;
@@ -213,7 +219,7 @@ export interface AttachmentMessage extends BaseTranscriptItem, Author {
   status?: MessageStatus;
 }
 
-export type ConversationMessage = TextMessage | AttachmentMessage;
+export type ConversationMessage = TextMessage | AttachmentMessage | RichMessage;
 
 export interface BaseEvent extends BaseTranscriptItem {
   authorType?: AuthorType;
@@ -283,6 +289,8 @@ export interface ChatMetadata {
   };
   registrationFormVersionId?: string;
 }
+
+export type ReplyResponse = Object;
 
 export interface WebsocketCallbacks {
   onConnectionLoss?: () => void;
