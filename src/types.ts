@@ -158,6 +158,12 @@ export interface QueueInfo {
   rawAssignedEst: number;
 }
 
+// NOTE: quiq-chat should be able to be agnostic to what a rich interaction consists of.
+export type RichInteraction = {[key: string]: any}
+
+// NOTE: quiq-chat should be able to be agnostic to what a rich interaction consists of.
+export type QuiqReply = {[key: string]: any}
+
 export type ChatterboxMessage =
   | ChatMessage
   | UnsubscribeMessage
@@ -205,11 +211,13 @@ export interface AgentTypingMessage extends Author {
 export interface TextMessage extends BaseTranscriptItem, Author {
   type: ConversationMessageType.TEXT;
   text: string;
+  links: Array<Object>;
 }
 
 export interface RichMessage extends BaseTranscriptItem, Author {
     type: ConversationMessageType.RICH;
-    text: string;
+    richInteraction: RichInteraction;
+    quiqReply: QuiqReply;
 }
 
 export interface AttachmentMessage extends BaseTranscriptItem, Author {
@@ -290,7 +298,11 @@ export interface ChatMetadata {
   registrationFormVersionId?: string;
 }
 
-export type ReplyResponse = Object;
+export type ReplyResponse = {
+  text: string,
+    postbackData?: Object,
+    replyDirectives?: Object,
+};
 
 export interface WebsocketCallbacks {
   onConnectionLoss?: () => void;

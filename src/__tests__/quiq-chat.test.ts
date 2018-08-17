@@ -546,7 +546,7 @@ describe('QuiqChatClient', () => {
       });
 
       it('proxies call on send message', () => {
-        expect(API.sendMessage).lastCalledWith('text');
+        expect(API.sendMessage).lastCalledWith({text: 'text'});
       });
 
       it('sets container visibility to `true`', () => {
@@ -559,7 +559,7 @@ describe('QuiqChatClient', () => {
     });
 
       describe('replyToRichMessage', () => {
-          const replyResponse = {test: 'value'};
+          const replyResponse = {text: 'value'};
 
           beforeEach(() => {
               jest.clearAllMocks();
@@ -586,13 +586,11 @@ describe('QuiqChatClient', () => {
               }
               
               ChatState.connected = true;
-              QuiqChatClient.replyToRichMessage(replyResponse);
+              QuiqChatClient.sendQuiqReply(replyResponse);
           });
 
           it('proxies call on send message', () => {
-              expect(API.sendMessage).toBeCalledWith(undefined, {
-                  replyResponse
-              });
+              expect(API.sendMessage).toBeCalledWith(replyResponse);
           });
 
           it('sets container visibility to `true`', () => {

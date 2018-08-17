@@ -187,32 +187,45 @@ class QuiqChatClient {
 
     // This is specific to our chat client. Don't document it.
     getChatConfiguration = () => API.getChatConfiguration();
-
-    sendTextMessage = async (text: string) => {
-        ChatState.chatIsVisible = true;
-        ChatState.subscribed = true;
-
+    
+    private _prepareForMessageSend = async () => {
         if (!ChatState.connected) {
             await this._connectSocket();
         }
 
-        return API.sendMessage(text);
+        // Set these AFTER connection routine, as the fetched transcript might still indicate subscription == false
+        // if no messages have been sent yet
+        ChatState.chatIsVisible = true;
+        ChatState.subscribed = true;
     };
 
-    replyToRichMessage = async (replyResponse: ReplyResponse) => {
-        ChatState.chatIsVisible = true;
-        ChatState.subscribed = true;
+    sendTextMessage = async (text: string) => {
+        await this._prepareForMessageSend();
+        return API.sendMessage({text});
+    };
 
-        if (!ChatState.connected) {
-            await this._connectSocket();
+    sendQuiqReply = async (reply: ReplyResponse) => {
+        await this._prepareForMessageSend();
+        return API.sendMessage(reply);
+    };
+
+    sendAttachmentMessage = async (file: File,
+                                   progressCallback: (progress: number) => void,): Promise<string> => {
+        await this._prepareForMessageSend();
+
+        // Returns an array of directives, but we'll always be asking for only 1 here
+        const uploadDirectives = await API.getAttachmentMessageUploadDirectives();
+        const uploadDirective = uploadDirectives.uploads[0];
+        const {url, formEntries} = uploadDirective.directive;
+        try {
+            await S3.uploadAttachment(file, url, formEntries, progressCallback);
+        } catch (e) {
+            log.error(`An occurred error sending attachment message: ${e.message}`, {exception: e});
+            throw e;
         }
+        const {id} = await API.sendAttachmentMessage(uploadDirective.uploadId);
 
-        return API.sendMessage(
-            undefined,
-            {
-                replyResponse
-            }
-        );
+        return id;
     };
 
     emailTranscript = async (data: EmailTranscriptPayload) => {
@@ -228,30 +241,6 @@ class QuiqChatClient {
                 },
             ]);
         }
-    };
-
-    sendAttachmentMessage = async (file: File,
-                                   progressCallback: (progress: number) => void,): Promise<string> => {
-        ChatState.chatIsVisible = true;
-        ChatState.subscribed = true;
-
-        if (!ChatState.connected) {
-            await this._connectSocket();
-        }
-
-        // Returns an array of directives, but we'll always be asking for only 1 here
-        const uploadDirectives = await API.getAttachmentMessageUploadDirectives();
-        const uploadDirective = uploadDirectives.uploads[0];
-        const {url, formEntries} = uploadDirective.directive;
-        try {
-            await S3.uploadAttachment(file, url, formEntries, progressCallback);
-        } catch (e) {
-            log.error(`An occurred error sending attachment message: ${e.message}`, {exception: e});
-            throw e;
-        }
-        const {id} = await API.sendAttachmentMessage(uploadDirective.uploadId);
-
-        return id;
     };
 
     updateTypingIndicator = (text: string, typing: boolean) =>
@@ -389,9 +378,9 @@ class QuiqChatClient {
 
                         log.info(`Using ${this.socketProtocol} protocol`);
 
-                        const connectionEstablish = () => {
+                        const connectionEstablish = async () => {
+                            await this._handleConnectionEstablish();
                             resolve();
-                            this._handleConnectionEstablish();
                         };
 
                         switch (this.socketProtocol) {
