@@ -171,12 +171,14 @@ class QuiqChatClient {
         this._resetState();
     };
 
-    getPersistentData = (): PersistentData => ChatState.customPersistedData || {};
+    getPersistentData = (): PersistentData => storage.getAll() || {};
 
     setCustomPersistentData = (key: string, value: any) =>
         (ChatState.customPersistedData = Object.assign({}, ChatState.customPersistedData, {
             [key]: value,
         }));
+    
+    getCustomPersistentData = (key: string) => (ChatState.customPersistedData || {})[key];
 
     getTranscript = async (cache: boolean = true): Promise<Array<TranscriptItem>> => {
         if (!cache || !ChatState.connected) {

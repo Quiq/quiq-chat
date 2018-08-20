@@ -1,4 +1,5 @@
 jest.mock('../../logging');
+jest.mock('../../State');
 
 import * as Utils from '../utils';
 import ChatState from '../../State';

@@ -21,12 +21,12 @@ let callbacks: StorageCallbacks = {};
 const expireInDays = (numberOfDays: number) =>
   new Date().getTime() + numberOfDays * 1000 * 60 * 60 * 24;
 
-const getData = (): PersistentData => store.get(prefix) || {};
+export const getAll = (): PersistentData => store.get(prefix) || {};
 
 export const get = (key: string): any => (store.get(prefix) || {})[key];
 
 export const set = (key: string, value: any) => {
-  const currentData = getData();
+  const currentData = getAll();
   const mergedData = Object.assign({}, currentData, { [key]: value });
 
   // @ts-ignore we've extended the StoreJs API to allow for expiration time

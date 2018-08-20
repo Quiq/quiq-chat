@@ -5,7 +5,9 @@ import {QuiqChatState} from './types';
 const log = logger('State');
 
 const state: { [key: string]: any } = {};
+
 const stateAccessors: QuiqChatState = {};
+
 const listeners: { [key: string]: Array<(newValue: any, oldValue: any) => void> } = {};
 
 export const addStateField = <K extends keyof QuiqChatState>(key: K,
