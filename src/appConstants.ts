@@ -7,3 +7,5 @@ export enum MessageFailureCodes {
   UPLOAD_NOT_FOUND = 11004,
   EMPTY_UPLOAD = 11005,
 }
+
+export const developmentDomains = ['quiq.dev', 'quiq.sh'];

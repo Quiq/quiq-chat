@@ -93,7 +93,7 @@ describe('QuiqChatClient', () => {
 
   describe('init', () => {
     it('sets host and contactPoint in chat state', () => {
-      expect(ChatState.host).toBe(host);
+      expect(ChatState.host!.rawUrl).toBe(host);
       expect(ChatState.contactPoint).toBe(contactPoint);
     });
   });

@@ -10,7 +10,8 @@ import {
     registerOnBurnCallback,
     isSupportedBrowser as supportedBrowser,
     createGuid,
-    getTenantFromHostname,
+    getTenantFromHostname, 
+    parseUrl,
 } from './Utils/utils';
 import * as S3 from './services/S3';
 import {
@@ -53,7 +54,7 @@ class QuiqChatClient {
     initialize = (host: string, contactPoint: string) => {
         // Set global options in state
         // NOTE HARD: Must be done prior to any networking/business logic!
-        ChatState.host = host;
+        ChatState.host = parseUrl(host);
         ChatState.contactPoint = contactPoint;
 
         Raven.setTagsContext({

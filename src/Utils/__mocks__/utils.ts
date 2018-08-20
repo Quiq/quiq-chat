@@ -9,3 +9,4 @@ export const inLocalDevelopment = () => true;
 export const getTenantFromHostname = () => 'tester';
 export const createGuid = () => 'imALittleGuidShortAndStout';
 export const onceAtATime = (f: Function) => f;
+export const parseUrl = (url: string) => ({rawUrl: url});

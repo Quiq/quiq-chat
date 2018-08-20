@@ -4,7 +4,8 @@ import qs from 'qs';
 import logger from '../logging';
 import StubbornFetch from 'stubborn-fetch';
 import ChatState from '../State';
-import { BrowserNames, BurnItDownResponse } from '../types';
+import UrlParser from 'url-parse';
+import {BrowserNames, BurnItDownResponse, ParsedUrl} from '../types';
 
 const log = logger('Utils');
 
@@ -118,4 +119,15 @@ export const onceAtATime = <A, T>(f: (arg?: A) => Promise<T>): ((arg?: A) => Pro
       });
     return currentPromise!;
   };
+};
+
+export const parseUrl = (url: string): ParsedUrl => {
+    const parsedUrl = UrlParser(url, {});
+    return {
+      hostname: parsedUrl.hostname,
+        port: parsedUrl.port,
+        pathname: parsedUrl.pathname,
+        protocol: parsedUrl.protocol,
+        rawUrl: url,
+    };
 };
