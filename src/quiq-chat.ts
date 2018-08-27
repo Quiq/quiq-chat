@@ -250,6 +250,11 @@ class QuiqChatClient {
         API.updateTypingIndicator(text, typing);
 
     sendRegistration = async (fields: { [fieldId: string]: string }, formVersionId?: string) => {
+        if (!fields || !Object.keys(fields).length) {
+            log.error('Cannot send registration without at least one field/value pair');
+            return;
+        }
+        
         ChatState.chatIsVisible = true;
         await API.sendRegistration(fields, formVersionId);
 
