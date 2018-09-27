@@ -1,6 +1,6 @@
 {
   "name": "quiq-chat",
-  "version": "2.2.0-beta.0",
+  "version": "2.2.0-beta.1",
   "descri1tion": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "dist/quiq-chat.js",
   "module": "lib/quiq-chat.js",
@@ -61,7 +61,7 @@
   "dependencies": {
     "isomorphic-fetch": "2.2.1",
     "jwt-decode": "2.2.0",
-    "lodash": "4.14.0",
+    "lodash": "4.17.10",
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",
     "quiq-socket": "0.0.4",
