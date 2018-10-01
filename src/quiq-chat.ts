@@ -29,7 +29,7 @@ import {
     QueueInfo,
     ChatterboxMessageType,
     ConversationMessageType,
-    EventType, ReplyResponse,
+    EventType, ReplyResponse, QuiqJwt,
 } from './types';
 import {setFetchMode} from './quiqFetch';
 import * as storage from './storage/index';
@@ -40,6 +40,7 @@ import {version} from '../package.json';
 import {registerCallbacks as registerQuiqFetchCallbacks} from './quiqFetch';
 import ChatState, {watch as watchState} from './State';
 import Raven from 'raven-js';
+import jwt_decode from "jwt-decode";
 
 Senty.init();
 
@@ -65,6 +66,11 @@ class QuiqChatClient {
         API.registerNewSessionCallback(this._handleNewSession);
 
         ChatState.reconnecting = false;
+        
+        // Set trackingId from accessToken, if accessToken is defined
+        if (ChatState.accessToken) {
+            ChatState.trackingId = jwt_decode<QuiqJwt>(ChatState.accessToken).sub;
+        }
 
         return this;
     };
