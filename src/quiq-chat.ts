@@ -542,13 +542,24 @@ class QuiqChatClient {
             });
         }
     };
-
+    
+    // TODO: Remove this method when CB stops sending duplicate messages for rich interactions
+    private _removeItemsWithDuplicateIdsPrioritizingRichMessages = (items: TranscriptItem[]): TranscriptItem[] => {
+        // We remove messages with duplicate IDs that DO NOT have a type of RICH, i.e., we remove the duplicate TEXT message
+        const countsById: {[id: string]: number} = items.reduce((counts: {[id: string]: number}, item) => ({...counts, [item.id]: counts[item.id] ? counts[item.id] + 1 : 1}), {});
+        return items.filter((item: TranscriptItem) => countsById[item.id] < 2 || item.type === ConversationMessageType.RICH);
+    };
+    
     // @ts-ignore no-unused-variable
     private _ingestTranscriptItems = (newItems: Array<TranscriptItem>,
                                       sendNewMessageCallback: boolean = true,): void => {
         // Sort and update cached textMessages, and send callback
         // Union removes duplicates; order is important--newItems must be passed to union before existing transcript
-        this.transcript = sortByTimestamp(unionBy(newItems, this.transcript, 'id'));
+        // TODO: This filtering logic is needed as long as CB sends us duplicate messages for rich interactions
+        // TODO: Remove when we use type TEXT for all messages
+        const uniqueNewItems = this._removeItemsWithDuplicateIdsPrioritizingRichMessages(newItems);
+        
+        this.transcript = sortByTimestamp(unionBy(uniqueNewItems, this.transcript, 'id'));
 
         if (this.callbacks.onTranscriptChanged && sendNewMessageCallback) {
             this.callbacks.onTranscriptChanged(this.transcript);
@@ -585,7 +596,11 @@ class QuiqChatClient {
         // Transcript changed callback
         // NOTE: We do not check to see if a message has CHANGED; we only react if there is a NEW MESSAGE
         if (conversation.messages.length > this.transcript.length) {
-            this.transcript = sortByTimestamp(conversation.messages);
+            // TODO: This filtering logic is needed as long as CB sends us duplicate messages for rich interactions
+            // TODO: Remove when we use type TEXT for all messages
+            const uniqueItems = this._removeItemsWithDuplicateIdsPrioritizingRichMessages(conversation.messages);
+            
+            this.transcript = sortByTimestamp(uniqueItems);
             if (this.callbacks.onTranscriptChanged && sendNewMessageCallback) {
                 this.callbacks.onTranscriptChanged(this.transcript);
             }
