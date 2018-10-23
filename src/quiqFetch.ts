@@ -77,22 +77,35 @@ const logger = {
   log: quiqFetchLog.info,
   debug: quiqFetchLog.debug,
   info: quiqFetchLog.info,
-  warn: (msg: string, data: LogData = {}) => {
+  warn: (msg: string, context: LogData = {}) => {
     // We don't care about 401's in chat
-    quiqFetchLog.warn(msg, data, !(data && data.response && data.response.status === 401));
+    quiqFetchLog.warn(msg, {
+        context,
+        capture: !(context && context.response && context.response.status === 401),
+        logOptions: {
+            logFirstOccurrence: true,
+            frequency: 'session',
+        },
+    });
   },
   error: (msg: string, data: LogData = {}) => {
     quiqFetchLog.error(
       msg,
-      data.error && scrubError(data.error),
-      !(
-        data &&
-        data.error &&
-        data.error.data &&
-        data.error.data.response &&
-        data.error.data.response.status &&
-        data.error.data.response.status === 401
-      ),
+        {
+            context: data.error && scrubError(data.error),
+            capture: !(
+                data &&
+                data.error &&
+                data.error.data &&
+                data.error.data.response &&
+                data.error.data.response.status &&
+                data.error.data.response.status === 401
+            ),
+            logOptions: {
+                logFirstOccurrence: true,
+                frequency: 'session',
+            },
+        },
     );
   },
 };
@@ -188,7 +201,13 @@ const quiqFetch = (
             .json()
             .then(result => result)
             .catch(err => {
-              quiqFetchLog.warn(messages.cannotParseResponse(parsedUrl), { exception: err });
+              quiqFetchLog.warn(messages.cannotParseResponse(parsedUrl), { 
+                  exception: err,
+                  logOptions: {
+                      logFirstOccurrence: true,
+                      frequency: 'every',
+                  },
+              });
               return err;
             });
         }
@@ -252,7 +271,7 @@ const quiqFetch = (
         failures,
       };
       quiqFetchLog.debug(`[${data.statusCode}] (${data.reason}) ${data.url}`, {
-        data,
+        context: data,
         capture: true,
       });
 
@@ -261,7 +280,13 @@ const quiqFetch = (
           .json()
           .then(result => result)
           .catch(err => {
-            quiqFetchLog.warn(messages.cannotParseResponse(parsedUrl), { exception: err });
+            quiqFetchLog.warn(messages.cannotParseResponse(parsedUrl), { 
+                exception: err,
+                logOptions: {
+                    logFirstOccurrence: true,
+                    frequency: 'session',
+                },
+            });
             return err;
           });
       }

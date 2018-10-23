@@ -25,7 +25,7 @@ function contactPointNamespacePlugin() {
   const set = (superFunc: Function, key: string, value: any) => {
     const ns = ChatState.contactPoint;
     if (!ns) {
-      log.error(`Can't set key ${key} before QuiqChatClient has been initialized.`);
+      log.error(`Can't set key ${key} before QuiqChatClient has been initialized.`, {logOptions: {frequency: 'history', logFirstOccurrence: true}});
       return;
     }
     return superFunc(`${key}_${ns}`, value);
@@ -34,7 +34,7 @@ function contactPointNamespacePlugin() {
   const remove = (superFunc: Function, key: string, useContactPointNamespace = true) => {
     const ns = ChatState.contactPoint;
     if (!ns && useContactPointNamespace) {
-      log.error(`Can't set key ${key} before global QuiqChatOptions have been set.`);
+        log.error(`Can't remove key ${key} before QuiqChatClient has been initialized.`, {logOptions: {frequency: 'history', logFirstOccurrence: true}});
       return;
     }
     const postfix = useContactPointNamespace ? `_${ns}` : '';

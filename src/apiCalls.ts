@@ -24,7 +24,7 @@ let _onNewSession: (newTrackingId: string) => any;
 
 const getHost = (cached: boolean): string => {
     if (!ChatState.host) {
-        log.error('Tried to get host (for making API call) before `host` was set in ChatState');
+        log.error('Tried to get host (for making API call) before `host` was set in ChatState', {logOptions: {frequency: 'session', logFirstOccurrence: true}});
         return '';
     }
     
@@ -42,7 +42,7 @@ const getHost = (cached: boolean): string => {
 
         if (!vanityName) {
             // Fallback to specified host in case of parsing error
-            log.error("Couldn't determine vanity name, falling back to provided host");
+            log.error("Couldn't determine vanity name, falling back to provided host", {logOptions: {frequency: 'session', logFirstOccurrence: true}});
             return ChatState.host.rawUrl;
         }
 
@@ -55,7 +55,7 @@ const getHost = (cached: boolean): string => {
         return `https://${vanityName}.goquiq.com`;
     } catch (e) {
         // Fallback to specified host in case of parsing error
-        log.error("Couldn't determine host name, falling back to provided host", {exception: e});
+        log.error("Couldn't determine host name, falling back to provided host", {exception: e, logOptions: {frequency: 'session', logFirstOccurrence: true}});
         return ChatState.host.rawUrl;
     }
 };

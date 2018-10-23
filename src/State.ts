@@ -14,7 +14,7 @@ export const addStateField = <K extends keyof QuiqChatState>(key: K,
                                                              persisted: boolean = false,
                                                              defaultValue?: QuiqChatState[K],) => {
     if (stateAccessors.hasOwnProperty(key)) {
-        log.error(`A key already exists with name ${key}`);
+        log.error(`A key already exists with name ${key}`, {logOptions: {frequency: 'history', logFirstOccurrence: true}});
         return;
     }
 
@@ -26,7 +26,7 @@ export const addStateField = <K extends keyof QuiqChatState>(key: K,
         // tslint:disable-next-line object-literal-shorthand
         get: function () {
             if (!state.hasOwnProperty(key)) {
-                log.error(`Cannot access unknown state field ${key}`);
+                log.error(`Cannot access unknown state field ${key}`, {logOptions: {frequency: 'history', logFirstOccurrence: true}});
             }
 
             // If this is the first time accessing a persisted key, load from localStorage
@@ -59,7 +59,7 @@ export const addStateField = <K extends keyof QuiqChatState>(key: K,
 export const watch = <K extends keyof QuiqChatState>(key: K,
                                                      f: (newValue: QuiqChatState[K], oldValue: QuiqChatState[K]) => void,) => {
     if (!state.hasOwnProperty(key)) {
-        log.error(`Cannot add watch for unknown key ${key}`);
+        log.error(`Cannot add watch for unknown key ${key}`, {logOptions: {frequency: 'history', logFirstOccurrence: true}});
         return;
     }
 

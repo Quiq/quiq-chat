@@ -1,6 +1,6 @@
 import log from 'loglevel';
 import prefix from 'loglevel-plugin-prefix';
-import sentryPlugin from './Utils/sentryLoglevelPlugin';
+import logListenerPlugin from './Utils/logListenerPlugin';
 
 prefix.apply(log, {
   template: '[%t] %l QuiqChatLib (%n):',
@@ -9,7 +9,7 @@ prefix.apply(log, {
   nameFormatter: (name: string) => name || 'global',
 });
 
-sentryPlugin.apply(log);
+logListenerPlugin.apply(log);
 
 log.enableAll();
 

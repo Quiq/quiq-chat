@@ -45,12 +45,16 @@ export const uploadAttachment = (
     req.addEventListener('error', () => {
       const error = 'An error occurred uploading attachment to S3';
       log.error(error, {
-        data: {
+        context: {
           requestStatus: req.statusText,
           attachmentType: file.type,
           attachmentSize: file.size,
           attachmentName: file.name,
         },
+          logOptions: {
+            logFirstOccurrence: true,
+              frequency: 'every',
+          }
       });
       reject(new Error(error));
     });

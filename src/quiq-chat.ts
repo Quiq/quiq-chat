@@ -34,15 +34,12 @@ import {
 import {setFetchMode} from './quiqFetch';
 import * as storage from './storage/index';
 import logger from './logging';
-import * as Senty from './sentry';
 import {MessageFailureCodes} from './appConstants';
 import {version} from '../package.json';
 import {registerCallbacks as registerQuiqFetchCallbacks} from './quiqFetch';
 import ChatState, {watch as watchState} from './State';
-import Raven from 'raven-js';
 import jwt_decode from "jwt-decode";
-
-Senty.init();
+import * as LogListener from './Utils/logListenerPlugin';
 
 const log = logger('QuiqChatClient');
 
@@ -57,10 +54,6 @@ class QuiqChatClient {
         // NOTE HARD: Must be done prior to any networking/business logic!
         ChatState.host = parseUrl(host);
         ChatState.contactPoint = contactPoint;
-
-        Raven.setTagsContext({
-            tenant: getTenantFromHostname(host),
-        });
 
         // Register with apiCalls for new session events
         API.registerNewSessionCallback(this._handleNewSession);
@@ -161,7 +154,7 @@ class QuiqChatClient {
 
             await this._getConversationAndConnect();
         } catch (err) {
-            log.error(`Could not start QuiqChatClient: ${err.message}`, {exception: err});
+            log.error('Could not start QuiqChatClient', {exception: err, logOptions: {frequency: 'history', logFirstOccurrence: true}});
             this._disconnectSocket();
 
             if (this.callbacks.onError) {
@@ -197,6 +190,8 @@ class QuiqChatClient {
     // This is specific to our chat client. Don't document it.
     getChatConfiguration = () => API.getChatConfiguration();
     
+    getTenantVanityName = (): string | undefined => ChatState.host ? getTenantFromHostname(ChatState.host.rawUrl) : undefined;
+    
     private _prepareForMessageSend = async () => {
         if (!ChatState.connected) {
             await this._connectSocket();
@@ -229,7 +224,7 @@ class QuiqChatClient {
         try {
             await S3.uploadAttachment(file, url, formEntries, progressCallback);
         } catch (e) {
-            log.error(`An occurred error sending attachment message: ${e.message}`, {exception: e});
+            log.error('An occurred error sending attachment message', {exception: e, logOptions: {frequency: 'history', logFirstOccurrence: true}});
             throw e;
         }
         const {id} = await API.sendAttachmentMessage(uploadDirective.uploadId);
@@ -257,7 +252,7 @@ class QuiqChatClient {
 
     sendRegistration = async (fields: { [fieldId: string]: string }, formVersionId?: string) => {
         if (!fields || !Object.keys(fields).length) {
-            log.error('Cannot send registration without at least one field/value pair');
+            log.error('Cannot send registration without at least one field/value pair', {logOptions: {frequency: 'history', logFirstOccurrence: true}});
             return;
         }
         
@@ -292,12 +287,18 @@ class QuiqChatClient {
     isRegistered = (): boolean => !!ChatState.userIsRegistered;
 
     isAgentAssigned = (): boolean => !!ChatState.agentIsAssigned;
-
+    
     private _resetState = () => {
         this.transcript = [];
         ChatState.userIsRegistered = false;
         ChatState.agentIsAssigned = false;
         ChatState.estimatedWaitTime = undefined;
+    };
+
+    // @ts-ignore no-unused-variable
+    private _withLogListener = (callback: LogListener.LogFunction): QuiqChatClient => {
+        LogListener.addListener(callback);
+        return this;
     };
 
     // @ts-ignore no-unused-variable
@@ -310,19 +311,6 @@ class QuiqChatClient {
     private _deepGetUserSubscribed = async (): Promise<boolean> => {
         await this._loadCurrentConversation();
         return this.isUserSubscribed();
-    };
-
-    // @ts-ignore no-unused-variable
-    private _logToSentry = (level: 'error' | 'warning' | 'info',
-                            message: string,
-                            data: { exception?: Error; data?: Object } = {},) => {
-        // @ts-ignore
-        if (log[level]) {
-            // @ts-ignore
-            log[level](`(via _logToSentry) ${message}`, data);
-        } else {
-            log.error(`logToSentry: unknown log level "${level}"`);
-        }
     };
 
     // @ts-ignore no-unused-variable
@@ -352,24 +340,8 @@ class QuiqChatClient {
     };
 
     // @ts-ignore no-unused-variable
-    private _withSentryMetadataCallback = (callback: () => Object) => {
-        this.callbacks.sentryMetadata = callback;
-    };
-
-    // @ts-ignore no-unused-variable
     private _setFetchMode = setFetchMode;
-
-    /**
-     * Returns an object of state information, useful for logging errors.
-     */
-        // @ts-ignore no-unused-variable
-    private _getState = (): Object => ({
-        clientState: this.callbacks.sentryMetadata ? this.callbacks.sentryMetadata() : null,
-        connected: ChatState.connected,
-        initialized: this.initialized,
-        transcript: this.transcript.filter(item => (<any>Object).values(EventType).includes(item)),
-    });
-
+    
     // @ts-ignore no-unused-variable
     private _connectSocket = (): Promise<void | {}> =>
         API.fetchWebsocketInfo()
@@ -386,6 +358,7 @@ class QuiqChatClient {
                         if (!this.socketProtocol || !['atmosphere', 'quiq'].includes(this.socketProtocol)) {
                             log.warn(
                                 `Unsupported socket protocol "${protocol}" received. Defaulting to "atmosphere"`,
+                                {logOptions: {frequency: 'history', logFirstOccurrence: true}},
                             );
                             this.socketProtocol = 'atmosphere';
                         }
@@ -416,12 +389,12 @@ class QuiqChatClient {
                                     .connect();
                                 break;
                             default:
-                                log.error(`Received unknown socket protocol "${this.socketProtocol || 'unknown'}"`);
+                                log.error(`Received unknown socket protocol "${this.socketProtocol || 'unknown'}"`, {logOptions: {frequency: 'history', logFirstOccurrence: true}});
                         }
                     }),
             )
             .catch((e: Error) => {
-                log.info('Unable to establish websocket connection', {data: {e}});
+                log.info('Unable to establish websocket connection', {context: {e}});
                 if (this.callbacks.onError) this.callbacks.onError();
                 return Promise.reject(e);
             });
@@ -482,7 +455,7 @@ class QuiqChatClient {
                     break;
                 default:
                     // @ts-ignore We know type still exists on data
-                    log.error(`Received a websocket message of unknown type ${message.data.type}`);
+                    log.error(`Received a websocket message of unknown type ${message.data.type}`, {logOptions: {frequency: 'history', logFirstOccurrence: true}});
             }
         }
 

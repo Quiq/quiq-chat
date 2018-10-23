@@ -65,7 +65,6 @@
     "loglevel": "1.4.1",
     "loglevel-plugin-prefix": "0.5.3",
     "quiq-socket": "0.0.4",
-    "raven-js": "3.26.4",
     "store": "2.0.12",
     "stubborn-fetch": "0.1.0",
     "ua-parser-js": "0.7.18",

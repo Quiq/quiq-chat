@@ -65,13 +65,13 @@ export const burnItDown = (message?: BurnItDownResponse) => {
       StubbornFetch.disable();
 
       if (_onBurn) _onBurn();
-      log.error('Webchat has been burned down.');
+      log.error('Webchat has been burned down.', {logOptions: {frequency: 'session', logFirstOccurrence: true}});
     }, timeToBurnItDown);
   } catch (e) {
     // Just in case something goes wrong while burning...
     // as a last ditch effort ensure we at least set burned status.
     ChatState.burned = true;
-    log.error(`Error encountered while burning it down: ${e.message}`, { exception: e });
+    log.error(`Error encountered while burning it down: ${e.message}`, { exception: e, logOptions: {frequency: 'session', logFirstOccurrence: true} });
   }
 };
 
