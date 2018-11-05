@@ -2,7 +2,7 @@ import oldStubbornFetch, { registerCallbacks as oldRegisterCallbacks } from './s
 import StubbornFetch, { StubbornFetchError } from 'stubborn-fetch';
 import { login } from './apiCalls';
 import merge from 'lodash/merge';
-import { burnItDown, formatQueryParams, createGuid } from './Utils/utils';
+import { burnItDown, formatQueryParams, createGuid, getTimezone } from './Utils/utils';
 import { version } from '../package.json';
 import logging from './logging';
 import ChatState from './State';
@@ -15,8 +15,8 @@ interface FetchCallbacks {
 }
 
 interface LogData {
-    response?: Response;
-    error?: StubbornFetchError;
+  response?: Response;
+  error?: StubbornFetchError;
 }
 
 interface FailureLogEntry {
@@ -80,33 +80,30 @@ const logger = {
   warn: (msg: string, context: LogData = {}) => {
     // We don't care about 401's in chat
     quiqFetchLog.warn(msg, {
-        context,
-        capture: !(context && context.response && context.response.status === 401),
-        logOptions: {
-            logFirstOccurrence: true,
-            frequency: 'session',
-        },
+      context,
+      capture: !(context && context.response && context.response.status === 401),
+      logOptions: {
+        logFirstOccurrence: true,
+        frequency: 'session',
+      },
     });
   },
   error: (msg: string, data: LogData = {}) => {
-    quiqFetchLog.error(
-      msg,
-        {
-            context: data.error && scrubError(data.error),
-            capture: !(
-                data &&
-                data.error &&
-                data.error.data &&
-                data.error.data.response &&
-                data.error.data.response.status &&
-                data.error.data.response.status === 401
-            ),
-            logOptions: {
-                logFirstOccurrence: true,
-                frequency: 'session',
-            },
-        },
-    );
+    quiqFetchLog.error(msg, {
+      context: data.error && scrubError(data.error),
+      capture: !(
+        data &&
+        data.error &&
+        data.error.data &&
+        data.error.data.response &&
+        data.error.data.response.status &&
+        data.error.data.response.status === 401
+      ),
+      logOptions: {
+        logFirstOccurrence: true,
+        frequency: 'session',
+      },
+    });
   },
 };
 
@@ -186,6 +183,8 @@ const quiqFetch = (
           'Content-Type': 'application/json',
         }
       : {},
+    getTimezone() ? { 'X-Quiq-Time-Zone': getTimezone() } : {},
+    document.referrer ? { 'X-Quiq-Referrer': document.referrer } : {},
   );
 
   if (overrides) {
@@ -195,29 +194,31 @@ const quiqFetch = (
   /******** Old Stubborn Fetch *********/
   if (!fetchMode || fetchMode === 'legacy') {
     return oldStubbornFetch(parsedUrl, request)
-      .then((res: Response): any => {
-        if (options.responseType === 'JSON' && res && res.json) {
-          return res
-            .json()
-            .then(result => result)
-            .catch(err => {
-              quiqFetchLog.warn(messages.cannotParseResponse(parsedUrl), { 
+      .then(
+        (res: Response): any => {
+          if (options.responseType === 'JSON' && res && res.json) {
+            return res
+              .json()
+              .then(result => result)
+              .catch(err => {
+                quiqFetchLog.warn(messages.cannotParseResponse(parsedUrl), {
                   exception: err,
                   logOptions: {
-                      logFirstOccurrence: true,
-                      frequency: 'every',
+                    logFirstOccurrence: true,
+                    frequency: 'every',
                   },
+                });
+                return err;
               });
-              return err;
-            });
-        }
+          }
 
-        if (options.responseType === 'NONE') {
-          return;
-        }
+          if (options.responseType === 'NONE') {
+            return;
+          }
 
-        return res;
-      })
+          return res;
+        },
+      )
       .catch(err => {
         return Promise.reject(err);
       });
@@ -261,42 +262,44 @@ const quiqFetch = (
     minimumStatusCodeForRetry: 500,
   })
     .send()
-    .then((res: Response): any => {
-      // Log this request to sentry
-      const data = {
-        statusCode: res.status,
-        reason: res.statusText,
-        request: scrubRequest(request),
-        url: parsedUrl,
-        failures,
-      };
-      quiqFetchLog.debug(`[${data.statusCode}] (${data.reason}) ${data.url}`, {
-        context: data,
-        capture: true,
-      });
+    .then(
+      (res: Response): any => {
+        // Log this request to sentry
+        const data = {
+          statusCode: res.status,
+          reason: res.statusText,
+          request: scrubRequest(request),
+          url: parsedUrl,
+          failures,
+        };
+        quiqFetchLog.debug(`[${data.statusCode}] (${data.reason}) ${data.url}`, {
+          context: data,
+          capture: true,
+        });
 
-      if (options.responseType === 'JSON' && res && res.json) {
-        return res
-          .json()
-          .then(result => result)
-          .catch(err => {
-            quiqFetchLog.warn(messages.cannotParseResponse(parsedUrl), { 
+        if (options.responseType === 'JSON' && res && res.json) {
+          return res
+            .json()
+            .then(result => result)
+            .catch(err => {
+              quiqFetchLog.warn(messages.cannotParseResponse(parsedUrl), {
                 exception: err,
                 logOptions: {
-                    logFirstOccurrence: true,
-                    frequency: 'session',
+                  logFirstOccurrence: true,
+                  frequency: 'session',
                 },
+              });
+              return err;
             });
-            return err;
-          });
-      }
+        }
 
-      if (options.responseType === 'NONE') {
-        return;
-      }
+        if (options.responseType === 'NONE') {
+          return;
+        }
 
-      return res;
-    })
+        return res;
+      },
+    )
     .catch((error: StubbornFetchError) => {
       if (!error) return Promise.reject(new Error(messages.unknownError(parsedUrl)));
 
