@@ -1,8 +1,10 @@
 export const formatQueryParams = (url: string) => url;
 export const getBrowserName = () => 'Chrome';
 export const getMajor = () => '53';
-// @ts-ignore
-export const sortByTimestamp = (arr: Array<Object>): Array<Object> =>
+interface Timestamped {
+  timestamp: number;
+}
+export const sortByTimestamp = <T extends Timestamped>(arr: Array<T>): Array<T> =>
   arr.slice().sort((a, b) => a.timestamp - b.timestamp);
 export const burnItDown = jest.fn();
 export const registerOnBurnCallback = jest.fn();
