@@ -5,7 +5,7 @@ import logger from '../logging';
 import StubbornFetch from 'stubborn-fetch';
 import ChatState from '../State';
 import UrlParser from 'url-parse';
-import {BrowserNames, BurnItDownResponse, ParsedUrl} from '../types';
+import { BrowserNames, BurnItDownResponse, ParsedUrl } from '../types';
 
 const log = logger('Utils');
 
@@ -65,13 +65,18 @@ export const burnItDown = (message?: BurnItDownResponse) => {
       StubbornFetch.disable();
 
       if (_onBurn) _onBurn();
-      log.error('Webchat has been burned down.', {logOptions: {frequency: 'session', logFirstOccurrence: true}});
+      log.error('Webchat has been burned down.', {
+        logOptions: { frequency: 'session', logFirstOccurrence: true },
+      });
     }, timeToBurnItDown);
   } catch (e) {
     // Just in case something goes wrong while burning...
     // as a last ditch effort ensure we at least set burned status.
     ChatState.burned = true;
-    log.error(`Error encountered while burning it down: ${e.message}`, { exception: e, logOptions: {frequency: 'session', logFirstOccurrence: true} });
+    log.error(`Error encountered while burning it down: ${e.message}`, {
+      exception: e,
+      logOptions: { frequency: 'session', logFirstOccurrence: true },
+    });
   }
 };
 
@@ -122,12 +127,18 @@ export const onceAtATime = <A, T>(f: (arg?: A) => Promise<T>): ((arg?: A) => Pro
 };
 
 export const parseUrl = (url: string): ParsedUrl => {
-    const parsedUrl = UrlParser(url, {});
-    return {
-      hostname: parsedUrl.hostname,
-        port: parsedUrl.port,
-        pathname: parsedUrl.pathname,
-        protocol: parsedUrl.protocol,
-        rawUrl: url,
-    };
+  const parsedUrl = UrlParser(url, {});
+  return {
+    hostname: parsedUrl.hostname,
+    port: parsedUrl.port,
+    pathname: parsedUrl.pathname,
+    protocol: parsedUrl.protocol,
+    rawUrl: url,
+  };
+};
+
+export const getTimezone = () => {
+  try {
+    return Intl && Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch (e) {} // tslint:disable-line no-empty
 };
