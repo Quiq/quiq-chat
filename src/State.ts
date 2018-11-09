@@ -5,9 +5,7 @@ import {QuiqChatState} from './types';
 const log = logger('State');
 
 const state: { [key: string]: any } = {};
-
 const stateAccessors: QuiqChatState = {};
-
 const listeners: { [key: string]: Array<(newValue: any, oldValue: any) => void> } = {};
 
 export const addStateField = <K extends keyof QuiqChatState>(key: K,
@@ -48,6 +46,8 @@ export const addStateField = <K extends keyof QuiqChatState>(key: K,
                 listeners[key].forEach(f => f(value, oldValue));
             }
         },
+        configurable: true,
+        enumerable: true,
     });
 
     // Assign default value if not assigned
@@ -76,19 +76,38 @@ export const reset = () => {
     });
 };
 
-addStateField('accessToken', true);
-addStateField('subscribed', true);
-addStateField('chatIsVisible', true);
-addStateField('hasTakenMeaningfulAction', true);
-addStateField('customPersistedData', true);
-addStateField('trackingId');
-addStateField('agentIsAssigned');
-addStateField('userIsRegistered');
-addStateField('connected');
-addStateField('reconnecting');
-addStateField('estimatedWaitTime');
-addStateField('contactPoint', false, 'default');
-addStateField('burned');
-addStateField('host');
+
+export const initialize = () => {
+    addStateField('accessToken', true);
+    addStateField('subscribed', true);
+    addStateField('chatIsVisible', true);
+    addStateField('hasTakenMeaningfulAction', true);
+    addStateField('customPersistedData', true);
+    addStateField('trackingId');
+    addStateField('agentIsAssigned');
+    addStateField('userIsRegistered');
+    addStateField('connected');
+    addStateField('reconnecting');
+    addStateField('estimatedWaitTime');
+    addStateField('contactPoint', false, 'default');
+    addStateField('burned');
+    addStateField('host');
+    addStateField('configuration');
+};
+
+// This is used only by tests. It completely nukes everything and allows re-initialization.
+// In real code, used `reset()`
+export const _deinit = () => {
+    for (const key of Object.keys(state)) {
+        delete state[key];
+    }
+    for (const key of Object.keys(stateAccessors)) {
+        // @ts-ignore
+        delete stateAccessors[key];
+    }
+    for (const key of Object.keys(listeners)) {
+        delete listeners[key];
+    }
+};
 
 export default stateAccessors;

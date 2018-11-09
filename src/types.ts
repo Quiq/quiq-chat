@@ -1,3 +1,5 @@
+import {StorageMode} from "./storage";
+
 export interface ParsedUrl {
     hostname?: string,
     port?: string,
@@ -9,6 +11,7 @@ export interface ParsedUrl {
 export interface QuiqChatState {
     contactPoint?: string;
     host?: ParsedUrl;
+    configuration?: ChatMetadata;
     burned?: boolean;
     accessToken?: string;
     subscribed?: boolean;
@@ -281,9 +284,11 @@ export type Event =
 
 export interface ChatMetadata {
     configs: {
+        CHAT_STORAGE_MODE?: StorageMode,
         [configName: string]: {
-            enabled: boolean;
-        };
+            enabled?: boolean;
+            [property: string]: any,
+        } | StorageMode | undefined;
     };
     registrationForm?: {
         headerText: string;

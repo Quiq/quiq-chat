@@ -1,15 +1,19 @@
 jest.mock('../storage');
 jest.mock('../logging');
 
-import ChatState, { addStateField } from '../State';
+import ChatState, { addStateField, initialize } from '../State';
 import * as _Storage from '../storage';
 
 const storage = <any>_Storage;
 
 describe('ChatState', () => {
+  beforeAll(() => {
+    initialize();
+  });
+  
   describe('initialization', () => {
     it('creates accessor for each defined property', () => {
-      expect(Object.getOwnPropertyNames(ChatState).length).toBe(14);
+      expect(Object.getOwnPropertyNames(ChatState).length).toBe(15);
     });
   });
 

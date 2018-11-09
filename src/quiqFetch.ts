@@ -1,4 +1,3 @@
-import oldStubbornFetch, { registerCallbacks as oldRegisterCallbacks } from './stubbornFetch';
 import StubbornFetch, { StubbornFetchError } from 'stubborn-fetch';
 import { login } from './apiCalls';
 import merge from 'lodash/merge';
@@ -22,11 +21,6 @@ interface LogData {
 interface FailureLogEntry {
   statusCode: number;
   errorType: string;
-}
-
-enum FetchMode {
-  EDGE = 'edge',
-  LEGACY = 'legacy',
 }
 
 const messages = {
@@ -107,20 +101,10 @@ const logger = {
   },
 };
 
-let fetchMode: FetchMode;
 let callbacks: FetchCallbacks = {};
-
-export const setFetchMode = (mode?: FetchMode) => {
-  if (mode) {
-    fetchMode = mode;
-  }
-};
 
 export const registerCallbacks = (cbs: FetchCallbacks) => {
   callbacks = Object.assign({}, callbacks, cbs);
-
-  // Assign these callbacks to old school stubborn fetch, until we remove it
-  oldRegisterCallbacks(cbs);
 };
 
 const quiqFetch = (
@@ -190,41 +174,7 @@ const quiqFetch = (
   if (overrides) {
     request = merge(request, overrides);
   }
-
-  /******** Old Stubborn Fetch *********/
-  if (!fetchMode || fetchMode === 'legacy') {
-    return oldStubbornFetch(parsedUrl, request)
-      .then(
-        (res: Response): any => {
-          if (options.responseType === 'JSON' && res && res.json) {
-            return res
-              .json()
-              .then(result => result)
-              .catch(err => {
-                quiqFetchLog.warn(messages.cannotParseResponse(parsedUrl), {
-                  exception: err,
-                  logOptions: {
-                    logFirstOccurrence: true,
-                    frequency: 'every',
-                  },
-                });
-                return err;
-              });
-          }
-
-          if (options.responseType === 'NONE') {
-            return;
-          }
-
-          return res;
-        },
-      )
-      .catch(err => {
-        return Promise.reject(err);
-      });
-  }
-
-  /******** New Stubborn Fetch *********/
+  
   const failures: Array<FailureLogEntry> = [];
 
   const onError = (e: StubbornFetchError) => {

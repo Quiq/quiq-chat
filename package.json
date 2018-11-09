@@ -9,7 +9,7 @@
     "start": "tsc --watch",
     "lint": "tslint --config tslint.json --project tsconfig.json 'src/**/*.ts'",
     "test": "jest --env=jsdom --coverage && yarn run lint",
-    "jest": "jest --watch --env=jsdom",
+    "jest": "jest --watch --env=jsdom --runInBand",
     "build": "rimraf ./lib ./dist && tsc && rollup -c",
     "prepublish": "yarn test && yarn build",
     "precommit": "lint-staged",

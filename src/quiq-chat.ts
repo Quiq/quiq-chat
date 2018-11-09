@@ -1,43 +1,45 @@
 import * as API from './apiCalls';
 import QuiqSocket from './services/QuiqSocketSingleton';
 import {Events as QuiqSocketEvents} from 'quiq-socket';
-import * as StubbornFetch from './stubbornFetch';
 import unionBy from 'lodash/unionBy';
 import throttle from 'lodash/throttle';
 import {
-    sortByTimestamp,
     burnItDown,
-    registerOnBurnCallback,
-    isSupportedBrowser as supportedBrowser,
     createGuid,
-    getTenantFromHostname, 
+    getTenantFromHostname,
+    isSupportedBrowser as supportedBrowser,
     parseUrl,
+    registerOnBurnCallback,
+    sortByTimestamp,
 } from './Utils/utils';
 import * as S3 from './services/S3';
 import {
     ApiError,
-    QuiqChatCallbacks,
-    EmailTranscriptPayload,
-    PersistentData,
     Author,
-    MessageFailureData,
-    ChatterboxMessage,
-    Conversation,
-    TranscriptItem,
-    QueueDisposition,
     AuthorType,
-    QueueInfo,
+    ChatMetadata,
+    ChatterboxMessage,
     ChatterboxMessageType,
+    Conversation,
     ConversationMessageType,
-    EventType, ReplyResponse, QuiqJwt,
+    EmailTranscriptPayload,
+    EventType,
+    MessageFailureData,
+    PersistentData,
+    QueueDisposition,
+    QueueInfo,
+    QuiqChatCallbacks,
+    QuiqJwt,
+    ReplyResponse,
+    TranscriptItem,
 } from './types';
-import {setFetchMode} from './quiqFetch';
+import {registerCallbacks as registerQuiqFetchCallbacks} from './quiqFetch';
 import * as storage from './storage/index';
+import {StorageMode} from './storage/index';
 import logger from './logging';
 import {MessageFailureCodes} from './appConstants';
 import {version} from '../package.json';
-import {registerCallbacks as registerQuiqFetchCallbacks} from './quiqFetch';
-import ChatState, {watch as watchState} from './State';
+import ChatState, {watch as watchState, initialize as initializeChatState} from './State';
 import jwt_decode from "jwt-decode";
 import * as LogListener from './Utils/logListenerPlugin';
 
@@ -49,21 +51,35 @@ class QuiqChatClient {
     callbacks: QuiqChatCallbacks = {};
     transcript: Array<TranscriptItem> = [];
 
-    initialize = (host: string, contactPoint: string) => {
+    initialize = async (host: string, contactPoint: string) => {
+        const parsedHost = parseUrl(host);
+        // Order matters here--we need configuration to setup storage, we need storage set up to initialize ChatState
+        // Retrieve configuration
+        const configuration = await API.getChatConfiguration(parsedHost, contactPoint);
+        
+        // Set storage mode from configuration
+        const storageMode = configuration.configs.CHAT_STORAGE_MODE || StorageMode.LOCAL;
+        storage.initialize(storageMode, contactPoint);
+        
+        // Initialize ChatState
+        initializeChatState();
+        
+        // Save configuration in state
+        ChatState.configuration = configuration;
+        
         // Set global options in state
         // NOTE HARD: Must be done prior to any networking/business logic!
-        ChatState.host = parseUrl(host);
+        ChatState.host = parsedHost;
         ChatState.contactPoint = contactPoint;
-
-        // Register with apiCalls for new session events
-        API.registerNewSessionCallback(this._handleNewSession);
-
         ChatState.reconnecting = false;
         
         // Set trackingId from accessToken, if accessToken is defined
         if (ChatState.accessToken) {
             ChatState.trackingId = jwt_decode<QuiqJwt>(ChatState.accessToken).sub;
         }
+
+        // Register with apiCalls for new session events
+        API.registerNewSessionCallback(this._handleNewSession);
 
         return this;
     };
@@ -93,6 +109,12 @@ class QuiqChatClient {
         return this;
     };
 
+    onErrorResolution = (callback: () => void): QuiqChatClient => {
+        this.callbacks.onErrorResolution = callback;
+        registerQuiqFetchCallbacks({onErrorResolved: callback});
+        return this;
+    };
+
     onRegistration = (callback: (registrationData: Object) => void): QuiqChatClient => {
         this.callbacks.onRegistration = callback;
         return this;
@@ -112,13 +134,7 @@ class QuiqChatClient {
         watchState('estimatedWaitTime', waitTime => callback(waitTime));
         return this;
     };
-
-    onErrorResolution = (callback: () => void): QuiqChatClient => {
-        this.callbacks.onErrorResolution = callback;
-        StubbornFetch.registerCallbacks({onErrorResolved: callback});
-        return this;
-    };
-
+    
     onReconnect = (callback: (reconnecting: boolean) => void): QuiqChatClient => {
         watchState('reconnecting', reconnecting => callback(!!reconnecting));
         return this;
@@ -147,12 +163,12 @@ class QuiqChatClient {
         try {
             this.initialized = true;
 
-            // Order Matters here.  Ensure we successfully complete this fetchConversation request before connecting to
-            // the websocket below!
+            // Get a session (or refresh existing)
             await API.login();
-            StubbornFetch.onInit();
 
+            // Perform initial fetch of conversation
             await this._getConversationAndConnect();
+
         } catch (err) {
             log.error('Could not start QuiqChatClient', {exception: err, logOptions: {frequency: 'history', logFirstOccurrence: true}});
             this._disconnectSocket();
@@ -188,7 +204,7 @@ class QuiqChatClient {
     };
 
     // This is specific to our chat client. Don't document it.
-    getChatConfiguration = () => API.getChatConfiguration();
+    getChatConfiguration = (): ChatMetadata | undefined => ChatState.configuration;
     
     getTenantVanityName = (): string | undefined => ChatState.host ? getTenantFromHostname(ChatState.host.rawUrl) : undefined;
     
@@ -338,9 +354,6 @@ class QuiqChatClient {
             joinOrLeaveEvents[joinOrLeaveEvents.length - 1].type === EventType.JOIN
         );
     };
-
-    // @ts-ignore no-unused-variable
-    private _setFetchMode = setFetchMode;
     
     // @ts-ignore no-unused-variable
     private _connectSocket = (): Promise<void | {}> =>
@@ -355,12 +368,12 @@ class QuiqChatClient {
                         this._disconnectSocket();
 
                         // If we didn't get protocol, or it was an unsupported value, default to 'atmosphere'
-                        if (!this.socketProtocol || !['atmosphere', 'quiq'].includes(this.socketProtocol)) {
+                        if (!this.socketProtocol || !['quiq'].includes(this.socketProtocol)) {
                             log.warn(
-                                `Unsupported socket protocol "${protocol}" received. Defaulting to "atmosphere"`,
+                                `Unsupported socket protocol "${protocol}" received. Defaulting to "quiq"`,
                                 {logOptions: {frequency: 'history', logFirstOccurrence: true}},
                             );
-                            this.socketProtocol = 'atmosphere';
+                            this.socketProtocol = 'quiq';
                         }
 
                         log.info(`Using ${this.socketProtocol} protocol`);

@@ -2,11 +2,12 @@ import { formatQueryParams, burnItDown, onceAtATime } from './Utils/utils';
 import quiqFetch from './quiqFetch';
 import ChatState from './State';
 import {
-  Conversation,
-  ChatMetadata,
-  UploadDirective,
-  EmailTranscriptPayload,
-  QuiqJwt,
+    Conversation,
+    ChatMetadata,
+    UploadDirective,
+    EmailTranscriptPayload,
+    QuiqJwt, 
+    ParsedUrl,
 } from './types';
 import logger from './logging';
 import jwt_decode from 'jwt-decode';
@@ -21,9 +22,9 @@ const log = logger('apiCalls');
 
 let _onNewSession: (newTrackingId: string) => any;
 
-const getHost = (cached: boolean): string => {
-  if (!ChatState.host) {
-    log.error('Tried to get host (for making API call) before `host` was set in ChatState', {
+const getHost = (cached: boolean, host: ParsedUrl | undefined = ChatState.host): string => {
+  if (!host) {
+    log.error('Tried to get host (for making API call) with undefined host, maybe `host` is not set in ChatState', {
       logOptions: { frequency: 'session', logFirstOccurrence: true },
     });
     return '';
@@ -35,17 +36,17 @@ const getHost = (cached: boolean): string => {
         d => !!(ChatState.host && ChatState.host.hostname && ChatState.host.hostname.includes(d)),
       )
     ) {
-      return ChatState.host.rawUrl;
+      return host.rawUrl;
     }
 
-    const vanityName = ChatState.host.hostname && ChatState.host.hostname.split('.')[0];
+    const vanityName = host.hostname && host.hostname.split('.')[0];
 
     if (!vanityName) {
       // Fallback to specified host in case of parsing error
       log.error("Couldn't determine vanity name, falling back to provided host", {
         logOptions: { frequency: 'session', logFirstOccurrence: true },
       });
-      return ChatState.host.rawUrl;
+      return host.rawUrl;
     }
 
     // If this is a cached endpoint, use quiq-api.com
@@ -61,14 +62,18 @@ const getHost = (cached: boolean): string => {
       exception: e,
       logOptions: { frequency: 'session', logFirstOccurrence: true },
     });
-    return ChatState.host.rawUrl;
+    return host.rawUrl;
   }
 };
 
 const getPublicApiUrl = (cached: boolean = false) => `${getHost(cached)}/api/v1/messaging`;
 
-const getUrlForContactPoint = (cached: boolean = false) =>
-  `${getHost(cached)}/api/v1/messaging/chat/${ChatState.contactPoint}`;
+const getUrlForContactPoint = (cached: boolean = false, contactPoint: string | undefined = ChatState.contactPoint, host: string = getHost(cached)) => {
+    if (!contactPoint) {
+        throw new Error('Tried making API call without contactPoint available in ChatState');
+    }
+    return `${host}/api/v1/messaging/chat/${contactPoint}`;
+};
 
 const getGenerateUrl = (cached: boolean = false) => `${getHost(cached)}/api/v1/token/generate`;
 
@@ -76,8 +81,13 @@ export const registerNewSessionCallback = (callback: (newTrackingId: string) => 
   _onNewSession = callback;
 };
 
-export const getChatConfiguration = (): Promise<ChatMetadata> =>
-  quiqFetch(`${getUrlForContactPoint(true)}/configuration`, undefined, { responseType: 'JSON' });
+/**
+ * This API call takes an optional host and contact point param; this allows the method to be called out of band 
+ * of ChatState being initialized.
+ * (Since it's an unauthenticated endpoint and needs to be retrieved before we can even initialize storage services)
+ */
+export const getChatConfiguration = (host?: ParsedUrl, contactPoint?: string): Promise<ChatMetadata> => 
+    quiqFetch(`${getUrlForContactPoint(true, contactPoint, getHost(true, host))}/configuration`, undefined, {responseType: 'JSON'});
 
 export const sendMessage = (payload: {
   text: string;
