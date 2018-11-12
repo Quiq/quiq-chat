@@ -10,10 +10,10 @@ describe('ChatState', () => {
   beforeAll(() => {
     initialize();
   });
-  
+
   describe('initialization', () => {
     it('creates accessor for each defined property', () => {
-      expect(Object.getOwnPropertyNames(ChatState).length).toBe(15);
+      expect(Object.getOwnPropertyNames(ChatState).length).toBe(16);
     });
   });
 

@@ -168,13 +168,15 @@ const quiqFetch = (
         }
       : {},
     getTimezone() ? { 'X-Quiq-Time-Zone': getTimezone() } : {},
-    document.referrer ? { 'X-Quiq-Referrer': document.referrer } : {},
+    ChatState.context && ChatState.context.href
+      ? { 'X-Quiq-Referrer': ChatState.context.href }
+      : {},
   );
 
   if (overrides) {
     request = merge(request, overrides);
   }
-  
+
   const failures: Array<FailureLogEntry> = [];
 
   const onError = (e: StubbornFetchError) => {
