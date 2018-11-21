@@ -48,7 +48,9 @@ function contactPointNamespacePlugin(namespace: string) {
             return superFunc(modKey);
         };
 
-        return {get, set, remove};
+        // We also need to namespace calls to get/set last modified timestamp (from lastModified plugin), but these
+        // can be proxied through the same method used for main get and set.
+        return {get, set, remove, getLastModifiedTimestamp: get, setLastModifiedTimestamp: set};
     }
 }
 

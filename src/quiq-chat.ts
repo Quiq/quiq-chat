@@ -36,7 +36,7 @@ import {
 } from './types';
 import { registerCallbacks as registerQuiqFetchCallbacks } from './quiqFetch';
 import * as storage from './storage/index';
-import { StorageMode } from './storage/index';
+import { StorageMode, PersistedData } from './storage/index';
 import logger from './logging';
 import { MessageFailureCodes } from './appConstants';
 import { version } from '../package.json';
@@ -52,7 +52,7 @@ class QuiqChatClient {
   callbacks: QuiqChatCallbacks = {};
   transcript: Array<TranscriptItem> = [];
 
-  initialize = async (host: string, contactPoint: string) => {
+  initialize = async (host: string, contactPoint: string, initialPersistedData?: PersistedData) => {
     const parsedHost = parseUrl(host);
     // Order matters here--we need configuration to setup storage, we need storage set up to initialize ChatState
     // Retrieve configuration
@@ -60,7 +60,7 @@ class QuiqChatClient {
 
     // Set storage mode from configuration
     const storageMode = configuration.configs.CHAT_STORAGE_MODE || StorageMode.LOCAL;
-    storage.initialize(storageMode, contactPoint);
+    storage.initialize(storageMode, contactPoint, initialPersistedData);
 
     // Initialize ChatState
     initializeChatState();
