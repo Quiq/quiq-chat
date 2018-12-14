@@ -6,7 +6,6 @@ import { version } from '../package.json';
 import logging from './logging';
 import ChatState from './State';
 import { ApiError, FetchRequestOptions } from './types';
-import { isStorageEnabled } from './storage';
 
 interface FetchCallbacks {
   onError?: (error: ApiError | StubbornFetchError | undefined) => void;
@@ -122,10 +121,6 @@ const quiqFetch = (
     checkRequiredSettings: true,
   },
 ): Promise<any> => {
-  if (!isStorageEnabled()) {
-    return Promise.reject(new Error(messages.storageDisabled));
-  }
-
   if (ChatState.burned) {
     return Promise.reject(new Error(messages.burned));
   }

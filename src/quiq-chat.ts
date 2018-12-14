@@ -36,7 +36,7 @@ import {
 } from './types';
 import { registerCallbacks as registerQuiqFetchCallbacks } from './quiqFetch';
 import * as storage from './storage/index';
-import { StorageMode, PersistedData } from './storage/index';
+import {StorageMode, PersistedData, isStorageEnabled} from './storage';
 import logger from './logging';
 import { MessageFailureCodes } from './appConstants';
 import { version } from '../package.json';
@@ -53,6 +53,11 @@ class QuiqChatClient {
   transcript: Array<TranscriptItem> = [];
 
   initialize = async (host: string, contactPoint: string, initialPersistedData?: PersistedData) => {
+    // If local storage is disabled/inaccessible, quiq-chat cannot function.
+    if (!isStorageEnabled()) {
+      throw new Error('Cannot initialize quiq-chat: local storage is not accessible');
+    }
+    
     const parsedHost = parseUrl(host);
     // Order matters here--we need configuration to setup storage, we need storage set up to initialize ChatState
     // Retrieve configuration
