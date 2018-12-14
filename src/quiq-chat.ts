@@ -43,6 +43,7 @@ import { version } from '../package.json';
 import ChatState, { watch as watchState, initialize as initializeChatState } from './State';
 import jwt_decode from 'jwt-decode';
 import * as LogListener from './Utils/logListenerPlugin';
+import QCError from './QCError';
 
 const log = logger('QuiqChatClient');
 
@@ -55,7 +56,7 @@ class QuiqChatClient {
   initialize = async (host: string, contactPoint: string, initialPersistedData?: PersistedData) => {
     // If local storage is disabled/inaccessible, quiq-chat cannot function.
     if (!isStorageEnabled()) {
-      throw new Error('Cannot initialize quiq-chat: local storage is not accessible');
+      throw QCError('StorageDisabled', 'Cannot initialize quiq-chat: local storage is not accessible');
     }
     
     const parsedHost = parseUrl(host);
