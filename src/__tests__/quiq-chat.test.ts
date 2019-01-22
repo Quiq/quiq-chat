@@ -18,8 +18,8 @@ import {
     TextMessage,
 } from '../types';
 
-import QuiqChatClient from '../quiq-chat';
 import * as ApiCalls from '../apiCalls';
+import QuiqChatClient from '../quiq-chat';
 import {set} from 'store';
 import * as Utils from '../Utils/utils';
 import * as log from 'loglevel';
@@ -64,8 +64,8 @@ describe('QuiqChatClient', () => {
     const contactPoint = 'test';
     const API = <any>ApiCalls;
 
-    beforeEach(async (done) => {
-        deinitState();
+    beforeAll(() => {
+        API.fetchConversation.mockResolvedValue(initialConvo);
         API.fetchConversation.mockReturnValue(Promise.resolve(initialConvo));
         API.fetchWebsocketInfo.mockReturnValue(
             Promise.resolve({
@@ -78,7 +78,9 @@ describe('QuiqChatClient', () => {
                 CHAT_STORAGE_MODE: 'local',
             }
         }));
-
+    });
+    
+    beforeAll(async (done) => {
         await QuiqChatClient.initialize(host, contactPoint);
 
         ChatState.chatIsVisible = true;
@@ -96,7 +98,7 @@ describe('QuiqChatClient', () => {
 
         done();
     });
-
+    
     describe('init', () => {
         it('sets host and contactPoint in chat state', () => {
             expect(ChatState.host!.rawUrl).toBe(host);
@@ -180,7 +182,7 @@ describe('QuiqChatClient', () => {
 
     describe('getting new messages', () => {
         beforeAll(async (done) => {
-           await QuiqChatClient.start(); 
+            await QuiqChatClient.start(); 
            done();
         });
         
@@ -204,9 +206,9 @@ describe('QuiqChatClient', () => {
                 data: newMessage,
             });
         });
-
-        it('calls onTranscriptChange', () => {
-            expect(onTranscriptChange).lastCalledWith(initialConvo.messages.concat(newMessage));
+        
+        it('updates state with new transcript', () => {
+            expect(ChatState.transcript).toEqual(initialConvo.messages.concat(newMessage));
         });
     });
 
@@ -360,11 +362,12 @@ describe('QuiqChatClient', () => {
     describe('isAgentAssigned', () => {
         beforeEach(() => {
             jest.clearAllMocks();
-
+            deinitState();
+            
             ChatState.chatIsVisible = true;
             ChatState.hasTakenMeaningfulAction = false;
 
-            QuiqChatClient.transcript = [];
+            ChatState.transcript = [];
         });
 
         it('No conversation and no queueDisposition', () => {
@@ -390,7 +393,7 @@ describe('QuiqChatClient', () => {
         });
 
         it('No queueDisposition but active convo', () => {
-            QuiqChatClient.transcript = [
+            ChatState.transcript = [
                 {
                     authorType: AuthorType.USER,
                     text: 'message',
@@ -406,7 +409,7 @@ describe('QuiqChatClient', () => {
         });
 
         it('No queueDisposition and inactive convo', () => {
-            QuiqChatClient.transcript = [
+            ChatState.transcript = [
                 {
                     authorType: AuthorType.USER,
                     text: 'message',
@@ -427,7 +430,7 @@ describe('QuiqChatClient', () => {
         });
 
         it('No queueDisposition and active convo with history', () => {
-            QuiqChatClient.transcript = [
+            ChatState.transcript = [
                 {
                     authorType: AuthorType.USER,
                     text: 'message',

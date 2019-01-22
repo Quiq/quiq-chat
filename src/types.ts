@@ -29,6 +29,7 @@ export interface QuiqChatState {
   hasTakenMeaningfulAction?: boolean;
   customPersistedData?: { [key: string]: any };
   context?: Context;
+  transcript?: Array<TranscriptItem>;
 }
 
 export enum EventType {
@@ -99,7 +100,6 @@ export interface MessageFailureData {
 }
 
 export interface QuiqChatCallbacks {
-  onTranscriptChanged?: (messages: Array<TranscriptItem>) => void;
   onRegistration?: (registrationData?: { [field: string]: any }) => void;
   onAgentTyping?: (typing: boolean, author: Author) => void;
   onMessageSendFailure?: (messageId: string, data: MessageFailureData) => void;
@@ -278,6 +278,7 @@ export interface SendTranscriptEvent extends BaseEvent {
 
 export interface RegisterEvent extends BaseEvent {
   type: EventType.REGISTER;
+  
 }
 
 export type Event =

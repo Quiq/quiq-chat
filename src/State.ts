@@ -1,17 +1,24 @@
 import logger from './logging';
 import * as Storage from './storage';
+import isEqual from 'lodash/isEqual';
 import { QuiqChatState } from './types';
+
+interface ChangeHandler {
+  handler: (newValue: any, oldValue: any) => void;
+  ignoreInitialDefinition: boolean;
+}
 
 const log = logger('State');
 
 const state: { [key: string]: any } = {};
 const stateAccessors: QuiqChatState = {};
-const listeners: { [key: string]: Array<(newValue: any, oldValue: any) => void> } = {};
+const listeners: { [key: string]: Array<ChangeHandler> } = {};
 
 export const addStateField = <K extends keyof QuiqChatState>(
   key: K,
   persisted: boolean = false,
   defaultValue?: QuiqChatState[K],
+  deepEquality: boolean = false,
 ) => {
   if (stateAccessors.hasOwnProperty(key)) {
     log.error(`A key already exists with name ${key}`, {
@@ -48,9 +55,13 @@ export const addStateField = <K extends keyof QuiqChatState>(
       if (persisted) {
         Storage.set(key, value);
       }
-      if (oldValue !== value) {
-        listeners[key].forEach(f => f(value, oldValue));
-      }
+      if (deepEquality ? !isEqual(value, oldValue) : value !== oldValue) {
+        listeners[key].forEach(listener => {
+          if (!listener.ignoreInitialDefinition || oldValue !== undefined) {
+              listener.handler(value, oldValue)
+          }
+        });
+      } 
     },
     configurable: true,
     enumerable: true,
@@ -64,7 +75,8 @@ export const addStateField = <K extends keyof QuiqChatState>(
 
 export const watch = <K extends keyof QuiqChatState>(
   key: K,
-  f: (newValue: QuiqChatState[K], oldValue: QuiqChatState[K]) => void,
+  handler: (newValue: QuiqChatState[K], oldValue: QuiqChatState[K]) => void,
+  ignoreInitialDefinition: boolean = true,
 ) => {
   if (!state.hasOwnProperty(key)) {
     log.error(`Cannot add watch for unknown key ${key}`, {
@@ -73,8 +85,8 @@ export const watch = <K extends keyof QuiqChatState>(
     return;
   }
 
-  if (!listeners[key].includes(f)) {
-    listeners[key].push(f);
+  if (!listeners[key].some(l => l.handler === handler)) {
+    listeners[key].push({handler, ignoreInitialDefinition});
   }
 };
 
@@ -95,18 +107,19 @@ export const initialize = () => {
   addStateField('trackingId');
   addStateField('agentIsAssigned');
   addStateField('userIsRegistered');
-  addStateField('connected');
-  addStateField('reconnecting');
+  addStateField('connected', false, false);
+  addStateField('reconnecting', false, false);
   addStateField('estimatedWaitTime');
   addStateField('contactPoint', false, 'default');
   addStateField('burned');
   addStateField('host');
   addStateField('configuration');
   addStateField('context');
-};
+  addStateField('transcript', false, undefined, true);
+}; 
 
 // This is used only by tests. It completely nukes everything and allows re-initialization.
-// In real code, used `reset()`
+// In real code, use `reset()`
 export const _deinit = () => {
   for (const key of Object.keys(state)) {
     delete state[key];
