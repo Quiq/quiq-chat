@@ -109,21 +109,33 @@ export const registerCallbacks = (cbs: FetchCallbacks) => {
 const quiqFetch = (
   url: string,
   overrides?: Object,
-  options: {
+  fetchOptions: {
     requestType?: string;
     responseType?: string;
     checkRequiredSettings?: boolean;
     cached?: boolean;
+    shouldRetry?: boolean;
+    failSilently?: boolean;
   } = {
     cached: false,
     requestType: 'JSON',
     responseType: 'NONE',
     checkRequiredSettings: true,
+    shouldRetry: true,
+    failSilently: false,
   },
 ): Promise<any> => {
   if (ChatState.burned) {
     return Promise.reject(new Error(messages.burned));
   }
+
+  const options = Object.assign(
+    {
+      shouldRetry: true,
+      failSilently: false,
+    },
+    fetchOptions,
+  );
 
   if (options.checkRequiredSettings) checkRequiredSettings();
 
@@ -157,10 +169,7 @@ const quiqFetch = (
       'X-Quiq-Access-Token': ChatState.accessToken,
     },
     options.requestType === 'JSON'
-      ? {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        }
+      ? { Accept: 'application/json', 'Content-Type': 'application/json' }
       : {},
     getTimezone() ? { 'X-Quiq-Time-Zone': getTimezone() } : {},
     ChatState.context && ChatState.context.href
@@ -200,7 +209,7 @@ const quiqFetch = (
   };
 
   return new StubbornFetch(parsedUrl, request, {
-    retries: -1,
+    retries: options.shouldRetry ? -1 : 0,
     maxErrors: 100,
     retryOnNetworkFailure: true,
     totalRequestTimeLimit: 30000,
@@ -250,8 +259,13 @@ const quiqFetch = (
     .catch((error: StubbornFetchError) => {
       if (!error) return Promise.reject(new Error(messages.unknownError(parsedUrl)));
 
+      if (options.failSilently) {
+        return Promise.reject(error);
+      }
+
       if (onError(error)) {
         if (callbacks.onError) callbacks.onError(error);
+
         return Promise.reject(new Error(messages.burned));
       }
 

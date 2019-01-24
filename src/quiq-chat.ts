@@ -36,7 +36,7 @@ import {
 } from './types';
 import { registerCallbacks as registerQuiqFetchCallbacks } from './quiqFetch';
 import * as storage from './storage/index';
-import {StorageMode, PersistedData, isStorageEnabled} from './storage';
+import { StorageMode, PersistedData, isStorageEnabled } from './storage';
 import logger from './logging';
 import { MessageFailureCodes } from './appConstants';
 import { version } from '../package.json';
@@ -55,9 +55,12 @@ class QuiqChatClient {
   initialize = async (host: string, contactPoint: string, initialPersistedData?: PersistedData) => {
     // If local storage is disabled/inaccessible, quiq-chat cannot function.
     if (!isStorageEnabled()) {
-      throw QCError('StorageDisabled', 'Cannot initialize quiq-chat: local storage is not accessible');
+      throw QCError(
+        'StorageDisabled',
+        'Cannot initialize quiq-chat: local storage is not accessible',
+      );
     }
-    
+
     const parsedHost = parseUrl(host);
     // Order matters here--we need configuration to setup storage, we need storage set up to initialize ChatState
     // Retrieve configuration
@@ -90,43 +93,43 @@ class QuiqChatClient {
     return this;
   };
 
-    start = async (): Promise<QuiqChatClient> => {
-        // Avoid race conditions by only running start() once
-        if (this.initialized) return this;
-        
-        try {
-            this._resetState();
-            this.initialized = true;
+  start = async (): Promise<QuiqChatClient> => {
+    // Avoid race conditions by only running start() once
+    if (this.initialized) return this;
 
-            // Get a session (or refresh existing)
-            await API.login();
+    try {
+      this._resetState();
+      this.initialized = true;
 
-            // Perform initial fetch of conversation
-            await this._getConversationAndConnect();
-        } catch (err) {
-            log.error('Could not start QuiqChatClient', {
-                exception: err,
-                logOptions: { frequency: 'history', logFirstOccurrence: true },
-            });
-            this._disconnectSocket();
+      // Get a session (or refresh existing)
+      await API.login();
 
-            if (this.callbacks.onError) {
-                this.callbacks.onError(err);
-            }
-        }
-        return this;
-    };
+      // Perform initial fetch of conversation
+      await this._getConversationAndConnect();
+    } catch (err) {
+      log.error('Could not start QuiqChatClient', {
+        exception: err,
+        logOptions: { frequency: 'history', logFirstOccurrence: true },
+      });
+      this._disconnectSocket();
 
-    stop = () => {
-        this._disconnectSocket();
-        this.initialized = false;
-    };
+      if (this.callbacks.onError) {
+        this.callbacks.onError(err);
+      }
+    }
+    return this;
+  };
+
+  stop = () => {
+    this._disconnectSocket();
+    this.initialized = false;
+  };
 
   /** Fluent client builder functions: these all return the client object * */
 
   onTranscriptChange = (callback: (messages: Array<TranscriptItem>) => void): QuiqChatClient => {
-      watchState('transcript', transcript => callback(transcript || []));
-      return this;
+    watchState('transcript', transcript => callback(transcript || []));
+    return this;
   };
 
   onMessageSendFailure = (
@@ -282,8 +285,11 @@ class QuiqChatClient {
     }
   };
 
-  updateTypingIndicator = (text: string, typing: boolean) =>
-    API.updateTypingIndicator(text, typing);
+  updateTypingIndicator = (text: string, typing: boolean) => {
+    const promise = API.updateTypingIndicator(text, typing);
+
+    if (promise) promise.catch(() => {});
+  };
 
   sendRegistration = async (fields: { [fieldId: string]: string }, formVersionId?: string) => {
     if (!fields || !Object.keys(fields).length) {
@@ -324,7 +330,7 @@ class QuiqChatClient {
   isRegistered = (): boolean => !!ChatState.userIsRegistered;
 
   isAgentAssigned = (): boolean => !!ChatState.agentIsAssigned;
-  
+
   private _resetState = () => {
     ChatState.transcript = [];
     ChatState.userIsRegistered = false;
@@ -543,7 +549,7 @@ class QuiqChatClient {
     if (!ChatState.transcript) {
       return;
     }
-    
+
     // Remove failed message and fire onMessageFailure callback
     const failedIdx = ChatState.transcript.findIndex(m => m.id === failedMessageId);
     if (failedIdx > -1) {
@@ -577,16 +583,14 @@ class QuiqChatClient {
   };
 
   // @ts-ignore no-unused-variable
-  private _ingestTranscriptItems = (
-    newItems: Array<TranscriptItem>,
-  ): void => {
+  private _ingestTranscriptItems = (newItems: Array<TranscriptItem>): void => {
     // Sort and update cached textMessages, and send callback
     // Union removes duplicates; order is important--newItems must be passed to union before existing transcript
     // TODO: This filtering logic is needed as long as CB sends us duplicate messages for rich interactions
     // TODO: Remove when we use type TEXT for all messages
     const uniqueNewItems = this._removeItemsWithDuplicateIdsPrioritizingRichMessages(newItems);
-    
-   ChatState.transcript = sortByTimestamp(unionBy(uniqueNewItems, ChatState.transcript, 'id'));
+
+    ChatState.transcript = sortByTimestamp(unionBy(uniqueNewItems, ChatState.transcript, 'id'));
   };
 
   // @ts-ignore no-unused-variable
@@ -604,7 +608,7 @@ class QuiqChatClient {
     if (!ChatState.transcript) {
       return;
     }
-    
+
     const agentMessages = ChatState.transcript.filter(message => message.authorType === 'User');
     const agentEndedEvents = ChatState.transcript.filter(event => event.type === 'End');
 
@@ -618,9 +622,7 @@ class QuiqChatClient {
   };
 
   // @ts-ignore no-unused-variable
-  private _processConversation = (
-    conversation: Conversation,
-  ): void => {
+  private _processConversation = (conversation: Conversation): void => {
     // Transcript changed callback
     // NOTE: We do not check to see if a message has CHANGED; we only react if there is a NEW MESSAGE
     if (!ChatState.transcript || conversation.messages.length > ChatState.transcript.length) {
@@ -629,10 +631,10 @@ class QuiqChatClient {
       const uniqueItems = this._removeItemsWithDuplicateIdsPrioritizingRichMessages(
         conversation.messages,
       );
-      
+
       ChatState.transcript = sortByTimestamp(uniqueItems);
     }
-    
+
     this._processQueueDisposition(conversation.queueDisposition);
 
     this._processQueueInfo(conversation.queueInfo);
