@@ -259,7 +259,7 @@ const quiqFetch = (
     .catch((error: StubbornFetchError) => {
       if (!error) return Promise.reject(new Error(messages.unknownError(parsedUrl)));
 
-      if (options.failSilently && !options.shouldRetry) {
+      if (options.failSilently) {
         return Promise.reject(error);
       }
 
