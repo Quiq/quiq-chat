@@ -114,11 +114,15 @@ const quiqFetch = (
     responseType?: string;
     checkRequiredSettings?: boolean;
     cached?: boolean;
+    shouldRetry?: boolean;
+    failSilently?: boolean;
   } = {
     cached: false,
     requestType: 'JSON',
     responseType: 'NONE',
     checkRequiredSettings: true,
+    shouldRetry: true,
+    failSilently: false,
   },
 ): Promise<any> => {
   if (ChatState.burned) {
@@ -157,10 +161,7 @@ const quiqFetch = (
       'X-Quiq-Access-Token': ChatState.accessToken,
     },
     options.requestType === 'JSON'
-      ? {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        }
+      ? { Accept: 'application/json', 'Content-Type': 'application/json' }
       : {},
     getTimezone() ? { 'X-Quiq-Time-Zone': getTimezone() } : {},
     ChatState.context && ChatState.context.href
@@ -200,7 +201,7 @@ const quiqFetch = (
   };
 
   return new StubbornFetch(parsedUrl, request, {
-    retries: -1,
+    retries: !options.shouldRetry ? 0 : -1,
     maxErrors: 100,
     retryOnNetworkFailure: true,
     totalRequestTimeLimit: 30000,
@@ -252,6 +253,7 @@ const quiqFetch = (
 
       if (onError(error)) {
         if (callbacks.onError) callbacks.onError(error);
+
         return Promise.reject(new Error(messages.burned));
       }
 
@@ -273,6 +275,10 @@ const quiqFetch = (
             return quiqFetch(url, overrides, options);
           })
           .catch(err => Promise.reject(err));
+      }
+
+      if (options.failSilently && !options.shouldRetry) {
+        return Promise.resolve();
       }
 
       if (callbacks.onError) callbacks.onError(error);

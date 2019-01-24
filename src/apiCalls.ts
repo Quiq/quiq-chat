@@ -2,12 +2,12 @@ import { formatQueryParams, burnItDown, onceAtATime } from './Utils/utils';
 import quiqFetch from './quiqFetch';
 import ChatState from './State';
 import {
-    Conversation,
-    ChatMetadata,
-    UploadDirective,
-    EmailTranscriptPayload,
-    QuiqJwt, 
-    ParsedUrl,
+  Conversation,
+  ChatMetadata,
+  UploadDirective,
+  EmailTranscriptPayload,
+  QuiqJwt,
+  ParsedUrl,
 } from './types';
 import logger from './logging';
 import jwt_decode from 'jwt-decode';
@@ -24,9 +24,12 @@ let _onNewSession: (newTrackingId: string) => any;
 
 const getHost = (cached: boolean, host: ParsedUrl | undefined = ChatState.host): string => {
   if (!host) {
-    log.error('Tried to get host (for making API call) with undefined host, maybe `host` is not set in ChatState', {
-      logOptions: { frequency: 'session', logFirstOccurrence: true },
-    });
+    log.error(
+      'Tried to get host (for making API call) with undefined host, maybe `host` is not set in ChatState',
+      {
+        logOptions: { frequency: 'session', logFirstOccurrence: true },
+      },
+    );
     return '';
   }
 
@@ -68,11 +71,15 @@ const getHost = (cached: boolean, host: ParsedUrl | undefined = ChatState.host):
 
 const getPublicApiUrl = (cached: boolean = false) => `${getHost(cached)}/api/v1/messaging`;
 
-const getUrlForContactPoint = (cached: boolean = false, contactPoint: string | undefined = ChatState.contactPoint, host: string = getHost(cached)) => {
-    if (!contactPoint) {
-        throw new Error('Tried making API call without contactPoint available in ChatState');
-    }
-    return `${host}/api/v1/messaging/chat/${contactPoint}`;
+const getUrlForContactPoint = (
+  cached: boolean = false,
+  contactPoint: string | undefined = ChatState.contactPoint,
+  host: string = getHost(cached),
+) => {
+  if (!contactPoint) {
+    throw new Error('Tried making API call without contactPoint available in ChatState');
+  }
+  return `${host}/api/v1/messaging/chat/${contactPoint}`;
 };
 
 const getGenerateUrl = (cached: boolean = false) => `${getHost(cached)}/api/v1/token/generate`;
@@ -82,12 +89,19 @@ export const registerNewSessionCallback = (callback: (newTrackingId: string) => 
 };
 
 /**
- * This API call takes an optional host and contact point param; this allows the method to be called out of band 
+ * This API call takes an optional host and contact point param; this allows the method to be called out of band
  * of ChatState being initialized.
  * (Since it's an unauthenticated endpoint and needs to be retrieved before we can even initialize storage services)
  */
-export const getChatConfiguration = (host?: ParsedUrl, contactPoint?: string): Promise<ChatMetadata> => 
-    quiqFetch(`${getUrlForContactPoint(true, contactPoint, getHost(true, host))}/configuration`, undefined, {responseType: 'JSON'});
+export const getChatConfiguration = (
+  host?: ParsedUrl,
+  contactPoint?: string,
+): Promise<ChatMetadata> =>
+  quiqFetch(
+    `${getUrlForContactPoint(true, contactPoint, getHost(true, host))}/configuration`,
+    undefined,
+    { responseType: 'JSON' },
+  );
 
 export const sendMessage = (payload: {
   text: string;
@@ -137,10 +151,11 @@ export const fetchConversation = (): Promise<Conversation> =>
   quiqFetch(getUrlForContactPoint(), undefined, { responseType: 'JSON' });
 
 export const updateTypingIndicator = (text: string, typing: boolean) =>
-  quiqFetch(`${getUrlForContactPoint()}/typing`, {
-    method: 'POST',
-    body: JSON.stringify({ text, typing }),
-  });
+  quiqFetch(
+    `${getUrlForContactPoint()}/typing`,
+    { method: 'POST', body: JSON.stringify({ text, typing }) },
+    { requestType: 'JSON', shouldRetry: false, failSilently: true },
+  );
 
 export const sendRegistration = (fields: { [fieldId: string]: string }, formVersionId?: string) =>
   quiqFetch(`${getUrlForContactPoint()}/register`, {
