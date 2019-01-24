@@ -109,7 +109,7 @@ export const registerCallbacks = (cbs: FetchCallbacks) => {
 const quiqFetch = (
   url: string,
   overrides?: Object,
-  options: {
+  fetchOptions: {
     requestType?: string;
     responseType?: string;
     checkRequiredSettings?: boolean;
@@ -128,6 +128,14 @@ const quiqFetch = (
   if (ChatState.burned) {
     return Promise.reject(new Error(messages.burned));
   }
+
+  const options = Object.assign(
+    {
+      shouldRetry: true,
+      failSilently: false,
+    },
+    fetchOptions,
+  );
 
   if (options.checkRequiredSettings) checkRequiredSettings();
 
@@ -201,7 +209,7 @@ const quiqFetch = (
   };
 
   return new StubbornFetch(parsedUrl, request, {
-    retries: !options.shouldRetry ? 0 : -1,
+    retries: options.shouldRetry ? -1 : 0,
     maxErrors: 100,
     retryOnNetworkFailure: true,
     totalRequestTimeLimit: 30000,
@@ -251,6 +259,10 @@ const quiqFetch = (
     .catch((error: StubbornFetchError) => {
       if (!error) return Promise.reject(new Error(messages.unknownError(parsedUrl)));
 
+      if (options.failSilently && !options.shouldRetry) {
+        return Promise.reject(error);
+      }
+
       if (onError(error)) {
         if (callbacks.onError) callbacks.onError(error);
 
@@ -275,10 +287,6 @@ const quiqFetch = (
             return quiqFetch(url, overrides, options);
           })
           .catch(err => Promise.reject(err));
-      }
-
-      if (options.failSilently && !options.shouldRetry) {
-        return Promise.resolve();
       }
 
       if (callbacks.onError) callbacks.onError(error);
