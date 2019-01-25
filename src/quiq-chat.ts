@@ -285,11 +285,8 @@ class QuiqChatClient {
     }
   };
 
-  updateTypingIndicator = (text: string, typing: boolean) => {
-    const promise = API.updateTypingIndicator(text, typing);
-
-    if (promise) promise.catch(() => {}); // tslint:disable-line no-empty
-  };
+  updateTypingIndicator = (text: string, typing: boolean) =>
+    API.updateTypingIndicator(text, typing).catch(() => {});
 
   sendRegistration = async (fields: { [fieldId: string]: string }, formVersionId?: string) => {
     if (!fields || !Object.keys(fields).length) {

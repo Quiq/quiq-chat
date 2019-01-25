@@ -250,7 +250,7 @@ const quiqFetch = (
         }
 
         if (options.responseType === 'NONE') {
-          return;
+          return Promise.resolve();
         }
 
         return res;

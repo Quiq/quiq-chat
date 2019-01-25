@@ -150,7 +150,7 @@ export const fetchWebsocketInfo = (): Promise<SocketInfo> =>
 export const fetchConversation = (): Promise<Conversation> =>
   quiqFetch(getUrlForContactPoint(), undefined, { responseType: 'JSON' });
 
-export const updateTypingIndicator = (text: string, typing: boolean) =>
+export const updateTypingIndicator = (text: string, typing: boolean): Promise<void> =>
   quiqFetch(
     `${getUrlForContactPoint()}/typing`,
     { method: 'POST', body: JSON.stringify({ text, typing }) },
