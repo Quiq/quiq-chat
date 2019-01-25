@@ -286,7 +286,7 @@ class QuiqChatClient {
   };
 
   updateTypingIndicator = (text: string, typing: boolean) =>
-    API.updateTypingIndicator(text, typing).catch(() => {});
+    API.updateTypingIndicator(text, typing).catch(() => {}); // tslint:disable-line no-empty
 
   sendRegistration = async (fields: { [fieldId: string]: string }, formVersionId?: string) => {
     if (!fields || !Object.keys(fields).length) {
