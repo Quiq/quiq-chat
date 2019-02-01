@@ -5,6 +5,7 @@ import logger from '../logging';
 import StubbornFetch from 'stubborn-fetch';
 import ChatState from '../State';
 import UrlParser from 'url-parse';
+import jstz from 'jstimezonedetect';
 import { BrowserNames, BurnItDownResponse, ParsedUrl } from '../types';
 
 const log = logger('Utils');
@@ -139,6 +140,7 @@ export const parseUrl = (url: string): ParsedUrl => {
 
 export const getTimezone = () => {
   try {
-    return Intl && Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Safely tries to use Intl.DateTimeFormat().resolvedOptions().timeZone, falls back to its own lookup
+    return jstz.determine().name();
   } catch (e) {} // tslint:disable-line no-empty
 };

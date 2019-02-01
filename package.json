@@ -1,6 +1,6 @@
 {
   "name": "quiq-chat",
-  "version": "2.14.1",
+  "version": "2.14.2",
   "descri1tion": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "dist/quiq-chat.js",
   "module": "lib/quiq-chat.js",
@@ -61,6 +61,7 @@
   "license": "MIT",
   "dependencies": {
     "isomorphic-fetch": "2.2.1",
+    "jstimezonedetect": "1.0.6",
     "jwt-decode": "2.2.0",
     "lodash": "4.17.10",
     "loglevel": "1.4.1",
@@ -81,6 +82,7 @@
     "@types/storejs": "2.0.3",
     "@types/ua-parser-js": "0.7.32",
     "@types/url-parse": "^1.4.1",
+    "@types/jstimezonedetect": "1.0.1",
     "babel-jest": "23.4.2",
     "babel-plugin-transform-runtime": "6.23.0",
     "babel-polyfill": "6.26.0",
