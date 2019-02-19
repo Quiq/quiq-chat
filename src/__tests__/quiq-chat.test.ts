@@ -6,25 +6,25 @@ jest.mock('../logging');
 jest.mock('../services/QuiqSocketSingleton');
 
 import {
-  AuthorType,
-  BurnItDownMessage,
-  ChatMessage,
-  ChatterboxMessageType,
-  ConversationMessageType,
-  EventType,
-  QueueDisposition,
-  QueueDispositionMessage,
-  RegisterEvent,
-  TextMessage,
+    AuthorType,
+    BurnItDownMessage,
+    ChatMessage,
+    ChatterboxMessageType,
+    ConversationMessageType,
+    EventType,
+    QueueDisposition,
+    QueueDispositionMessage,
+    RegisterEvent,
+    TextMessage,
 } from '../types';
 
 import * as ApiCalls from '../apiCalls';
-import QuiqChatClient from '../quiq-chat';
-import { set } from 'store';
+import QuiqChatClient, {QuiqChatClientStatus} from '../quiq-chat';
+import {set} from 'store';
 import * as Utils from '../Utils/utils';
 import * as log from 'loglevel';
 import QuiqSocketSingleton from '../services/QuiqSocketSingleton';
-import ChatState, { _deinit as deinitState } from '../State';
+import ChatState, {_deinit as deinitState} from '../State';
 
 log.setLevel('debug');
 
@@ -107,6 +107,10 @@ describe('QuiqChatClient', () => {
       expect(ChatState.host!.rawUrl).toBe(host);
       expect(ChatState.contactPoint).toBe(contactPoint);
     });
+
+      it('sets status flag to INITIALIZED', () => {
+          expect(QuiqChatClient.status).toEqual(QuiqChatClientStatus.INITIALIZED);
+      });
   });
 
   describe('start', () => {
@@ -115,8 +119,8 @@ describe('QuiqChatClient', () => {
       done();
     });
 
-    it('sets initialized flag to "true"', () => {
-      expect(QuiqChatClient.initialized).toBe(true);
+    it('sets status flag to RUNNING', () => {
+      expect(QuiqChatClient.status).toEqual(QuiqChatClientStatus.RUNNING);
     });
 
     it('calls login', () => {
@@ -136,10 +140,10 @@ describe('QuiqChatClient', () => {
     });
   });
 
-  describe('start with "initialized" set to true', () => {
+  describe('start with `status` set to "running"', () => {
     beforeAll(async done => {
       jest.clearAllMocks();
-      QuiqChatClient.initialized = true;
+      QuiqChatClient.status = QuiqChatClientStatus.RUNNING;
       await QuiqChatClient.start();
       done();
     });
@@ -174,8 +178,8 @@ describe('QuiqChatClient', () => {
       expect(QuiqSocketSingleton.disconnect).toBeCalled();
     });
 
-    it('sets initialzed flag to false', () => {
-      expect(QuiqChatClient.initialized).toBe(false);
+    it('sets status flag to initialized', () => {
+      expect(QuiqChatClient.status).toEqual(QuiqChatClientStatus.INITIALIZED);
     });
 
     it('sets connected flag to false', () => {

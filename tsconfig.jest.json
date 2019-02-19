@@ -4,14 +4,17 @@
     "declaration": false,
     "module": "commonjs",
     "noImplicitAny": true,
-    "target": "es2017",
+    "target": "es5",
     "lib": ["es7", "dom", "dom.iterable", "scripthost"],
     "moduleResolution": "node",
     "strictNullChecks": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "sourceRoot": "./src",
-    "sourceMap": true
+    "sourceMap": true,
+    "experimentalDecorators": true
   },
-  "exclude": ["node_modules"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
+  "outDir": "test"
 }

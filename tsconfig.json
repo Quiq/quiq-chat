@@ -3,14 +3,14 @@
     "declaration": false,
     "module": "es6",
     "noImplicitAny": true,
-    "outDir": "./lib",
-    "target": "es2017",
+    "target": "ES5",
     "lib": ["es2017", "dom", "dom.iterable", "scripthost"],
     "moduleResolution": "node",
     "strictNullChecks": true,
     "allowSyntheticDefaultImports": true,
     "noUnusedParameters": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "experimentalDecorators": true
   },
   "include": [
     "src/**/*"
