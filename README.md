@@ -187,6 +187,10 @@ Returns the estimate wait time in milliseconds. This is the amount of time we es
 #### emailTranscript(data: [EmailTranscriptPayload](#EmailTranscriptPayload)) => void
 Email a transcript of the current conversation to the specified e-mail. If an agent has not yet responded to the conversation, a 400 will be returned.
 
+## Setting the logging level
+#### setLogLevel(level: trace | debug, info | warn | error | silent) => [QuiqChatClient](#quiqchatclient)
+Sets which levels of log statements will be output to the console. Pass in `silent` to disable logging entirely.
+
 ## Utilities
 #### isStorageEnabled() => boolean
 

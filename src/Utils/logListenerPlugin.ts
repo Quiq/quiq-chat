@@ -57,7 +57,7 @@ const listenerPlugin = {
                 rawMethod(message);
             };
         };
-        log.setLevel(log.getLevel()); // Be sure to call setLevel method in order to apply plugin
+        log.setLevel(log.getLevel(), false); // Be sure to call setLevel method in order to apply plugin
     },
 };
 

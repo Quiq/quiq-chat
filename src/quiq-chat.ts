@@ -37,7 +37,7 @@ import {
 import {registerCallbacks as registerQuiqFetchCallbacks} from './quiqFetch';
 import * as storage from './storage/index';
 import {StorageMode, PersistedData, isStorageEnabled} from './storage';
-import logger from './logging';
+import logger, {LogLevel, setLevel as setLogLevel} from './logging';
 import {MessageFailureCodes} from './appConstants';
 import {version} from '../package.json';
 import ChatState, {watch as watchState, initialize as initializeChatState} from './State';
@@ -85,6 +85,11 @@ class QuiqChatClient {
     private callbacks: QuiqChatCallbacks = {};
     status: QuiqChatClientStatus = QuiqChatClientStatus.UNINITIALIZED;
 
+    setLogLevel(logLevel: LogLevel): QuiqChatClient {
+        setLogLevel(logLevel);
+        return this;
+    }
+    
     @StatusRequired(QuiqChatClientStatus.UNINITIALIZED)
     async initialize(host: string, contactPoint: string, initialPersistedData?: PersistedData) {
         this.status = QuiqChatClientStatus.INITIALIZED;
