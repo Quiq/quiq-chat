@@ -7,7 +7,7 @@
   "scripts": {
     "start": "rollup -c -w",
     "lint": "tslint --config tslint.json --project tsconfig.json 'src/**/*.ts'",
-    "test": "jest --env=jsdom --coverage && yarn run lint",
+    "test": "tsc --noEmit && jest --env=jsdom --coverage && yarn run lint",
     "jest": "jest --watch --env=jsdom --runInBand",
     "build": "rimraf ./dist && rollup -c",
     "prepublish": "yarn test && yarn build",
