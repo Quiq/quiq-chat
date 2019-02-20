@@ -61,13 +61,13 @@ function StatusRequired(requiredStatus: QuiqChatClientStatus) {
             if (this.status < requiredStatus) {
                 switch (requiredStatus) {
                     case QuiqChatClientStatus.UNINITIALIZED:
-                        log.warn(`"${methodName}()" should not be called once QuiqChat has been initialized.`);
+                        log.warn(`"${methodName}()" should not be called once QuiqChat has been initialized.`, {capture: false});
                         break;
                     case QuiqChatClientStatus.INITIALIZED:
-                        log.warn(`"${methodName}()" should not be called before initializing QuiqChat by calling the "initialize()" method.`);
+                        log.warn(`"${methodName}()" should not be called before initializing QuiqChat by calling the "initialize()" method.`, {capture: false});
                         break;
                     case QuiqChatClientStatus.RUNNING:
-                        log.warn(`"${methodName}()" should not be called before starting QuiqChat by calling the "start()" method.`);
+                        log.warn(`"${methodName}()" should not be called before starting QuiqChat by calling the "start()" method.`, {capture: false});
                         break;
                     default:
                         break;
