@@ -15,7 +15,7 @@
     "prettier": "prettier --write src/**/*.ts src/*.ts"
   },
   "lint-staged": {
-    "src/**/*.js": [
+    "src/**/*.{js,ts}": [
       "prettier --write",
       "git add"
     ]
