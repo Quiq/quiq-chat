@@ -8,6 +8,7 @@ import {
   EmailTranscriptPayload,
   QuiqJwt,
   ParsedUrl,
+  Context,
 } from './types';
 import logger from './logging';
 import jwt_decode from 'jwt-decode';
@@ -107,18 +108,22 @@ export const sendMessage = (payload: {
   text: string;
   postbackData?: Object;
   replyDirectives?: Object;
+  context?: Context;
 }) =>
   quiqFetch(`${getUrlForContactPoint()}/send-message`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 
-export const sendAttachmentMessage = (uploadId: string): Promise<{ id: string }> =>
+export const sendAttachmentMessage = (
+  uploadId: string,
+  context?: Context,
+): Promise<{ id: string }> =>
   quiqFetch(
     `${getUrlForContactPoint()}/send-attachment`,
     {
       method: 'POST',
-      body: JSON.stringify({ uploadId }),
+      body: JSON.stringify({ uploadId, context }),
     },
     {
       responseType: 'JSON',

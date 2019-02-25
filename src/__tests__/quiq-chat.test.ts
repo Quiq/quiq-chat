@@ -6,25 +6,25 @@ jest.mock('../logging');
 jest.mock('../services/QuiqSocketSingleton');
 
 import {
-    AuthorType,
-    BurnItDownMessage,
-    ChatMessage,
-    ChatterboxMessageType,
-    ConversationMessageType,
-    EventType,
-    QueueDisposition,
-    QueueDispositionMessage,
-    RegisterEvent,
-    TextMessage,
+  AuthorType,
+  BurnItDownMessage,
+  ChatMessage,
+  ChatterboxMessageType,
+  ConversationMessageType,
+  EventType,
+  QueueDisposition,
+  QueueDispositionMessage,
+  RegisterEvent,
+  TextMessage,
 } from '../types';
 
 import * as ApiCalls from '../apiCalls';
-import QuiqChatClient, {QuiqChatClientStatus} from '../quiq-chat';
-import {set} from 'store';
+import QuiqChatClient, { QuiqChatClientStatus } from '../quiq-chat';
+import { set } from 'store';
 import * as Utils from '../Utils/utils';
 import * as log from 'loglevel';
 import QuiqSocketSingleton from '../services/QuiqSocketSingleton';
-import ChatState, {_deinit as deinitState} from '../State';
+import ChatState, { _deinit as deinitState } from '../State';
 
 log.setLevel('debug');
 
@@ -108,9 +108,9 @@ describe('QuiqChatClient', () => {
       expect(ChatState.contactPoint).toBe(contactPoint);
     });
 
-      it('sets status flag to INITIALIZED', () => {
-          expect(QuiqChatClient.status).toEqual(QuiqChatClientStatus.INITIALIZED);
-      });
+    it('sets status flag to INITIALIZED', () => {
+      expect(QuiqChatClient.status).toEqual(QuiqChatClientStatus.INITIALIZED);
+    });
   });
 
   describe('start', () => {
@@ -465,11 +465,7 @@ describe('QuiqChatClient', () => {
     });
   });
 
-  describe('API wrappers', () => {
-    afterEach(() => {
-      (<any>set).mockClear();
-    });
-
+  describe('state getters/setters', () => {
     describe('isChatVisible', () => {
       it('returns the value of the quiq-chat-container-visible value value', () => {
         if (!QuiqChatClient) {
@@ -479,6 +475,36 @@ describe('QuiqChatClient', () => {
         ChatState.chatIsVisible = false;
         expect(QuiqChatClient.isChatVisible()).toBe(false);
       });
+    });
+
+    describe('setChatContext', () => {
+      it('replaces the value of context in state', () => {
+        if (!QuiqChatClient) {
+          throw new Error('Client undefined');
+        }
+
+        ChatState.context = { intent: 'oldVal', data: { test: 'val' } };
+        QuiqChatClient.setChatContext({ intent: 'newVal', data: { my: 'value' } });
+        expect(ChatState.context).toEqual({ intent: 'newVal', data: { my: 'value' } });
+      });
+    });
+
+    describe('updateChatContext', () => {
+      it('shallow merges the value of context in state', () => {
+        if (!QuiqChatClient) {
+          throw new Error('Client undefined');
+        }
+
+        ChatState.context = { intent: 'oldVal', data: { test: 'val' } };
+        QuiqChatClient.updateChatContext({ intent: 'newVal' });
+        expect(ChatState.context).toEqual({ intent: 'newVal', data: { test: 'val' } });
+      });
+    });
+  });
+
+  describe('API wrappers', () => {
+    afterEach(() => {
+      (<any>set).mockClear();
     });
 
     describe('hasTakenMeaningfulAction', () => {
@@ -504,6 +530,7 @@ describe('QuiqChatClient', () => {
 
         ChatState.chatIsVisible = true;
         ChatState.hasTakenMeaningfulAction = true;
+        ChatState.context = { intent: 'textIntent' };
 
         if (!QuiqChatClient) {
           throw new Error('Client undefined');
@@ -514,7 +541,7 @@ describe('QuiqChatClient', () => {
       });
 
       it('proxies call on send message', () => {
-        expect(API.sendMessage).lastCalledWith({ text: 'text' });
+        expect(API.sendMessage).lastCalledWith({ text: 'text', context: { intent: 'textIntent' } });
       });
 
       it('sets container visibility to `true`', () => {
@@ -538,6 +565,7 @@ describe('QuiqChatClient', () => {
 
         ChatState.chatIsVisible = true;
         ChatState.hasTakenMeaningfulAction = true;
+        ChatState.context = { intent: 'replyIntent' };
 
         if (!QuiqChatClient) {
           throw new Error('Client undefined');
@@ -551,7 +579,10 @@ describe('QuiqChatClient', () => {
       });
 
       it('proxies call on send message', () => {
-        expect(API.sendMessage).toBeCalledWith(replyResponse);
+        expect(API.sendMessage).toBeCalledWith({
+          ...replyResponse,
+          context: { intent: 'replyIntent' },
+        });
       });
 
       it('sets container visibility to `true`', () => {

@@ -58,10 +58,10 @@ export const addStateField = <K extends keyof QuiqChatState>(
       if (deepEquality ? !isEqual(value, oldValue) : value !== oldValue) {
         listeners[key].forEach(listener => {
           if (!listener.ignoreInitialDefinition || oldValue !== undefined) {
-              listener.handler(value, oldValue)
+            listener.handler(value, oldValue);
           }
         });
-      } 
+      }
     },
     configurable: true,
     enumerable: true,
@@ -86,7 +86,7 @@ export const watch = <K extends keyof QuiqChatState>(
   }
 
   if (!listeners[key].some(l => l.handler === handler)) {
-    listeners[key].push({handler, ignoreInitialDefinition});
+    listeners[key].push({ handler, ignoreInitialDefinition });
   }
 };
 
@@ -114,9 +114,9 @@ export const initialize = () => {
   addStateField('burned');
   addStateField('host');
   addStateField('configuration');
-  addStateField('context');
+  addStateField('context', false, {});
   addStateField('transcript', false, undefined, true);
-}; 
+};
 
 // This is used only by tests. It completely nukes everything and allows re-initialization.
 // In real code, use `reset()`

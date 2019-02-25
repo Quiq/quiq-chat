@@ -139,6 +139,15 @@ Called when quiq-chat gets in a fatal state and page holding webchat needs to be
 
 Called whenever Quiq-related data stored in the browser's localStorage changes.
 
+## Update and set context
+Context is data that is set by the chat client and is available throughout the Quiq system as part of the conversation. It can be viewed by agents, included in webhooks and leveraged in queuing rules.
+
+#### setChatContext(context: ChatContext)
+Replaces the entire context. This new context will be sent to Quiq with every subsequent message.
+
+#### updateChatContext(updates: Partial<ChatContext>)
+Performs a shallow merge of the current context with the provided updates. The resulting context will be sent to Quiq with every subsequent message.
+
 ## Retrieve messages and conversation events
 #### getTranscript(cache?: boolean = true) => Promise<Array<[ConversationMessage](#ConversationMessage) | [Event](#Event)>>
 
@@ -298,15 +307,13 @@ TextMessage | AttachmentMessage;
   };
 ```
 
-### PersistentData
+### ChatContext
 
 ```javascript
     {
-      accessToken?: string,
-      chatContainerVisible?: boolean,
-      subscribed?: boolean,
-      hasTakenMeaningfulAction?: boolean,
-      [string]: any,
+      href?: string,    // The URL of the page from which the customer is currently chatting. For example, agents can use this value to know which product the customer is viewing.
+      intent?: string,  // Indicates the "purpose" of a conversation, can be used in the Quiq queuing system to control where the chat conversation is routed.
+      data?: Object,    // Arbitrary, serialiozable data that can be accessed in bots, webhokos and queing rules.
     };
 ```
 

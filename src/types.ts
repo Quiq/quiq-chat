@@ -10,6 +10,8 @@ export interface ParsedUrl {
 
 export interface Context {
   href?: string;
+  intent?: string;
+  data?: Object;
 }
 
 export interface QuiqChatState {
@@ -278,7 +280,6 @@ export interface SendTranscriptEvent extends BaseEvent {
 
 export interface RegisterEvent extends BaseEvent {
   type: EventType.REGISTER;
-  
 }
 
 export type Event =
