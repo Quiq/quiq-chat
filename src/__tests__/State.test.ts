@@ -64,54 +64,54 @@ describe('ChatState', () => {
       });
     });
   });
-  
+
   describe('setter', () => {
     describe('watchers', () => {
-        let watcher = jest.fn();
+      let watcher = jest.fn();
 
-        beforeAll(() => {
+      beforeAll(() => {
         initialize();
-          // @ts-ignore
-          addStateField('testKey');
-          // @ts-ignore
-          ChatState.testKey = 'valueA';
+        // @ts-ignore
+        addStateField('testKey');
+        // @ts-ignore
+        ChatState.testKey = 'valueA';
 
-          // @ts-ignore
-          watch('testKey', watcher);
+        // @ts-ignore
+        watch('testKey', watcher);
       });
-        
-        afterEach(() => {
-          watcher.mockClear();
-        });
-      
+
+      afterEach(() => {
+        watcher.mockClear();
+      });
+
       it('fires any listeners if value has changed', () => {
         ChatState.testKey = 'valueB';
         expect(watcher).toHaveBeenCalledWith('valueB', 'valueA');
       });
-      
+
       describe('changing from undefined to value (setting the initial value)', () => {
         beforeAll(() => {
-            addStateField('testKey2');
-            watch('testKey2', watcher);
+          addStateField('testKey2');
+          watch('testKey2', watcher);
         });
-        
+
         it('does not fire watcher', () => {
-            ChatState.testKey2 = 'value';
-            expect(watcher).not.toHaveBeenCalled();
+          ChatState.testKey2 = 'value';
+          expect(watcher).not.toHaveBeenCalled();
         });
       });
-      
-      describe('when deep equality is enabled on a key', () => {
-          beforeAll(() => {
-              addStateField('testKey3', false, undefined, true);
-              ChatState.testKey3 = {a: {b: 1}};
-              watch('testKey3', watcher);
-          });
 
-          fit('does fires watcher on deep change', () => {
-              ChatState.testKey3 = {a: {b: 2}};
-              expect(watcher).toHaveBeenCalledWith({a: {b: 2}}, {a: {b: 1}});
-          });
+      describe('when deep equality is enabled on a key', () => {
+        beforeAll(() => {
+          addStateField('testKey3', false, undefined, true);
+          ChatState.testKey3 = { a: { b: 1 } };
+          watch('testKey3', watcher);
+        });
+
+        fit('does fires watcher on deep change', () => {
+          ChatState.testKey3 = { a: { b: 2 } };
+          expect(watcher).toHaveBeenCalledWith({ a: { b: 2 } }, { a: { b: 1 } });
+        });
       });
     });
   });

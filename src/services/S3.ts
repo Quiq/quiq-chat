@@ -19,7 +19,7 @@ export const uploadAttachment = (
   const handleProgress = (e: ProgressEvent) => {
     // Convert bytes to integer percentage
     if (e.lengthComputable) {
-      const percent = Math.floor(e.loaded / e.total * 100);
+      const percent = Math.floor((e.loaded / e.total) * 100);
       progressCallback(percent);
     }
   };
@@ -51,10 +51,10 @@ export const uploadAttachment = (
           attachmentSize: file.size,
           attachmentName: file.name,
         },
-          logOptions: {
-            logFirstOccurrence: true,
-              frequency: 'every',
-          }
+        logOptions: {
+          logFirstOccurrence: true,
+          frequency: 'every',
+        },
       });
       reject(new Error(error));
     });

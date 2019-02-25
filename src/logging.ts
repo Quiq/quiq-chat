@@ -1,8 +1,15 @@
-import log, {Logger} from 'loglevel';
+import log, { Logger } from 'loglevel';
 import prefix from 'loglevel-plugin-prefix';
 import logListenerPlugin from './Utils/logListenerPlugin';
 
-export enum LogLevel { trace, debug, info, warn, error, silent }
+export enum LogLevel {
+  trace,
+  debug,
+  info,
+  warn,
+  error,
+  silent,
+}
 
 prefix.reg(log);
 prefix.apply(log, {

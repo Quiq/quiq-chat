@@ -17,10 +17,11 @@ function modifiedTimestampPlugin() {
     modifiedTimestampStore.remove(key);
     return superFunc(key);
   };
-  
+
   const getLastModifiedTimestamp = (_: Function, key: string) => modifiedTimestampStore.get(key);
-  
-  const setLastModifiedTimestamp = (_: Function, key: string, timestamp: number) => modifiedTimestampStore.set(key, timestamp);
+
+  const setLastModifiedTimestamp = (_: Function, key: string, timestamp: number) =>
+    modifiedTimestampStore.set(key, timestamp);
 
   return { set, remove, getLastModifiedTimestamp, setLastModifiedTimestamp };
 }
