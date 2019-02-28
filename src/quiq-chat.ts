@@ -292,7 +292,7 @@ class QuiqChatClient {
 
   @StatusRequired(QuiqChatClientStatus.INITIALIZED)
   setChatContext(context: Context) {
-    ChatState.context = context;
+    ChatState.context = { ...context, intent: context.intent && context.intent.slice(0, 255) };
   }
 
   @StatusRequired(QuiqChatClientStatus.INITIALIZED)
