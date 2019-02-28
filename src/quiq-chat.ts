@@ -44,7 +44,6 @@ import ChatState, { watch as watchState, initialize as initializeChatState } fro
 import jwt_decode from 'jwt-decode';
 import * as LogListener from './Utils/logListenerPlugin';
 import QCError from './QCError';
-import mod = require('ts-jest');
 
 const log = logger('QuiqChatClient');
 
