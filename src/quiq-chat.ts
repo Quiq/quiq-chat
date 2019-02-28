@@ -297,7 +297,10 @@ class QuiqChatClient {
 
   @StatusRequired(QuiqChatClientStatus.INITIALIZED)
   updateChatContext(updates: Partial<Context>) {
-    const modifiedUpdates = { ...updates, intent: updates.intent && updates.intent.slice(0, 255) };
+    const modifiedUpdates = { ...updates };
+    if (modifiedUpdates.intent) {
+      modifiedUpdates.intent = modifiedUpdates.intent.slice(0, 255);
+    }
     ChatState.context = { ...ChatState.context, ...modifiedUpdates };
   }
 
