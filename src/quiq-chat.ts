@@ -44,6 +44,7 @@ import ChatState, { watch as watchState, initialize as initializeChatState } fro
 import jwt_decode from 'jwt-decode';
 import * as LogListener from './Utils/logListenerPlugin';
 import QCError from './QCError';
+import mod = require('ts-jest');
 
 const log = logger('QuiqChatClient');
 
@@ -297,7 +298,8 @@ class QuiqChatClient {
 
   @StatusRequired(QuiqChatClientStatus.INITIALIZED)
   updateChatContext(updates: Partial<Context>) {
-    ChatState.context = { ...ChatState.context, ...updates };
+    const modifiedUpdates = { ...updates, intent: updates.intent && updates.intent.slice(0, 255) };
+    ChatState.context = { ...ChatState.context, ...modifiedUpdates };
   }
 
   private async _prepareForMessageSend() {
