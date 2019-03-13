@@ -40,7 +40,11 @@ import { StorageMode, PersistedData, isStorageEnabled } from './storage';
 import logger, { LogLevel, setLevel as setLogLevel } from './logging';
 import { MessageFailureCodes } from './appConstants';
 import { version } from '../package.json';
-import ChatState, { watch as watchState, initialize as initializeChatState } from './State';
+import ChatState, {
+  watch as watchState,
+  initialize as initializeChatState,
+  reset as resetState,
+} from './State';
 import jwt_decode from 'jwt-decode';
 import * as LogListener from './Utils/logListenerPlugin';
 import QCError from './QCError';
@@ -175,8 +179,13 @@ class QuiqChatClient {
   }
 
   @StatusRequired(QuiqChatClientStatus.RUNNING)
-  stop() {
+  stop(clearSession: boolean = false) {
     this._disconnectSocket();
+
+    if (clearSession) {
+      resetState();
+    }
+
     this.status = QuiqChatClientStatus.INITIALIZED;
   }
 

@@ -91,10 +91,11 @@ export const watch = <K extends keyof QuiqChatState>(
 };
 
 export const reset = () => {
-  Object.getOwnPropertyNames(state).forEach(key => {
+  Object.getOwnPropertyNames(stateAccessors).forEach(key => {
     // Clear watch functions first, so they don't detect changes to undefined in state
     listeners[key] = [];
-    state[key] = undefined;
+    // @ts-ignore - we know key to be a valid key on stateAccessors
+    stateAccessors[key] = undefined;
   });
 };
 
