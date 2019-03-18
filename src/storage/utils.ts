@@ -6,6 +6,7 @@ const log = Logging('StorageUtils');
 export const updatePersistedItemIfNewer = (
   newData: PersistedData,
   key: string,
+  // @ts-ignore
   store: StoreJsAPI,
 ) => {
   // @ts-ignore
