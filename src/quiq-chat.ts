@@ -644,7 +644,8 @@ class QuiqChatClient {
     }
 
     if (message.messageType === ChatterboxMessageType.UNSUBSCRIBE) {
-      this._unsubscribeFromChat();
+      // See SER-11880 for reasoning
+      setTimeout(this._unsubscribeFromChat, 30000);
     }
   };
 
