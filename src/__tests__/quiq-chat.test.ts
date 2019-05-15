@@ -525,7 +525,7 @@ describe('QuiqChatClient', () => {
     });
 
     describe('sendTextMessage', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         jest.clearAllMocks();
 
         ChatState.chatIsVisible = true;
@@ -537,7 +537,7 @@ describe('QuiqChatClient', () => {
         }
 
         ChatState.connected = true;
-        QuiqChatClient.sendTextMessage('text');
+        await QuiqChatClient.sendTextMessage('text');
       });
 
       it('proxies call on send message', () => {

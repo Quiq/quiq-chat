@@ -3,12 +3,12 @@ jest.mock('../../State');
 
 import * as Utils from '../utils';
 import ChatState from '../../State';
-import {BurnItDownResponse} from '../../types';
+import { BurnItDownResponse } from '../../types';
 
 describe('Utils', () => {
   describe('formatQueryParams', () => {
     it('adds params with ? and & syntax', () => {
-      expect(Utils.formatQueryParams('/url', {a: 'one', b: 'two'})).toBe('/url?a=one&b=two');
+      expect(Utils.formatQueryParams('/url', { a: 'one', b: 'two' })).toBe('/url?a=one&b=two');
       expect(
         Utils.formatQueryParams('/url?alreadyParamed=true', {
           a: 'one',
@@ -68,32 +68,32 @@ describe('Utils', () => {
       expect(burnCallback).toBeCalled();
     });
   });
-  
+
   describe('sortByTimestamp', () => {
     const items = [
-        {timestamp: 4},
-        {timestamp: 5},
-        {timestamp: 2},
-        {timestamp: 1},
-        {timestamp: 3}
+      { timestamp: 4 },
+      { timestamp: 5 },
+      { timestamp: 2 },
+      { timestamp: 1 },
+      { timestamp: 3 },
     ];
-    
+
     it('sorts by timestamp', () => {
       expect(Utils.sortByTimestamp(items)).toEqual([
-          {timestamp: 1},
-          {timestamp: 2},
-          {timestamp: 3},
-          {timestamp: 4},
-          {timestamp: 5}
+        { timestamp: 1 },
+        { timestamp: 2 },
+        { timestamp: 3 },
+        { timestamp: 4 },
+        { timestamp: 5 },
       ]);
     });
   });
 
-  describe('onceAtATime', () => {
+  describe('onceAtATime', async () => {
     const f = jest.fn(
       (n: number) => new Promise(resolve => setTimeout(resolve(`Seahawks ${n}`), 2000)),
     );
-    const f1 = Utils.onceAtATime(f);
+    const f1 = await Utils.onceAtATime(f);
 
     afterEach(() => {
       f.mockClear();
