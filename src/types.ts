@@ -61,7 +61,6 @@ export enum AuthorType {
 export enum ConversationMessageType {
   TEXT = 'Text',
   ATTACHMENT = 'Attachment',
-  RICH = 'Rich',
   AGENT_TYPING = 'AgentTyping',
 }
 
