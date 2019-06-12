@@ -595,7 +595,6 @@ class QuiqChatClient {
       switch (message.data.type) {
         case ConversationMessageType.TEXT:
         case ConversationMessageType.ATTACHMENT:
-        case ConversationMessageType.RICH:
         case EventType.JOIN:
         case EventType.LEAVE:
         case EventType.END:
@@ -692,33 +691,11 @@ class QuiqChatClient {
     }
   }
 
-  // TODO: Remove this method when CB stops sending duplicate messages for rich interactions
-  private _removeItemsWithDuplicateIdsPrioritizingRichMessages(
-    items: TranscriptItem[],
-  ): TranscriptItem[] {
-    // We remove messages with duplicate IDs that DO NOT have a type of RICH, i.e., we remove the duplicate TEXT message
-    const countsById: { [id: string]: number } = items.reduce(
-      (counts: { [id: string]: number }, item) => ({
-        ...counts,
-        [item.id]: counts[item.id] ? counts[item.id] + 1 : 1,
-      }),
-      {},
-    );
-    return items.filter(
-      (item: TranscriptItem) =>
-        countsById[item.id] < 2 || item.type === ConversationMessageType.RICH,
-    );
-  }
-
   // @ts-ignore no-unused-variable
   private _ingestTranscriptItems(newItems: Array<TranscriptItem>): void {
     // Sort and update cached textMessages, and send callback
     // Union removes duplicates; order is important--newItems must be passed to union before existing transcript
-    // TODO: This filtering logic is needed as long as CB sends us duplicate messages for rich interactions
-    // TODO: Remove when we use type TEXT for all messages
-    const uniqueNewItems = this._removeItemsWithDuplicateIdsPrioritizingRichMessages(newItems);
-
-    ChatState.transcript = sortByTimestamp(unionBy(uniqueNewItems, ChatState.transcript, 'id'));
+    ChatState.transcript = sortByTimestamp(unionBy(newItems, ChatState.transcript, 'id'));
   }
 
   // @ts-ignore no-unused-variable
@@ -749,14 +726,30 @@ class QuiqChatClient {
           agentEndedEvents[agentEndedEvents.length - 1].timestamp);
   }
 
+  private _removeItemsWithDuplicateIdsPrioritizingTextMessages(
+    items: TranscriptItem[],
+  ): TranscriptItem[] {
+    // We remove messages with duplicate IDs that DO have a type of RICH, i.e., we remove the duplicate RICH message
+    // Quiq Replies still sends RICH
+    const countsById: { [id: string]: number } = items.reduce(
+      (counts: { [id: string]: number }, item) => ({
+        ...counts,
+        [item.id]: counts[item.id] ? counts[item.id] + 1 : 1,
+      }),
+      {},
+    );
+    return items.filter(
+      (item: TranscriptItem) =>
+        countsById[item.id] < 2 || item.type === ConversationMessageType.TEXT,
+    );
+  }
+
   // @ts-ignore no-unused-variable
   private _processConversation(conversation: Conversation): void {
     // Transcript changed callback
     // NOTE: We do not check to see if a message has CHANGED; we only react if there is a NEW MESSAGE
     if (!ChatState.transcript || conversation.messages.length > ChatState.transcript.length) {
-      // TODO: This filtering logic is needed as long as CB sends us duplicate messages for rich interactions
-      // TODO: Remove when we use type TEXT for all messages
-      const uniqueItems = this._removeItemsWithDuplicateIdsPrioritizingRichMessages(
+      const uniqueItems = this._removeItemsWithDuplicateIdsPrioritizingTextMessages(
         conversation.messages,
       );
 
