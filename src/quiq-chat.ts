@@ -603,7 +603,7 @@ class QuiqChatClient {
           this._ingestTranscriptItems([message.data]);
           break;
         case ConversationMessageType.RICH:
-          //do nothing
+          // do nothing
           break;
         case EventType.REGISTER:
           this._ingestTranscriptItems([message.data]);
