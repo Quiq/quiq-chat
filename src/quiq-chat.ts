@@ -602,6 +602,9 @@ class QuiqChatClient {
         case EventType.SEND_TRANSCRIPT:
           this._ingestTranscriptItems([message.data]);
           break;
+        case ConversationMessageType.RICH:
+          //do nothing
+          break;
         case EventType.REGISTER:
           this._ingestTranscriptItems([message.data]);
           // Fire registration callback if user just became registered
