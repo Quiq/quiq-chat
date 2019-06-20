@@ -205,7 +205,6 @@ export const login = onceAtATime(() =>
     ChatState.accessToken = res.accessToken;
 
     const { sub: newTrackingId } = jwt_decode<QuiqJwt>(res.accessToken);
-    ChatState.trackingId = newTrackingId;
 
     // Ensure we were able to store access token properly
     if (ChatState.accessToken !== res.accessToken) {
@@ -216,6 +215,8 @@ export const login = onceAtATime(() =>
     if (_onNewSession) {
       _onNewSession(res.tokenId);
     }
+    // This should be after the _onNewSession call so we can react to a change in tracking ID if needed. SER-12073
+    ChatState.trackingId = newTrackingId;
 
     log.info(`Login successful. trackingId: ${newTrackingId || 'unknown'}`);
 
