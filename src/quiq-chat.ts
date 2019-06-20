@@ -145,7 +145,7 @@ class QuiqChatClient {
     }
 
     // Register with apiCalls for new session events
-    API.registerNewSessionCallback(this._handleNewSession);
+    API.registerNewSessionCallback(this._handleNewSession.bind(this));
 
     return this;
   }
