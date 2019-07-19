@@ -139,8 +139,11 @@ Called when quiq-chat gets in a fatal state and page holding webchat needs to be
 
 Called whenever Quiq-related data stored in the browser's localStorage changes.
 
-## Update and set context
+## Update, and set and retrieve context
 Context is data that is set by the chat client and is available throughout the Quiq system as part of the conversation. It can be viewed by agents, included in webhooks and leveraged in queuing rules.
+
+#### getChatContext(context: ChatContext)
+Retrieves the current chat context.
 
 #### setChatContext(context: ChatContext)
 Replaces the entire context. This new context will be sent to Quiq with every subsequent message.

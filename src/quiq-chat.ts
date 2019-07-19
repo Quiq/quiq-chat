@@ -313,6 +313,11 @@ class QuiqChatClient {
     ChatState.context = { ...ChatState.context, ...modifiedUpdates };
   }
 
+  @StatusRequired(QuiqChatClientStatus.INITIALIZED)
+  getChatContext(): Context {
+    return ChatState.context || {};
+  }
+
   private async _prepareForMessageSend() {
     if (!ChatState.connected) {
       await this._connectSocket();
