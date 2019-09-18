@@ -1,9 +1,8 @@
 {
   "name": "quiq-chat",
-  "version": "2.16.16",
+  "version": "2.16.17",
   "descri1tion": "Library to help with network requests to create a webchat client for Quiq Messaging",
   "main": "dist/quiq-chat.js",
-  "repository": "https://github.com/Quiq/quiq-chat",
   "scripts": {
     "start": "rollup -c -w",
     "lint": "tslint --config tslint.json --project tsconfig.json 'src/**/*.ts'",
